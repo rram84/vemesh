@@ -7,10 +7,9 @@
 
 namespace vm
 {
-
   // Reads a surface mesh
-  void read_pmp(const std::string coord_file, const std::string conn_file,
-		pmp::SurfaceMesh& mesh);
+  void read_triangles(const std::string coord_file, const std::string conn_file,
+		      pmp::SurfaceMesh& mesh);
   
   // Writes a mesh in .off format
   // Note that pmp::SurfaceMesh::write() does not corrrectly handle non-sequential vertex indexing
