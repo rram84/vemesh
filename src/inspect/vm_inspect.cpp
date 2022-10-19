@@ -15,7 +15,7 @@ namespace vm
   using boost_point_t    = bgm::point<double, 2, bg::cs::cartesian>;
   using boost_polygon_t  = bgm::polygon<boost_point_t, false>;
 
-  void inspect_face(const pmp::SurfaceMesh& mesh, const pmp::Face& face)
+  void inspect_face(pmp::SurfaceMesh& mesh, pmp::Face& face)
   {
     assert(mesh.is_valid(face)==true);
     

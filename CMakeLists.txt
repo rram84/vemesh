@@ -24,6 +24,6 @@ add_subdirectory(src)
 
 # Testing
 include(CTest)
-#add_subdirectory(src/medial/test)
+add_subdirectory(src/manager/test)
 
 

@@ -27,7 +27,6 @@ namespace vm
 	pfile >> xy[0];
       }
     pfile.close();
-    std::cout << "Read " << mesh.n_vertices() << " vertices " << std::endl;
     
     // read triangle connectivities
     pfile.open(conn_file, std::ios::in);
@@ -42,7 +41,8 @@ namespace vm
 	pfile >> conn[0];
       }
     pfile.close();
-    std::cout << "Read " << mesh.n_faces() << " triangle " << std::endl;
+    std::cout << "Read " << mesh.n_vertices() << " vertices and "
+	      << mesh.n_faces() << " triangles " << std::endl;
 
     // done
     return;
@@ -89,7 +89,7 @@ namespace vm
     out.open(filename, std::ios::out);
     assert(out.good() && out.is_open());
     out << "OFF" << std::endl
-	<< positions.size() << " " << mesh.n_faces() << " " << 0;
+	<< positions.size() << " " << faces.size() << " " << 0;
 
     // vertex coordinates
     for(auto& pt:positions)

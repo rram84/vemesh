@@ -27,13 +27,13 @@ namespace vm
 	const auto& Xc = mesh.position(vert_c);
 
 	// edges ab and bc
-	const double AB[] = {Xb[0]-Xa[0], Xb[1]-Xa[1]};
+	const double BA[] = {Xa[0]-Xb[0], Xa[1]-Xb[1]};
 	const double BC[] = {Xc[0]-Xb[0], Xc[1]-Xb[1]};
 
 	// measure the angle at vertex b
-	const double dot = AB[0]*BC[0] + AB[1]*BC[1];
-	const double det = AB[0]*BC[1] - AB[1]*BC[0];
-	angles[count]    = std::atan2(det, dot);
+	const double dot = BA[0]*BC[0] + BA[1]*BC[1];
+	const double det = BA[0]*BC[1] - BA[1]*BC[0];
+	angles[count]    = std::atan2(-det, dot);
 	if(angles[count]<0.) angles[count] += 2.*M_PI;
 
 	// next

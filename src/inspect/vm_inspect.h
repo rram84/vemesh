@@ -4,10 +4,10 @@
 
 #include <pmp/SurfaceMesh.h>
 
-namespace pmp
+namespace vm
 {
   // Run checks on a mesh face
   // mesh [in]           : polygon mesh
   // face [in]           : polygon face
-  void inspect_face(const pmp::SurfaceMesh& mesh, const pmp::Face& face);
+  void inspect_face(pmp::SurfaceMesh& mesh, pmp::Face& face);
 }

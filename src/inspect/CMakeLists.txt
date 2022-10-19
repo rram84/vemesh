@@ -1,6 +1,7 @@
 # Sriramajayam
 
-add_library(vm_inspect STATIC vm_inspect.cpp)
+add_library(vm_inspect STATIC
+		 vm_inspect.cpp)
 
 # include headers in the current directory
 target_include_directories(vm_inspect PUBLIC

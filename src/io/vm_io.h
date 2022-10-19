@@ -15,7 +15,7 @@ namespace vm
   // Note that pmp::SurfaceMesh::write() does not corrrectly handle non-sequential vertex indexing
   // mesh [in]           : polygon mesh
   // filename [in]       : name of the file
-  void write_off(const pmp::SurfaceMesh& mesh, const std::string filename);
+  void write_off(pmp::SurfaceMesh& mesh, const std::string filename);
 
   // Writes a given set of faces of a in .off format
   // Note that pmp::SurfaceMesh::write() does not corrrectly handle non-sequential vertex indexing

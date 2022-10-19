@@ -2,8 +2,8 @@
 
 #include <vm_manager.h>
 #include <vm_io.h>
-#include <vm_inspect.h>
 #include <vm_quality.h>
+#include <vm_inspect.h>
 
 namespace vm
 {
@@ -36,7 +36,7 @@ namespace vm
     auto face_circulator = mesh.faces();
     for(auto face:face_circulator)
       inspect_face(mesh, face);
-
+    
     // done
     return;
   }
@@ -68,6 +68,31 @@ namespace vm
   // visualize elements with small edges
   void Manager::write_bad_vertices(const std::string filename, const double eps_edge_ratio) 
   {
+    std::list<pmp::Face> facelist;
+    facelist.clear();
+    auto vert_circulator = mesh.vertices();
+    for(auto vert:vert_circulator)
+      {
+	auto halfedge_circulator = mesh.halfedges(vert);
+	std::vector<double> edge_len{};
+	const auto& Xa = mesh.position(vert);
+	for(auto h:halfedge_circulator)
+	  {
+	    const auto& Xb = mesh.position(mesh.to_vertex(h));
+	    edge_len.push_back(std::sqrt((Xa[0]-Xb[0])*(Xa[0]-Xb[0]) + (Xa[1]-Xb[1])*(Xa[1]-Xb[1])));
+	  }
+	const auto minmax = std::minmax_element(edge_len.begin(), edge_len.end());
+
+	if((*minmax.first)/(*minmax.second)<eps_edge_ratio) // small edge at this vertex
+	  {
+	    auto face_circulator = mesh.faces(vert);
+	    for(auto f:face_circulator)
+	      facelist.push_back(f);
+	  }
+      }
+    
+    write_off(mesh, facelist, filename);
+    return;	
   }
 
 }
