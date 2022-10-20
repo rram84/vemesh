@@ -6,7 +6,7 @@
 namespace vm
 {
   // Agglomerate poor quality elements
-  void Merge(pmp::SurfaceMesh& mesh, const pmp::Halfedge& h0)
+  void merge(pmp::SurfaceMesh& mesh, const pmp::Halfedge& h0)
   {
     // sanity checks 
     assert(mesh.is_valid(h0) && !mesh.is_deleted(h0) && !mesh.is_boundary(h0));
