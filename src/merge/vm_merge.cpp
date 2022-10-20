@@ -53,6 +53,7 @@ namespace vm
       }
     
     // check for the possibility of isolated vertices caused when deleting faces
+    const int nvertices = mesh.n_vertices();
     const int nNewVerts = static_cast<int>(new_face_vertices.size());
     for(int n=0; n<nNewVerts; ++n)
       if(mesh.valence(new_face_vertices[n])==2)
@@ -64,16 +65,15 @@ namespace vm
     // delete faces of h0 and h1 (can also delete the edge of h0,h1)
     // notice that this does not delete the remaining halfedges of faces f0 and f1.
     // instead, the faces of the halfedges are invalidated
-    const int nvertices = mesh.n_vertices();
     mesh.delete_face(f0);
     mesh.delete_face(f1);
     assert( mesh.is_deleted(f0) && mesh.is_deleted(f1) &&
 	    mesh.is_deleted(h0) && mesh.is_deleted(h1) );
-
+    
     // create the new new face
     auto new_face = mesh.add_face(new_face_vertices);
     assert(mesh.is_valid(new_face));
-
+    
     // #vertices should remain unchanged
     assert(mesh.n_vertices()==nvertices);
     
