@@ -56,11 +56,8 @@ namespace vm
     const int nvertices = mesh.n_vertices();
     const int nNewVerts = static_cast<int>(new_face_vertices.size());
     for(int n=0; n<nNewVerts; ++n)
-      if(mesh.valence(new_face_vertices[n])==2)
-	{
-	  assert(mesh.is_boundary(new_face_vertices[n]));
-	  new_face_vertices[n] = mesh.add_vertex(mesh.position(new_face_vertices[n]));
-	}
+      if(mesh.valence(new_face_vertices[n])==2 && mesh.is_boundary(new_face_vertices[n]))
+	new_face_vertices[n] = mesh.add_vertex(mesh.position(new_face_vertices[n]));
     
     // delete faces of h0 and h1 (can also delete the edge of h0,h1)
     // notice that this does not delete the remaining halfedges of faces f0 and f1.
