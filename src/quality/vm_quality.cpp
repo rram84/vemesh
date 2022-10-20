@@ -42,6 +42,33 @@ namespace vm
     
     return (180./M_PI)*(*std::min_element(angles.begin(), angles.end()));
   }
+
+
+  double face_quality(const std::vector<pmp::Point>& coords)
+  {
+    const int nverts = static_cast<int>(coords.size());
+    std::vector<double> angles(nverts);
+    for(int a=0; a<nverts; ++a)
+      {
+	const auto& Xa = coords[a];
+	const auto& Xb = coords[(a+1)%nverts];
+	const auto& Xc = coords[(a+2)%nverts];
+
+	// edges ab and bc
+	const double BA[] = {Xa[0]-Xb[0], Xa[1]-Xb[1]};
+	const double BC[] = {Xc[0]-Xb[0], Xc[1]-Xb[1]};
+	
+	// measure the angle at vertex b
+	const double dot = BA[0]*BC[0] + BA[1]*BC[1];
+	const double det = BA[0]*BC[1] - BA[1]*BC[0];
+	angles[a]    = std::atan2(-det, dot);
+	if(angles[a]<0.) angles[a] += 2.*M_PI;
+      }
+    
+    return (180./M_PI)*(*std::min_element(angles.begin(), angles.end()));
+  }
+  
+  
   
   // measure quality of a vertex as the face as the ratio of smallest and largest edge lengths
   double vertex_quality(const pmp::SurfaceMesh& mesh, const pmp::Vertex& vert)
