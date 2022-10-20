@@ -40,7 +40,10 @@ namespace vm
 
     // inspect validity of the mesh
     void inspect_mesh();
-    
+
+    // merge a face with a neighbor in the mesh
+    void merge_face(const pmp::Face& face);
+		    
     pmp::SurfaceMesh mesh;
   };
 }
