@@ -10,8 +10,10 @@
 namespace vm
 {
   // merge poor quality elements with neighbors
-  void Manager::merge(const double eps_degrees)
+  int Manager::merge(const double eps_degrees)
   {
+    int merge_count = 0;
+    
     // collate a list of faces with quality less than the threshold
     // sort them in ascending order of quality
     using Face_Quality_t = std::pair<pmp::Face, double>;
@@ -34,12 +36,15 @@ namespace vm
 	  
 	// is this still a valid face
 	if(mesh.is_valid(face) && !mesh.is_deleted(face))
-	  merge_face(face);
+	  {
+	    merge_face(face);
+	    ++merge_count;
+	  }
 	
 	bad_faces.erase(bad_faces.begin());
       }
 
-    return;
+    return merge_count;
   }
   
   // merge a face with a neighbor in the mesh

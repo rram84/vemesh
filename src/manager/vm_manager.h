@@ -22,7 +22,8 @@ namespace vm
     Manager operator=(const Manager&) = delete;
     
     // merge poor quality elements with neighbors
-    void merge(const double eps_degrees);
+    // returns the number of merging operations performed
+    int merge(const double eps_degrees);
 
     // move vertices of small edges
     void move(const double eps_edge_ratio) const;
