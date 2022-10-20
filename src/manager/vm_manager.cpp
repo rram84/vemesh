@@ -14,9 +14,7 @@ namespace vm
     read_triangles(coord_file, conn_file, mesh);
 
     // only triangles
-    auto face_circulator = mesh.faces();
-    for(auto face:face_circulator)
-      assert(mesh.valence(face)==3);
+    assert(mesh.is_triangle_mesh()==true);
     
     // sanity checks
     inspect_mesh();
