@@ -83,4 +83,19 @@ namespace vm
     return;
   }
 
+
+  bool inspect_face(const std::vector<pmp::Point>& coords)
+  {
+    // boost polygon representation
+    boost_polygon_t poly;
+    for(const auto& pt:coords)
+      bg::append(poly.outer(), boost_point_t(pt[0],pt[1]));
+
+    // close the loop
+    bg::append(poly.outer(), boost_point_t(coords[0][0], coords[0][1]));
+    
+    // the face should be valid & simple
+    return (bg::is_valid(poly) && bg::is_simple(poly));
+  }
+
 }

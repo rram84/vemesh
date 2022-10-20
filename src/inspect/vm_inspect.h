@@ -10,4 +10,6 @@ namespace vm
   // mesh [in]           : polygon mesh
   // face [in]           : polygon face
   void inspect_face(pmp::SurfaceMesh& mesh, pmp::Face& face);
+
+  bool inspect_face(const std::vector<pmp::Point>& coords);
 }
