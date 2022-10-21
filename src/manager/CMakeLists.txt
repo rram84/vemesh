@@ -9,7 +9,7 @@ target_include_directories(vm_manager PUBLIC
 					$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
 
 # link
-target_link_libraries(vm_manager PUBLIC vm_merge vm_io vm_quality vm_inspect)
+target_link_libraries(vm_manager PUBLIC vm_merge vm_io vm_quality vm_inspect vm_snap)
 
 # Add required flags
 target_compile_features(vm_manager PUBLIC ${VM_COMPILE_FEATURES})
