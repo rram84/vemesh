@@ -25,6 +25,7 @@ namespace vm
 
     const int nvertices = mesh.n_vertices();
     auto e = mesh.edge(h0);
+    assert(mesh.is_removal_ok(e));
     mesh.remove_edge(e);
 
     // #vertices should remain unchanged
