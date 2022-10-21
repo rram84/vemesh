@@ -39,7 +39,12 @@ namespace vm
     return;
   }
 
-  
+  // access the mesh
+  pmp::SurfaceMesh& Manager::get_mesh()
+  {
+    return mesh;
+  }
+
   // visualize
   void Manager::write(const std::string filename) 
   {

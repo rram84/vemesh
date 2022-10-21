@@ -20,7 +20,10 @@ namespace vm
     //! Disable copy and assignment
     Manager(const Manager&) = delete;
     Manager operator=(const Manager&) = delete;
-    
+
+    // access the mesh
+    pmp::SurfaceMesh& get_mesh();
+
     // merge poor quality elements with neighbors
     // returns the number of merging operations performed
     int merge(const double eps_degrees);
