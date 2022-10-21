@@ -12,7 +12,9 @@ namespace vm
   namespace bg  = boost::geometry;
   namespace bgm = bg::model;
   using boost_point_t         = bgm::point<double, 2, bg::cs::cartesian>;
+  using boost_segment_t       = bgm::segment<boost_point_t>;
   using boost_linestring_t    = bgm::linestring<boost_point_t>;
+  
     
   // determine whether the vertex of a face needs to be snapped
   std::vector<pmp::Vertex> needs_snap(pmp::SurfaceMesh& mesh, const pmp::Face& face, const double eps_dist_ratio)
@@ -58,4 +60,43 @@ namespace vm
     return result;
   }
 
-}
+
+  // identify the halfedge of a face closest to the given vertex
+  pmp::Halfedge closest_halfedge(pmp::SurfaceMesh& mesh, const pmp::Face& face, const pmp::Vertex& vertex)
+  {
+    // location of the vertex
+    const auto& Xv = mesh.position(vertex);
+    const boost_point_t pt(Xv[0],Xv[1]);
+
+    // track the closest distance
+    double min_distance = std::numeric_limits<double>::max();
+    
+    // identify the halfedge of face closest to the vertex
+    pmp::Halfedge closest_halfedge;
+    auto halfedge_circulator = mesh.halfedges(face);
+
+    for(auto h:halfedge_circulator)
+      {
+	auto a = mesh.from_vertex(h);
+	auto b = mesh.to_vertex(h);
+	if(a==vertex || b==vertex)    // vertex lies on this halfedge
+	  continue;
+	else                          // find the closest distance of 
+	  {
+	    const auto& Xa = mesh.position(a);
+	    const auto& Xb = mesh.position(b);
+	    boost_segment_t seg(boost_point_t(Xa[0],Xa[1]), boost_point_t(Xb[0],Xb[1]));
+	    double dist = bg::distance(pt, seg);
+	    if(dist<min_distance)
+	      {
+		min_distance = dist;
+		closest_halfedge = h;
+	      }
+	  }
+      }
+
+    // done
+    return closest_halfedge;
+  }
+
+} // vm::
