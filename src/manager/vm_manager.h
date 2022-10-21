@@ -28,8 +28,8 @@ namespace vm
     // returns the number of merging operations performed
     int merge(const double eps_degrees);
 
-    // move vertices of small edges
-    void move(const double eps_edge_ratio) const;
+    // snap vertices to nearby edges
+    int snap(const double eps_dist_ratio);
 
     // visualize
     void write(const std::string filename);
