@@ -1,6 +1,6 @@
 // Sriramajayam
 
-#include <vm_manager.h>
+#include <vm_Manager.h>
 #include <vm_inspect.h>
 #include <vm_snap.h>
 #include <cassert>
