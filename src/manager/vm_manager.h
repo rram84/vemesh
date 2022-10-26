@@ -40,10 +40,10 @@ namespace vm
     // visualize elements with small edges
     void write_bad_vertices(const std::string filename, const double eps_edge_ratio);
 
-  private:
-
     // inspect validity of the mesh
     void inspect_mesh();
+    
+  private:
 
     // merge a face with a neighbor in the mesh
     void merge_face(const pmp::Face& face);
