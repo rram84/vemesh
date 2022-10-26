@@ -1,9 +1,9 @@
 # Sriramajayam
 
 add_library(vm_manager STATIC
-		 vm_manager.cpp
-		 vm_manager_merge.cpp
-		 vm_manager_snap.cpp)
+		 vm_Manager.cpp
+		 vm_Manager_merge.cpp
+		 vm_Manager_snap.cpp)
 
 # include headers in the current directory
 target_include_directories(vm_manager PUBLIC
@@ -17,5 +17,5 @@ target_compile_features(vm_manager PUBLIC ${VM_COMPILE_FEATURES})
 
 # install headers
 install(FILES
-	vm_manager.h
+	vm_Manager.h
   	DESTINATION ${PROJECT_NAME}/include)

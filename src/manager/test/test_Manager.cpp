@@ -1,9 +1,6 @@
 // Sriramajayam
 
-#include <vm_manager.h>
-#include <list>
-#include <vm_snap.h>
-#include <vm_io.h>
+#include <vm_Manager.h>
 
 int main()
 {
