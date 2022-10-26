@@ -2,6 +2,7 @@
 
 #include <vm_manager.h>
 #include <vm_inspect.h>
+#include <vm_snap.h>
 #include <cassert>
 
 namespace vm
@@ -19,13 +20,28 @@ namespace vm
     // TODO: can restrict the search to just a few faces- perhaps ones with poor quality or concave angles?
 
     auto face_circulator = mesh.faces();
-    for(auto face:faces)
+    for(auto face:face_circulator)
       if(mesh.is_valid(face) && !mesh.is_deleted(face))
 	{
-	  auto snap_vertices = needs_snap(mesh, face, eps_dist_ratio);                 // does this face need a vertex to be snapped?
-	  if(!snap_vertcies.empty())
-	    {
-	      // do something
+	  // does this face need a vertex to be snapped?
+	  auto snap_vertices = needs_snap(mesh, face, eps_dist_ratio);
+
+	  if(snap_vertices.empty())
+	    continue;
+	  
+	  // snap a vertex of this face, if possible
+	  for(auto& vertex:snap_vertices)
+	    {		
+	      // halfedge on which to project this vertex
+	      auto target_halfedge = closest_halfedge(mesh, face, vertex);
+	      
+	      // snap, if legal
+	      if(is_snap_ok(mesh, vertex, target_halfedge))
+		{
+		  vm::snap(mesh, vertex, target_halfedge);
+		  ++nsnaps;
+		  break;
+		}
 	    }
 	}
     

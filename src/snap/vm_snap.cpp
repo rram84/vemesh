@@ -139,23 +139,15 @@ namespace vm
   bool is_snap_ok(pmp::SurfaceMesh& mesh, const pmp::Vertex& vertex, const pmp::Halfedge& halfedge)
   {
     // (i) orthogonal projection should lie on the half edge
-    // (ii) it should be legal to delete all edges around vertex
+    // (ii) snapping should result in a valid mesh
 
     // examine projection
     auto proj_result = projection_on_halfedge(mesh, vertex, halfedge);
     if(proj_result.first==false)
       return false;
 
-    // edge removal
-    auto halfedge_circulator = mesh.halfedges(vertex);
-    for(auto h:halfedge_circulator)
-      {
-	auto edge = mesh.edge(h);
-	assert(mesh.is_valid(edge));
-	if(mesh.is_removal_ok(edge)==false)
-	  return false;
-      }
-
+    // TODO: examine projected mesh
+    
     // all ok
     return true;
   }
@@ -174,36 +166,107 @@ namespace vm
     
     // split the halfedge by inserting a new vertex at the projection location
     auto new_halfedge = mesh.insert_vertex(mesh.edge(halfedge), proj_result.second);
-    assert(mesh.from_vertex(new_halfedge)==mesh.from_vertex(halfedge));
-    
-    // list of outgoing halfedges around 'vertex'
-    std::vector<pmp::Halfedge> old_halfedges{};
-    auto halfedge_circulator = mesh.halfedges(vertex);
-    for(auto h:halfedge_circulator)
-      old_halfedges.push_back(h);
+    auto split_vertex = mesh.to_vertex(new_halfedge);
 
-    // modify old_halfedges by replacing connections from 'vertex' to connections from 'new_vertex'
-    // halfedges with tip equal to 'vA' and 'vB' are omitted
-    for(auto& h:old_halfedges)
+    // connectivities of all faces incident at "vertex"
+    std::vector<std::vector<pmp::Vertex>> face_vertices{};
+    auto face_circulator = mesh.faces(vertex);
+    for(auto face:face_circulator)
       {
-	assert(mesh.from_vertex(h)==vertex);
+	std::vector<pmp::Vertex> vertices;
+	vertices.clear();
+	auto vertex_circulator = mesh.vertices(face);
+	for(auto v:vertex_circulator)
+	  vertices.push_back(v);
+	face_vertices.push_back(vertices);
+      }
 
-	// bypass collapsed edges
-	if(mesh.to_vertex(h)==vA || mesh.to_vertex(h)==vB)
-	  continue;
+    // remove "vertex"
+    mesh.delete_vertex(vertex);
+    
+    // account for isolated vertices being deleted
+    std::map<pmp::Vertex, pmp::Vertex> old_to_new_vert_map{};
+    for(auto& it:face_vertices)
+      for(auto& v:it)
+	if(mesh.is_deleted(v))
+	  {
+	    auto jt = old_to_new_vert_map.find(v);
+	    if(jt==old_to_new_vert_map.end())
+	      {
+		const auto& X = mesh.position(v);
+		auto new_v    = mesh.add_vertex(X);
+		old_to_new_vert_map.insert({v, new_v});
+	      }
+	  }
 
-	// non-collapsed edges
-	
-	// remove the old edge of 'h'
-	auto edge = mesh.edge(h);
-	assert(mesh.is_removal_ok(edge)==true);
-	mesh.remove_edge(edge);
+    // "vertex" should be mapped to the "split_vertex"
+    {
+      auto it = old_to_new_vert_map.find(vertex);
+      assert(it!=old_to_new_vert_map.end());
+      auto jt = old_to_new_vert_map.find(split_vertex);
+      if(jt==old_to_new_vert_map.end())
+	it->second = split_vertex;
+      else
+	{
+	  split_vertex = jt->second;
+	  it->second   = jt->second;
+	}
+    }
 
-	// add the new edge in its place: to_vertex(h) --> to_vertex(new_halfedge)
-	mesh.insert_edge(h, new_halfedge);
+    // renumber faces
+    for(auto& it:face_vertices)
+      for(auto& v:it)
+	if(mesh.is_deleted(v))
+	  {
+	    auto jt = old_to_new_vert_map.find(v);
+	    assert(jt!=old_to_new_vert_map.end());
+	    v = jt->second;
+	  }
+
+    // recreate faces in the mesh
+    for(auto& vertices:face_vertices)
+      {
+	// if "split_vertex" is repeated, this face has multiple loops
+	int count = std::count(vertices.begin(), vertices.end(), split_vertex);
+	if(count==1)
+	  mesh.add_face(vertices);
+	else
+	  {
+	    // permute until "split_vertex" appears at the start of the list
+	    while(vertices.front()!=split_vertex)
+	      std::rotate(vertices.begin(), vertices.begin()+1, vertices.end());
+
+	    // add cycles from "split_vertex" to "split_vertex"
+	    std::list<pmp::Vertex> vertex_list(vertices.begin(), vertices.end());
+	    std::vector<pmp::Vertex> cycle{};
+	    cycle.push_back(vertex_list.front());
+	    vertex_list.pop_front();		
+	    while(!vertex_list.empty())
+	      {
+		if(vertex_list.front()!=split_vertex)
+		  cycle.push_back(vertex_list.front());
+		else
+		  {
+		    // add this cycle to the mesh
+		    if(static_cast<int>(cycle.size())>2)
+		      mesh.add_face(cycle);
+		     
+		    // prepare for the next cycle
+		    cycle.clear();
+		    cycle.push_back(vertex_list.front());
+		  }
+		
+		vertex_list.pop_front();
+	      }
+
+	    // append the last cycle
+	    if(static_cast<int>(cycle.size())>2)
+	      mesh.add_face(cycle);
+	    
+	  }
       }
     
-    // done
+   // done
     return;
   }
     
