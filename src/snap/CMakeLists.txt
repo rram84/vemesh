@@ -7,7 +7,7 @@ target_include_directories(vm_snap PUBLIC
 					$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
 
 # link
-target_link_libraries(vm_snap PUBLIC pmp Eigen3::Eigen Boost::boost)
+target_link_libraries(vm_snap PUBLIC vm_inspect)
 
 # Add required flags
 target_compile_features(vm_snap PUBLIC ${VM_COMPILE_FEATURES})
