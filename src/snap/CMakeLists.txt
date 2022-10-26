@@ -1,6 +1,11 @@
 # Sriramajayam
 
-add_library(vm_snap STATIC vm_snap.cpp)
+add_library(vm_snap STATIC
+		 vm_snap.cpp
+		 vm_snap_needs.cpp
+		 vm_snap_closest.cpp
+		 vm_snap_ok.cpp)
+		    
 
 # include headers in the current directory
 target_include_directories(vm_snap PUBLIC

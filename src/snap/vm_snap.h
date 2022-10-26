@@ -16,6 +16,9 @@ namespace vm
   std::pair<bool, pmp::Point> projection_on_halfedge(pmp::SurfaceMesh& mesh,
 						     const pmp::Vertex& vertex,
 						     const pmp::Halfedge& halfedge);
+
+  // examine whether snapping a src_vertex to tgt_vertex in a mesh is ok
+  bool is_snap_ok(pmp::SurfaceMesh& mesh, const pmp::Vertex& src_vertex, const pmp::Vertex& tgt_vertex);
   
   // examine whether snapping a vertex to its closest point on a half-edge is legal
   bool is_snap_ok(pmp::SurfaceMesh& mesh, const pmp::Vertex& vertex, const pmp::Halfedge& halfedge);
