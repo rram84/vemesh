@@ -99,4 +99,112 @@ namespace vm
     return closest_halfedge;
   }
 
+
+  // determine the orthogonal projection of a vertex on a halfedge
+  std::pair<bool, pmp::Point> projection_on_halfedge(pmp::SurfaceMesh& mesh,
+						     const pmp::Vertex& vertex,
+						     const pmp::Halfedge& halfedge)
+  {
+    std::pair<bool, pmp::Point> result;
+    result.first = false;
+    
+    // location of the vertex
+    const auto& Xv = mesh.position(vertex);
+
+    // coordinates of the halfedge vertices
+    const auto& Xa = mesh.position(mesh.from_vertex(halfedge));
+    const auto& Xb = mesh.position(mesh.to_vertex(halfedge));
+
+    // length of this edge
+    const double len = (Xa[0]-Xb[0])*(Xa[0]-Xb[0]) + (Xa[1]-Xb[1])*(Xa[1]-Xb[1]);
+
+    // orthogonal projection
+    const double lambda = ((Xv[0]-Xa[0])*(Xb[0]-Xa[0]) + (Xv[1]-Xa[1])*(Xb[1]-Xa[1]))/len;
+
+    // is the closest point an orthogonal projection?
+    if(lambda>0. && lambda<1.)
+      {
+	result.first = true;
+	result.second[0] = Xa[0] + lambda*(Xb[0]-Xa[0]);
+	result.second[1] = Xa[1] + lambda*(Xb[1]-Xa[1]);
+      }
+
+    // done
+    return result;
+  }
+
+
+  
+  // examine whether snapping a vertex to its closest point on a half-edge is legal
+  bool is_snap_ok(pmp::SurfaceMesh& mesh, const pmp::Vertex& vertex, const pmp::Halfedge& halfedge)
+  {
+    // (i) orthogonal projection should lie on the half edge
+    // (ii) it should be legal to delete all edges around vertex
+
+    // examine projection
+    auto proj_result = projection_on_halfedge(mesh, vertex, halfedge);
+    if(proj_result.first==false)
+      return false;
+
+    // edge removal
+    auto halfedge_circulator = mesh.halfedges(vertex);
+    for(auto h:halfedge_circulator)
+      {
+	auto edge = mesh.edge(h);
+	assert(mesh.is_valid(edge));
+	if(mesh.is_removal_ok(edge)==false)
+	  return false;
+      }
+
+    // all ok
+    return true;
+  }
+
+
+  // snap a vertex to its closest point on a halfedge
+  void snap(pmp::SurfaceMesh& mesh, const pmp::Vertex& vertex, const pmp::Halfedge& halfedge)
+  {
+    // vertices of the halfedge
+    const auto& vA = mesh.from_vertex(halfedge);
+    const auto& vB = mesh.to_vertex(halfedge);
+    
+    // get the closest point projection of vertex on the halfedge
+    auto proj_result = projection_on_halfedge(mesh, vertex, halfedge);
+    assert(proj_result.first==true);
+    
+    // split the halfedge by inserting a new vertex at the projection location
+    auto new_halfedge = mesh.insert_vertex(mesh.edge(halfedge), proj_result.second);
+    assert(mesh.from_vertex(new_halfedge)==mesh.from_vertex(halfedge));
+    
+    // list of outgoing halfedges around 'vertex'
+    std::vector<pmp::Halfedge> old_halfedges{};
+    auto halfedge_circulator = mesh.halfedges(vertex);
+    for(auto h:halfedge_circulator)
+      old_halfedges.push_back(h);
+
+    // modify old_halfedges by replacing connections from 'vertex' to connections from 'new_vertex'
+    // halfedges with tip equal to 'vA' and 'vB' are omitted
+    for(auto& h:old_halfedges)
+      {
+	assert(mesh.from_vertex(h)==vertex);
+
+	// bypass collapsed edges
+	if(mesh.to_vertex(h)==vA || mesh.to_vertex(h)==vB)
+	  continue;
+
+	// non-collapsed edges
+	
+	// remove the old edge of 'h'
+	auto edge = mesh.edge(h);
+	assert(mesh.is_removal_ok(edge)==true);
+	mesh.remove_edge(edge);
+
+	// add the new edge in its place: to_vertex(h) --> to_vertex(new_halfedge)
+	mesh.insert_edge(h, new_halfedge);
+      }
+    
+    // done
+    return;
+  }
+    
 } // vm::
