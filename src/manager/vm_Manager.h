@@ -44,10 +44,7 @@ namespace vm
     void inspect_mesh();
     
   private:
-
-    // merge a face with a neighbor in the mesh
-    void merge_face(const pmp::Face& face);
-		    
+    
     pmp::SurfaceMesh mesh;
   };
 }

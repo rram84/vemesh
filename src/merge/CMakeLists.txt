@@ -7,7 +7,7 @@ target_include_directories(vm_merge PUBLIC
 					$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
 
 # link
-target_link_libraries(vm_merge PUBLIC pmp Eigen3::Eigen Boost::boost)
+target_link_libraries(vm_merge PUBLIC vm_inspect vm_quality)
 
 # Add required flags
 target_compile_features(vm_merge PUBLIC ${VM_COMPILE_FEATURES})
