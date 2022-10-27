@@ -9,6 +9,9 @@ namespace vm
   // snap a vertex to its closest point on a halfedge
   void snap(pmp::SurfaceMesh& mesh, const pmp::Vertex& vertex, const pmp::Halfedge& halfedge)
   {
+    // # vertices
+    const int nvertices = mesh.n_vertices();
+    
     // vertices of the halfedge
     const auto& vA = mesh.from_vertex(halfedge);
     const auto& vB = mesh.to_vertex(halfedge);
