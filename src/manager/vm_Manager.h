@@ -4,6 +4,7 @@
 
 #include <pmp/SurfaceMesh.h>
 #include <string>
+#include <map>
 
 namespace vm
 {
@@ -45,5 +46,6 @@ namespace vm
     
   private:
     pmp::SurfaceMesh mesh;
+    std::map<pmp::Vertex, pmp::Vertex> curr2ref_vertex_map;
   };
 }

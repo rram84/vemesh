@@ -3,7 +3,8 @@
 add_library(vm_manager STATIC
 		 vm_Manager.cpp
 		 vm_Manager_merge.cpp
-		 vm_Manager_snap.cpp)
+		 vm_Manager_snap.cpp
+		 vm_Manager_inspect.cpp)
 
 # include headers in the current directory
 target_include_directories(vm_manager PUBLIC

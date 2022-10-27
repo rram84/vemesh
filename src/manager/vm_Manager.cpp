@@ -3,7 +3,6 @@
 #include <vm_Manager.h>
 #include <vm_io.h>
 #include <vm_quality.h>
-#include <vm_inspect.h>
 
 namespace vm
 {
@@ -11,6 +10,7 @@ namespace vm
   Manager::Manager(const std::string coord_file, const std::string conn_file)
   {
     mesh.clear();
+    curr2ref_vertex_map.clear();
     read_triangles(coord_file, conn_file, mesh);
 
     // only triangles
@@ -23,21 +23,6 @@ namespace vm
   // Destructor
   Manager::~Manager() {}
 
-  // inspect validity of the mesh
-  void Manager::inspect_mesh() const
-  {
-    assert(mesh.n_vertices()>0);
-    assert(mesh.n_faces()>0);
-    assert(mesh.n_edges()>0);
-
-    // inspect faces
-    auto face_circulator = mesh.faces();
-    for(auto face:face_circulator)
-      inspect_face(mesh, face);
-    
-    // done
-    return;
-  }
 
   // access the mesh
   pmp::SurfaceMesh& Manager::get_mesh()

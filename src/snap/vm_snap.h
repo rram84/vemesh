@@ -3,6 +3,7 @@
 #pragma once
 
 #include <pmp/SurfaceMesh.h>
+#include <map>
 
 namespace vm
 {
@@ -24,6 +25,7 @@ namespace vm
   bool is_snap_ok(const pmp::SurfaceMesh& mesh, const pmp::Vertex& vertex, const pmp::Halfedge& halfedge);
   
   // snap a vertex to its closest point on a halfedge
-  void snap(pmp::SurfaceMesh& mesh, const pmp::Vertex& vertex, const pmp::Halfedge& halfedge);
+  void snap(pmp::SurfaceMesh& mesh, std::map<pmp::Vertex, pmp::Vertex>& vertex_map,
+	    const pmp::Vertex& vertex, const pmp::Halfedge& halfedge);
 }  
 

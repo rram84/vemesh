@@ -38,7 +38,7 @@ namespace vm
 	      // snap, if legal
 	      if(is_snap_ok(mesh, vertex, target_halfedge))
 		{
-		  vm::snap(mesh, vertex, target_halfedge);
+		  vm::snap(mesh, curr2ref_vertex_map, vertex, target_halfedge);
 		  ++nsnaps;
 		  break;
 		}
