@@ -21,6 +21,9 @@ namespace vm
     Manager(const Manager&) = delete;
     Manager operator=(const Manager&) = delete;
 
+    // inspect validity of the mesh
+    void inspect_mesh() const;
+    
     // access the mesh
     pmp::SurfaceMesh& get_mesh();
 
@@ -39,9 +42,6 @@ namespace vm
 
     // visualize elements with small edges
     void write_bad_vertices(const std::string filename, const double eps_edge_ratio);
-
-    // inspect validity of the mesh
-    void inspect_mesh() const;
     
   private:
     pmp::SurfaceMesh mesh;
