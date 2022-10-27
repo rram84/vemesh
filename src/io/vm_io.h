@@ -4,6 +4,7 @@
 
 #include <pmp/SurfaceMesh.h>
 #include <list>
+#include <map>
 
 namespace vm
 {
@@ -12,13 +13,18 @@ namespace vm
 		      pmp::SurfaceMesh& mesh);
   
   // Writes a mesh in .off format
-  // Note that pmp::SurfaceMesh::write() does not corrrectly handle non-sequential vertex indexing
+  // Note that pmp::SurfaceMesh::write() does not correctly handle non-sequential vertex indexing
   // mesh [in]           : polygon mesh
   // filename [in]       : name of the file
   void write_off(pmp::SurfaceMesh& mesh, const std::string filename);
 
+  // Writes a mesh in .off format
+  void write_off(const pmp::SurfaceMesh& mesh,
+		 const std::map<pmp::Vertex, pmp::Vertex>& vertex_map,
+		 const std::string filename);
+
   // Writes a given set of faces of a in .off format
-  // Note that pmp::SurfaceMesh::write() does not corrrectly handle non-sequential vertex indexing
+  // Note that pmp::SurfaceMesh::write() does not correctly handle non-sequential vertex indexing
   // mesh [in]           : polygon mesh
   // filename [in]       : name of the file
   void write_off(pmp::SurfaceMesh& mesh,

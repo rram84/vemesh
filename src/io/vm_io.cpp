@@ -105,5 +105,55 @@ namespace vm
       }
     out.close();
   }
+
+
+  // Writes a mesh in .off format
+  void write_off(const pmp::SurfaceMesh& mesh,
+		 const std::map<pmp::Vertex, pmp::Vertex>& vertex_map,
+		 const std::string filename)
+  {
+    const int nvertices = mesh.n_vertices();
+
+    // map from new to old vertex references
+    std::map<pmp::Vertex, pmp::Vertex> new_to_old_num_map{};
+    auto vert_circulator = mesh.vertices();
+    for(auto v:vert_circulator)
+      new_to_old_num_map.insert({v, v});
+    for(auto& it:vertex_map)
+      {
+	auto jt = new_to_old_num_map.find(it.first);
+	assert(jt!=new_to_old_num_map.end());
+	jt->second = it.second;
+      }
+    
+    // vertex coordinates in order
+    std::vector<pmp::Point> vertex_coords(nvertices);
+    for(auto& it:new_to_old_num_map)
+      vertex_coords[it.second.idx()] = mesh.position(it.first);  // number using old, position using new.
+
+    std::fstream out;
+    out.open(filename, std::ios::out);
+    assert(out.good() && out.is_open());
+    out << "OFF" << std::endl
+	<< nvertices << " " << mesh.n_faces() << " " << 0;
+
+    // write coordinates
+    for(auto& pt:vertex_coords)
+      out << std::endl << pt[0] <<" " <<pt[1] <<" " << 0.;
+
+    // write connectivities
+    auto face_circulator = mesh.faces();
+    for(auto face:face_circulator)
+      {
+	out << std::endl << mesh.valence(face) <<" ";
+	auto face_vertices = mesh.vertices(face);
+	for(auto v:face_vertices)
+	  out << new_to_old_num_map[v].idx() <<" ";
+      }
+
+    // done
+    out.close();
+    return;
+  }
   
 }

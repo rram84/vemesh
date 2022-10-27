@@ -33,7 +33,10 @@ namespace vm
   // visualize
   void Manager::write(const std::string filename) 
   {
-    write_off(mesh, filename);
+    if(curr2ref_vertex_map.empty())
+      write_off(mesh, filename);
+    else
+      write_off(mesh, curr2ref_vertex_map, filename);
     return;
   }
   
