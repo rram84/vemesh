@@ -85,6 +85,7 @@ namespace vm
     assert(mesh.is_valid(f1) && !mesh.is_deleted(f1));
 
     const int nvertices = mesh.n_vertices();
+    const int nprev_elm = mesh.n_faces();
     auto e = mesh.edge(h0);
     assert(mesh.is_removal_ok(e));
     mesh.remove_edge(e);
@@ -92,6 +93,9 @@ namespace vm
     // #vertices should remain unchanged
     assert(mesh.n_vertices()==nvertices);
 
+    // #elements should reduce by 1
+    assert(mesh.n_faces()==nprev_elm-1);
+    
     // done
     return;
   }
