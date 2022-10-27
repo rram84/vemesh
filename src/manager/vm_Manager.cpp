@@ -24,7 +24,7 @@ namespace vm
   Manager::~Manager() {}
 
   // inspect validity of the mesh
-  void Manager::inspect_mesh()
+  void Manager::inspect_mesh() const
   {
     assert(mesh.n_vertices()>0);
     assert(mesh.n_faces()>0);

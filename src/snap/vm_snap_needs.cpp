@@ -15,7 +15,7 @@ namespace vm
   using boost_linestring_t    = bgm::linestring<boost_point_t>;
 
   // determine whether the vertex of a face needs to be snapped
-  std::vector<pmp::Vertex> needs_snap(pmp::SurfaceMesh& mesh, const pmp::Face& face, const double eps_dist_ratio)
+  std::vector<pmp::Vertex> needs_snap(const pmp::SurfaceMesh& mesh, const pmp::Face& face, const double eps_dist_ratio)
   {
     std::vector<pmp::Vertex> result{};
 

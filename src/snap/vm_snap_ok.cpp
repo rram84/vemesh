@@ -9,7 +9,7 @@
 namespace vm
 {
   // examine whether snapping a src_vertex to tgt_vertex in a mesh is ok
-  bool is_snap_ok(pmp::SurfaceMesh& mesh, const pmp::Vertex& src_vertex, const pmp::Vertex& tgt_vertex)
+  bool is_snap_ok(const pmp::SurfaceMesh& mesh, const pmp::Vertex& src_vertex, const pmp::Vertex& tgt_vertex)
   {
     auto face_circulator = mesh.faces(src_vertex);
     for(auto face:face_circulator)
@@ -78,7 +78,7 @@ namespace vm
 
   
   // examine whether snapping a vertex to its closest point on a half-edge is legal
-  bool is_snap_ok(pmp::SurfaceMesh& mesh, const pmp::Vertex& vertex, const pmp::Halfedge& halfedge)
+  bool is_snap_ok(const pmp::SurfaceMesh& mesh, const pmp::Vertex& vertex, const pmp::Halfedge& halfedge)
   {
     // (i) orthogonal projection should lie on the half edge
     // (ii) snapping should result in a valid mesh

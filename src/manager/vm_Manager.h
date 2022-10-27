@@ -41,10 +41,9 @@ namespace vm
     void write_bad_vertices(const std::string filename, const double eps_edge_ratio);
 
     // inspect validity of the mesh
-    void inspect_mesh();
+    void inspect_mesh() const;
     
   private:
-    
     pmp::SurfaceMesh mesh;
   };
 }

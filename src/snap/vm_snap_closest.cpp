@@ -14,7 +14,7 @@ namespace vm
   using boost_segment_t       = bgm::segment<boost_point_t>;
   
   // identify the halfedge of a face closest to the given vertex
-  pmp::Halfedge closest_halfedge(pmp::SurfaceMesh& mesh, const pmp::Face& face, const pmp::Vertex& vertex)
+  pmp::Halfedge closest_halfedge(const pmp::SurfaceMesh& mesh, const pmp::Face& face, const pmp::Vertex& vertex)
   {
     // location of the vertex
     const auto& Xv = mesh.position(vertex);
@@ -53,7 +53,7 @@ namespace vm
 
 
   // determine the orthogonal projection of a vertex on a halfedge
-  std::pair<bool, pmp::Point> projection_on_halfedge(pmp::SurfaceMesh& mesh,
+  std::pair<bool, pmp::Point> projection_on_halfedge(const pmp::SurfaceMesh& mesh,
 						     const pmp::Vertex& vertex,
 						     const pmp::Halfedge& halfedge)
   {
