@@ -117,7 +117,8 @@ namespace vm
 	      mesh.add_face(cycle);
 	  }
       }
-    
+
+    assert(mesh.n_vertices()==nvertices);
    // done
     return;
   }
