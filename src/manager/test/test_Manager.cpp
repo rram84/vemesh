@@ -36,4 +36,11 @@ int main()
   manager.inspect_mesh();
   std::cout << "Snapped " << nsnaps << " vertices " << std::endl;
   manager.write("snapped-3.off");
+
+  // move vertices
+  int nmoved = manager.move(0.4);
+  manager.inspect_mesh();
+  std::cout << "Moved "<<nmoved << " vertices "<< std::endl;
+  manager.write("moved-1.off");
+  
 }

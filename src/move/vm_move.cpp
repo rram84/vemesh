@@ -29,6 +29,8 @@ namespace vm
 	avg_len += len;
 	++nedges;
       }
+    avg_len -= min_len;
+    --nedges;
     avg_len /= static_cast<double>(nedges);
 
     // examine the smallest edge length ratio
@@ -41,7 +43,9 @@ namespace vm
 
 
   // identify a feasible point to move a vertex
-  std::pair<bool, pmp::Point> feasible_move_point(const pmp::SurfaceMesh& mesh, const pmp::Vertex& vertex, const double eps_length_ratio)
+  std::pair<bool, pmp::Point> feasible_move_point(const pmp::SurfaceMesh& mesh,
+						  const pmp::Vertex& vertex,
+						  const double eps_length_ratio)
   {
     // attempt to move in the direction opposite the shortest halfedge
     double min_len = std::numeric_limits<double>::max();
@@ -56,19 +60,21 @@ namespace vm
 	double len    = std::sqrt((X[0]-Xv[0])*(X[0]-Xv[0])+(X[1]-Xv[1])*(X[1]-Xv[1]));
 	if(len<min_len)
 	  {
-	    len = min_len;
+	    min_len           = len;
 	    shortest_halfedge = h;
 	  }
 	avg_len += len;
 	++nedges;
       }
+    avg_len -= min_len;
+    --nedges;
     avg_len /= static_cast<double>(nedges);
 
     // new trial position
     const auto& Xt          = mesh.position(mesh.to_vertex(shortest_halfedge));
     const double unit_vec[] = {(Xt[0]-Xv[0])/min_len, (Xt[1]-Xv[1])/min_len};
     const double lambda     = eps_length_ratio*avg_len;
-    const auto& Yv          = pmp::Point(Xv[0]+lambda*unit_vec[0], Xv[1]+lambda*unit_vec[1], 0.);
+    const auto& Yv          = pmp::Point(Xv[0]-lambda*unit_vec[0], Xv[1]-lambda*unit_vec[1], 0.);
 
     // examine whether the new faces are ok
     auto face_circulator = mesh.faces(vertex);
