@@ -17,7 +17,7 @@ find_package(eigen3 REQUIRED)
 find_package(CLI11 REQUIRED)
 find_package(Boost REQUIRED)
 
-list(APPEND VM_COMPILE_FEATURES cxx_std_14)
+list(APPEND VM_COMPILE_FEATURES cxx_std_17)
 
 # Compile code in src and mesh
 add_subdirectory(src)
@@ -25,5 +25,6 @@ add_subdirectory(src)
 # Testing
 include(CTest)
 add_subdirectory(src/manager/test)
+add_subdirectory(src/tet-slicer/test)
 
 
