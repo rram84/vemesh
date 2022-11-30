@@ -3,6 +3,7 @@
 #include <vm_Manager.h>
 #include <vm_io.h>
 #include <vm_quality.h>
+#include <filesystem>
 
 namespace vm
 {
@@ -20,6 +21,19 @@ namespace vm
     inspect_mesh();
   }
 
+
+  // Constructor: from a .OFF file
+  Manager::Manager(const std::string off_file)
+  {
+    mesh.clear();
+    curr2ref_vertex_map.clear();
+    read_off(off_file, mesh);
+
+    // sanity checks
+    inspect_mesh();
+  }
+  
+  
   // Destructor
   Manager::~Manager() {}
 

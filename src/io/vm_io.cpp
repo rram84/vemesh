@@ -3,6 +3,8 @@
 #include <vm_io.h>
 #include <fstream>
 #include <cassert>
+#include <filesystem>
+#include <sstream>
 
 namespace vm
 {
@@ -49,9 +51,72 @@ namespace vm
   }
 
 
+  // Reads a .OFF mesh
+  void read_off(const std::string filename, pmp::SurfaceMesh& mesh)
+  {
+    assert(std::filesystem::exists(filename)==true);
+    const std::string extension = std::filesystem::path(filename).extension();
+    assert(extension==".off" || extension==".OFF");
+    std::fstream in;
+    in.open(filename, std::ios::in);
+    assert(in.good() && in.is_open());
+
+    // first line: OFF
+    std::string line_1;
+    std::getline(in, line_1);
+    
+    // second line: # vertices, # faces, # edges
+    int num_nodes, num_faces, num_edges;
+    in >> num_nodes;
+    in >> num_faces;
+    in >> num_edges;
+    assert(num_nodes>0 && num_faces>0 && num_edges==0);
+
+    // read coordinates
+    std::vector<pmp::Vertex> vertices(num_nodes);
+    double xyz[3];
+    for(int n=0; n<num_nodes; ++n)
+      {
+	in >> xyz[0];
+	in >> xyz[1];
+	in >> xyz[2];
+	vertices[n] = mesh.add_vertex(pmp::Point(xyz[0], xyz[1], xyz[2])); 
+      }
+
+    // read faces
+    int num_face_verts;
+    int vnum;
+    for(int e=0; e<num_faces; ++e)
+      {
+	in >> num_face_verts;
+	assert(num_face_verts>=3);
+	std::vector<pmp::Vertex> face_verts(num_face_verts);
+	for(int a=0; a<num_face_verts; ++a)
+	  {
+	    in >> vnum;
+	    assert(vnum>=0 && vnum<num_nodes);
+	    face_verts[a] = vertices[vnum];
+	  }
+	mesh.add_face(face_verts);
+      }
+
+    in.close();
+    
+    // check
+    assert(mesh.n_vertices()==num_nodes);
+    assert(mesh.n_faces()==num_faces);
+
+    // done
+    return;
+  }
+  
+
   // Writes a mesh in .off format
   void write_off(pmp::SurfaceMesh& mesh, const std::string filename)
   {
+    const std::string extension = std::filesystem::path(filename).extension();
+    assert(extension==".off" || extension=="OFF");
+    
     const auto& positions = mesh.positions();
     std::fstream out;
     out.open(filename, std::ios::out);
@@ -84,6 +149,9 @@ namespace vm
 		 const std::list<pmp::Face>& faces,
 		 const std::string filename)
   {
+    const std::string extension = std::filesystem::path(filename).extension();
+    assert(extension==".off" || extension=="OFF");
+    
     const auto& positions = mesh.positions();
     std::fstream out;
     out.open(filename, std::ios::out);
@@ -112,6 +180,9 @@ namespace vm
 		 const std::map<pmp::Vertex, pmp::Vertex>& vertex_map,
 		 const std::string filename)
   {
+    const std::string extension = std::filesystem::path(filename).extension();
+    assert(extension==".off" || extension=="OFF");
+    
     const int nvertices = mesh.n_vertices();
 
     // map from new to old vertex references
