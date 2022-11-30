@@ -30,7 +30,7 @@ namespace vm
     
     // slice a tet mesh at a z-plane
     // returns the number of perturbed nodes
-    pmp::SurfaceMesh zslice(const double zcoord, std::vector<std::array<double,2>>& coord, std::vector<std::vector<int>>& conn) const;
+    pmp::SurfaceMesh zslice(const double zcoord) const;
     
   };
 }

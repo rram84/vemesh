@@ -1,11 +1,12 @@
 // Sriramajayam
 
 #include <vm_TetMesh.h>
-#include <fstream>
 #include <iostream>
+#include <vm_io.h>
 
 int main()
 {
+  
   // Read the tet mesh
   vm::TetMesh MD;
   MD.read_tec("tetmesh.tec");
@@ -18,45 +19,7 @@ int main()
   MD.write_tec("zpert.tec");
   
   // slice the mesh at z = zcoord
-  std::vector<std::array<double,2>> intersect_coords{};
-  std::vector<std::vector<int>> intersect_conn{};
-  MD.zslice(zcoord, intersect_coords, intersect_conn);
-
-  int nTri = 0;
-  int nQuad = 0;
-  for(auto& conn:intersect_conn)
-    if(conn.size()==3)
-      ++nTri;
-    else
-      ++nQuad;
-  
-  // write coordinates and connectivity as an OFF file
-  std::fstream pfile;
-  pfile.open("tri.OFF", std::ios::out);
-  pfile << "OFF" << std::endl << intersect_coords.size() << " " << nTri << " " << 0;
-  for(auto& X:intersect_coords)
-    pfile << std::endl << X[0] <<", " << X[1] << ", " << zcoord;
-  for(auto& conn:intersect_conn)
-    if(conn.size()==3)
-      {
-	pfile << std::endl << conn.size() << " ";
-	for(auto& n:conn)
-	  pfile << n << " ";
-      }
-  pfile.close();
-
-  pfile.open("quad.OFF", std::ios::out);
-  pfile << "OFF" << std::endl << intersect_coords.size() << " " << nQuad << " " << 0;
-  for(auto& X:intersect_coords)
-    pfile << std::endl << X[0] <<", " << X[1] << ", " << zcoord;
-  for(auto& conn:intersect_conn)
-    if(conn.size()==4)
-      {
-	pfile << std::endl << conn.size() << " ";
-	for(auto& n:conn)
-	  pfile << n << " ";
-      }
-  pfile.close();
-  
+  auto surf_mesh = MD.zslice(zcoord);
+  vm::write_off(surf_mesh, "slice.OFF");
 }
   

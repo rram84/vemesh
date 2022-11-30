@@ -15,57 +15,49 @@ namespace vm
   namespace bgm = bg::model;
   using boost_point_t    = bgm::point<double, 2, bg::cs::cartesian>;
   using boost_polygon_t  = bgm::polygon<boost_point_t, false>;
+  using boost_linestring_t = bgm::linestring<boost_point_t>;
 
   // checks whether the area of a 2D triangle is positive
   bool is_triangle_oriented(const double* A, const double* B, const double* C)
   {
-    boost_polygon_t poly;
-    bg::append(poly.outer(), boost_point_t(A[0],A[1]));
-    bg::append(poly.outer(), boost_point_t(B[0],B[1]));
-    bg::append(poly.outer(), boost_point_t(C[0],C[1]));
-    bg::append(poly.outer(), boost_point_t(A[0],A[1]));
+    boost_polygon_t poly{{{A[0],A[1]}, {B[0],B[1]}, {C[0],C[1]}, {A[0],A[1]}}};
     return (bg::area(poly)>0.);
   }
 
-
-  // checks whether a 2D quadrilateral is simple and positively oriented
-  bool is_quadrilateral_simple_and_oriented(const double* A, const double* B, const double* C, const double* D)
+  // checks whether 4 points form a quadrilateral
+  bool is_quadrilateral_simple(const double* A, const double* B, const double* C, const double* D)
   {
-    boost_polygon_t poly;
-    bg::append(poly.outer(), boost_point_t(A[0],A[1]));
-    bg::append(poly.outer(), boost_point_t(B[0],B[1]));
-    bg::append(poly.outer(), boost_point_t(C[0],C[1]));
-    bg::append(poly.outer(), boost_point_t(D[0],D[1]));
-    bg::append(poly.outer(), boost_point_t(A[0],A[1]));
-
-    return (bg::area(poly)>0. && bg::is_simple(poly));
+    boost_linestring_t ls{{A[0],A[1]}, {B[0],B[1]}, {C[0],C[1]}, {D[0],D[1]}, {A[0],A[1]}};
+    return bg::is_simple(ls);
   }
 
+
+  // checks whether the area of a 2D quadrilateral is positive
+  bool is_quadrilateral_oriented(const double* A, const double* B, const double* C, const double* D)
+  {
+    boost_polygon_t poly{{{A[0],A[1]}, {B[0],B[1]}, {C[0],C[1]}, {D[0],D[1]}, {A[0],A[1]}}};
+    return (bg::area(poly)>0.);
+  }
   
   // slice a tet mesh at a z-plane
-  pmp::SurfaceMesh TetMesh::zslice(const double zcoord,
-				   std::vector<std::array<double,2>>& cut_coords,
-				   std::vector<std::vector<int>>&     cut_conn) const 
+  pmp::SurfaceMesh TetMesh::zslice(const double zcoord) const 
   {
-    cut_coords.clear();
-    cut_conn.clear();
     assert(num_nodes>0 && num_elements>0);
-    using Edge_t = std::pair<int,int>;
 
     // local enumerations
     const int local_edges[]     = {0,1, 0,2, 0,3, 1,2, 1,3, 2,3};
     const int num_edges_per_elm = 6;
-    const int quad_permutations[6][4] = {{0,1,2,3},
+    const int num_quad_permutations   = 3;
+    const int quad_permutations[3][4] = {{0,1,2,3},
 					 {0,1,3,2},
-					 {0,2,1,3},
-					 {0,2,3,1},
-					 {0,3,1,2},
-					 {0,3,2,1}};
+					 {0,2,1,3}};
     
     // enumerate all edges that are intersected by the given plane
-    cut_coords.clear();
-    cut_conn.clear();
-    std::map<Edge_t, int> cut_edge_index{};
+    using Edge_t = std::pair<int,int>;
+    std::vector<std::array<double,2>> cut_coords{};
+    std::vector<std::vector<int>>     cut_conn{};
+    std::map<Edge_t, int>             cut_edge_index{};
+    
     for(auto& tet_conn:connectivity)
       {
 	// indices of intersection points
@@ -132,30 +124,31 @@ namespace vm
 		for(int a=0; a<4; ++a)
 		  quad_coords[a] = cut_coords[my_cut_indices[a]].data();
 
-		// examine all 6 possible permutations of the intersection points
-		int correct_perm_num = -1;
-		for(int p=0; p<6; ++p)
+		// examine all 3 possible permutations of the intersection points
+		bool success = false;
+		for(int p=0; p<num_quad_permutations; ++p)
 		  {
 		    const int* perm = quad_permutations[p];
-		    if(is_quadrilateral_simple_and_oriented(quad_coords[perm[0]], quad_coords[perm[1]], quad_coords[perm[2]], quad_coords[perm[3]])==true)
+		    if(is_quadrilateral_simple(quad_coords[perm[0]], quad_coords[perm[1]], quad_coords[perm[2]], quad_coords[perm[3]])==true)
 		      {
-			correct_perm_num = p;
+			if(is_quadrilateral_oriented(quad_coords[perm[0]], quad_coords[perm[1]], quad_coords[perm[2]], quad_coords[perm[3]])==true)
+			  cut_conn.push_back({my_cut_indices[perm[0]], my_cut_indices[perm[1]], my_cut_indices[perm[2]], my_cut_indices[perm[3]]});
+			else
+			  cut_conn.push_back({my_cut_indices[perm[0]], my_cut_indices[perm[3]], my_cut_indices[perm[2]], my_cut_indices[perm[1]]});
+
+			success = true;
 			break;
 		      }
 		  }
-
+		
 		// one permutation should work
-		assert(correct_perm_num!=-1);
-
-		// append the intersecting quadrilateral
-		const int* correct_perm = quad_permutations[correct_perm_num];
-		cut_conn.push_back({my_cut_indices[correct_perm[0]], my_cut_indices[correct_perm[1]], my_cut_indices[correct_perm[2]], my_cut_indices[correct_perm[3]]});
+		assert(success==true);
 	      }
 
 	  } // end loop over non-empty intersections
 	
       } // end loop over tets
-
+    
     
     // sanity checks
     assert(cut_coords.size()>0 && cut_conn.size()>0);
@@ -177,9 +170,8 @@ namespace vm
     for(auto& conn:cut_conn)
       {
 	std::vector<pmp::Vertex> face_verts{};
-	if(static_cast<int>(conn.size())==3)
-	  for(auto& n:conn)
-	    face_verts.push_back(vertices[n]);
+	for(auto& n:conn)
+	  face_verts.push_back(vertices[n]);
 	surface_mesh.add_face(face_verts);
       }
 
