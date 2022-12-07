@@ -16,8 +16,7 @@ target_link_libraries(vm_manager PUBLIC
 		 	     vm_merge
 			     vm_io
 			     vm_snap
-			     vm_move
-			     vm_poly_kernel)
+			     vm_move)
 
 # Add required flags
 target_compile_features(vm_manager PUBLIC ${VM_COMPILE_FEATURES})
