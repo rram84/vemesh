@@ -24,7 +24,6 @@ add_subdirectory(src)
 
 # Testing
 include(CTest)
-add_subdirectory(src/poly_kernel/test)
 add_subdirectory(src/manager/test)
 add_subdirectory(src/tet-slicer/test)
 

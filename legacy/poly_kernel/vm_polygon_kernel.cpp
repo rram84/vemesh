@@ -7,6 +7,8 @@
 #include <boost/geometry/geometry.hpp>
 #include <boost/geometry/geometries/polygon.hpp>
 
+#include <iostream>
+
 namespace vm
 {
   // boost aliases
@@ -17,27 +19,16 @@ namespace vm
 
   
   std::vector<std::pair<double,double>>
-  compute_polygon_kernel(const pmp::SurfaceMesh& mesh, const pmp::Face& face)
+  compute_polygon_kernel(const std::vector<pmp::Point>& vertices)
   {
-    assert(mesh.is_valid(face)==true);
-    
-    // bounding box for this face
-    auto vertex_circulator = mesh.vertices(face);
-    double xmin, xmax, ymin, ymax;
-    // initialize
-    for(auto v:vertex_circulator)
+    // bounding box 
+    const auto& v0 = vertices.front();
+    double xmin = v0[0];
+    double xmax = v0[0];
+    double ymin = v0[1];
+    double ymax = v0[1];
+    for(auto& pt:vertices)
       {
-	const auto& pt = mesh.position(v);
-	xmin = pt[0];
-	xmax = pt[0];
-	ymin = pt[1];
-	ymax = pt[1];
-	break;
-      }
-    // bounds
-    for(auto v:vertex_circulator)
-      {
-	const auto& pt = mesh.position(v);
 	const auto& x = pt[0];
 	const auto& y = pt[1];
 	if(x<xmin) xmin = x;
@@ -51,12 +42,13 @@ namespace vm
 
     // construct large quadrilaterals defining half-spaces for each edge
     std::vector<boost_polygon_t> half_spaces{};
-    
-    auto halfedge_circulator = mesh.halfedges(face);
-    for(auto h:halfedge_circulator)
+
+    const int nVerts = static_cast<int>(vertices.size());
+    for(int i=0; i<nVerts; ++i)
       {
-	const auto& A = mesh.position(mesh.from_vertex(h));
-	const auto& B = mesh.position(mesh.to_vertex(h));
+	std::cout << " I am here " << std::endl;
+	const auto& A = vertices[i];
+	const auto& B = vertices[(i+1)%nVerts];
 
 	// unit vector along AB 
 	const double len    = std::sqrt((A[0]-B[0])*(A[0]-B[0]) + (A[1]-B[1])*(A[1]-B[1]));
