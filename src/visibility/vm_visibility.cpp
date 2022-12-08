@@ -1,0 +1,163 @@
+// Sriramajayam
+
+#include <vm_visibility.h>
+#include <iostream>
+
+// cgal visibility utilities
+#include <CGAL/Exact_predicates_exact_constructions_kernel.h>
+#include <CGAL/Simple_polygon_visibility_2.h>
+#include <CGAL/Arrangement_2.h>
+#include <CGAL/Arr_segment_traits_2.h>
+#include <CGAL/Arr_naive_point_location.h>
+
+// boost polygon utilities
+#include <boost/geometry/geometry.hpp>
+#include <boost/geometry/geometries/polygon.hpp>
+
+namespace vm
+{
+  // compute the vertex ring
+  std::vector<pmp::Vertex> get_vertex_ring(const pmp::SurfaceMesh& mesh, const pmp::Vertex& v)
+  {
+    // list to return
+    std::vector<pmp::Vertex> vertex_ring{};
+    
+    // faces incident at v
+    auto face_circulator = mesh.faces(v);
+
+    for(auto f:face_circulator)
+      {
+	// vertices of this face
+	auto vert_circulator = mesh.vertices(f);
+	std::vector<pmp::Vertex> face_vertices{};
+	int v_indx = -1;
+	int indx = 0;
+	for(auto w:vert_circulator)
+	  {
+	    face_vertices.push_back(w);
+	    if(w.idx()==v.idx())
+	      v_indx = indx;
+	    ++indx;
+	  }
+	const int nVerts = static_cast<int>(face_vertices.size());
+	
+	// permute the list of face vertices until 'v' appears first
+	std::rotate(face_vertices.begin(), face_vertices.begin()+v_indx, face_vertices.end());
+	assert(face_vertices.front().idx()==v.idx());
+
+	// append vertices to the ring, exclude 'v' and repetitions
+	for(int i=2; i<nVerts; ++i)
+	  vertex_ring.push_back(face_vertices[i]);
+      }
+
+    // done
+    return std::move(vertex_ring);
+  }
+  
+
+  // cgal aliases
+  using Kernel                  = CGAL::Exact_predicates_inexact_constructions_kernel;
+  using Point_2                 = Kernel::Point_2;
+  using Segment_2               = Kernel::Segment_2;
+  using Traits_2                = CGAL::Arr_segment_traits_2<Kernel>;
+  using Arrangement_2           = CGAL::Arrangement_2<Traits_2>;
+  using Face_handle             = Arrangement_2::Face_handle;                                      
+  using Vertex_const_iterator   = Arrangement_2::Vertex_const_iterator;
+  using RSPV                    = CGAL::Simple_polygon_visibility_2<Arrangement_2, CGAL::Tag_true>;
+
+  // boost aliases
+  namespace bg  = boost::geometry;
+  namespace bgm = bg::model;
+  using boost_point_t    = bgm::point<double, 2, bg::cs::cartesian>;
+  using boost_polygon_t  = bgm::polygon<boost_point_t, false>;
+  
+  std::vector<std::pair<double,double>>
+  compute_visibility_polygon(const pmp::SurfaceMesh& mesh,
+			    const pmp::Vertex& vertex)
+  {
+    // vertex ring
+    const auto vertex_ring = get_vertex_ring(mesh, vertex);
+
+    // connected vertices
+    auto vertex_guards = mesh.vertices(vertex);
+
+    // create the environment in CGAL
+    const int nRingVerts = static_cast<int>(vertex_ring.size());
+    std::vector<Point_2> env_vertices{};
+    for(int n=0; n<nRingVerts; ++n)
+      {
+	const auto& A = mesh.position(vertex_ring[n]);
+	env_vertices.push_back(Point_2(A[0],A[1]));
+      }
+    std::vector<Segment_2> segments{};
+    for(int n=0; n<nRingVerts; ++n)
+      segments.push_back( Segment_2(env_vertices[n], env_vertices[(n+1)%nRingVerts]) );
+    
+    Arrangement_2 env;
+    CGAL::insert_non_intersecting_curves(env, segments.begin(), segments.end());
+    
+    // cgal face of the evironment
+    const auto& X = mesh.position(vertex);
+    Arrangement_2::Face_const_handle *face;
+    CGAL::Arr_naive_point_location<Arrangement_2> pl(env);
+    CGAL::Arr_point_location_result<Arrangement_2>::Type obj = pl.locate(Point_2(X[0],X[1]));
+    face = boost::get<Arrangement_2::Face_const_handle> (&obj);
+
+    // compute the regularized visibility polygon from each of the guard vertices
+    const double EPS = 0.01;
+    RSPV regular_visibility(env);
+    Arrangement_2 regular_output;
+    std::vector<boost_polygon_t> visibility_polygons{};
+    for(auto guard:vertex_guards)
+      {
+	regular_output.clear();
+	const auto& Y = mesh.position(guard);
+	const Point_2 guard_eps( (1.-EPS)*Y[0]+EPS*X[0], (1.-EPS)*Y[1]+EPS*X[1] );
+	regular_visibility.compute_visibility(guard_eps, *face, regular_output);
+	auto v_begin = regular_output.vertices_begin();
+	auto v_end   = regular_output.vertices_end();
+	boost_polygon_t vp;
+	for(Vertex_const_iterator it=v_begin; it!=v_end; ++it)
+	  {
+	    const auto& P = it->point();
+	    bg::append(vp.outer(), boost_point_t(P.x(),P.y()));
+	  }
+	// repeat the first vertex
+	{
+	  const auto& P = v_begin->point();
+	  bg::append(vp.outer(), boost_point_t(P.x(), P.y()));
+	}
+
+	bg::correct(vp);
+	visibility_polygons.push_back(vp);
+      }
+
+    // intersection of visibility polygones
+    boost_polygon_t poly = visibility_polygons.back();
+    visibility_polygons.pop_back();
+    for(auto& vp:visibility_polygons)
+      {
+	std::vector<boost_polygon_t> intersections{};
+	bg::intersection(poly, vp, intersections);
+
+	// intersection should be non empty, with one connected component
+	assert(intersections.empty()==false);
+	assert(static_cast<int>(intersections.size())==1);
+	
+	// update the kernel
+	poly = std::move(intersections[0]);
+      }
+
+    // return the vertices of the intersection polygon
+    std::vector<std::pair<double,double>> poly_verts{};
+    for(auto& v:poly.outer())
+      poly_verts.push_back({bg::get<0>(v), bg::get<1>(v)});
+    poly_verts.pop_back();
+
+    // sanity check: poly should contain the given vertex and all its halfedges
+    assert(bg::within(boost_point_t(X[0],X[1]), poly)==true);
+      
+    return std::move(poly_verts);
+  }
+
+}
