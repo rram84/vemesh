@@ -115,7 +115,7 @@ namespace vm
   void write_off(pmp::SurfaceMesh& mesh, const std::string filename)
   {
     const std::string extension = std::filesystem::path(filename).extension();
-    assert(extension==".off" || extension=="OFF");
+    assert(extension==".off" || extension==".OFF");
     
     const auto& positions = mesh.positions();
     std::fstream out;
