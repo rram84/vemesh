@@ -50,5 +50,5 @@ int main()
 
   // check the vertex quality
   auto q = vm::vertex_quality(mesh, inner_vertex);
-  std::cout << "Edge ratio angle at vertex: " << q.first << ", " << q.second << std::endl;
+  std::cout << "Edge ratio and min angle: " << q.first << ", " << q.second << std::endl;
 }
