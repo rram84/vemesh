@@ -67,31 +67,5 @@ namespace vm
     
     return (180./M_PI)*(*std::min_element(angles.begin(), angles.end()));
   }
-  
-  
-  
-  // measure quality of a vertex as the face as the ratio of smallest and largest edge lengths
-  double vertex_quality(const pmp::SurfaceMesh& mesh, const pmp::Vertex& vert)
-  {
-    auto halfedge_circulator = mesh.halfedges(vert);
-    std::vector<double> edge_lengths{};
-    
-    for(auto h:halfedge_circulator)
-      {
-	// vertices
-	const auto vert_a = mesh.from_vertex(h);
-	const auto vert_b = mesh.to_vertex(h);
-	
-	// coordinates
-	const auto Xa = mesh.position(vert_a);
-	const auto Xb = mesh.position(vert_b);
 
-	// length
-	edge_lengths.push_back( std::sqrt((Xa[0]-Xb[0])*(Xa[0]-Xb[0]) + (Xa[1]-Xb[1])*(Xa[1]-Xb[1])) );
-      }
-    double max_len = *std::max_element(edge_lengths.begin(), edge_lengths.end());
-    double min_len = *std::min_element(edge_lengths.begin(), edge_lengths.end());
-    
-    return min_len/max_len;
-  }
 }

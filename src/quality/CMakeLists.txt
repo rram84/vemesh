@@ -1,6 +1,8 @@
 # Sriramajayam
 
-add_library(vm_quality STATIC vm_quality.cpp)
+add_library(vm_quality STATIC
+		 vm_face_quality.cpp
+		 vm_vertex_quality.cpp)
 
 # include headers in the current directory
 target_include_directories(vm_quality PUBLIC
