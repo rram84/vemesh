@@ -8,7 +8,7 @@
 namespace vm
 {
   // snap vertices to nearby edges
-  int Manager::snap(const double eps_dist_ratio)
+  int Manager::snap_vertices(const double eps_dist_ratio)
   {
     assert(eps_dist_ratio>0. && eps_dist_ratio<1.);
     

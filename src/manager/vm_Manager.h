@@ -33,10 +33,10 @@ namespace vm
 
     // merge poor quality elements with neighbors
     // returns the number of merging operations performed
-    int merge(const double eps_degrees);
+    int merge_faces(const double eps_degrees);
 
     // snap vertices to nearby edges
-    int snap(const double eps_dist_ratio);
+    int snap_vertices(const double eps_dist_ratio);
 
     // moves vertices if the length of an incident edge is small
     int move(const double eps_len_ratio);

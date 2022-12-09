@@ -10,7 +10,7 @@
 namespace vm
 {
   // merge poor quality elements with neighbors
-  int Manager::merge(const double eps_degrees)
+  int Manager::merge_faces(const double eps_degrees)
   {
     int merge_count = 0;
     
