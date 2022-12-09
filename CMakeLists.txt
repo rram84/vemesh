@@ -27,6 +27,7 @@ add_subdirectory(src)
 include(CTest)
 add_subdirectory(src/manager/test)
 add_subdirectory(src/visibility/test)
+add_subdirectory(src/sampling/test)	
 add_subdirectory(src/tet-slicer/test)
 
 
