@@ -39,7 +39,7 @@ namespace vm
     int snap_vertices(const double eps_dist_ratio);
 
     // moves vertices if the length of an incident edge is small
-    int move(const double eps_len_ratio);
+    int move_vertices(const double eps_len_ratio, const double eps_degrees, const int num_samples);
 
     // visualize
     void write(const std::string filename);

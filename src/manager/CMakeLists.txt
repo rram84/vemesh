@@ -16,6 +16,7 @@ target_link_libraries(vm_manager PUBLIC
 		 	     vm_merge
 			     vm_io
 			     vm_snap
+			     vm_quality
 			     vm_move)
 
 # Add required flags
