@@ -8,7 +8,10 @@ target_include_directories(vm_move PUBLIC
 					$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
 
 # link
-target_link_libraries(vm_move PUBLIC vm_quality vm_visibility vm_sampling vm_inspect)
+target_link_libraries(vm_move PUBLIC
+			      vm_quality
+			      vm_visibility
+			      vm_sampling)
 
 # Add required flags
 target_compile_features(vm_move PUBLIC ${VM_COMPILE_FEATURES})

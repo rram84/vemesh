@@ -2,6 +2,7 @@
 
 #include <vm_vertex_ring.h>
 #include <vm_quality.h>
+
 #include <cmath>
 #include <cassert>
 #include <limits>
@@ -18,7 +19,10 @@ namespace vm
   using boost_point_t      = bgm::point<double, 2, bg::cs::cartesian>;
   using boost_linestring_t = bgm::linestring<boost_point_t>;
   
-  // measure quality as the ratio of the distance of a vertex to its enclosing linestring to the longest halfedge
+  // measure
+  // (i)  minimum distance of a vertex to its enclosing linestring
+  // (ii) minimum distance of unconnected ring vertices to half-edges incident at the vertex
+  // measure the quality as a min of (i) and (ii) wrt the longest halfedge incident at the vertex
   // defined only for non-boundary vertices, not connected to hanging nodes
   double compute_distance_based_vertex_quality(const pmp::SurfaceMesh& mesh, const pmp::Vertex& vert)
   {
@@ -42,20 +46,56 @@ namespace vm
     // distance of vertex from the linestring
     const auto& V = mesh.position(vert);
     const double min_dist  = bg::distance(boost_point_t(V[0], V[1]), ls);
-
-    // length of the longest halfedge at this vertex
-    auto h_circulator = mesh.halfedges(vert);
+    
+    // longest halfedge at this vertex
     double max_h = min_dist;
+    
+    // linestrings of halfedges
+    std::vector<boost_linestring_t> ls_halfedges{};
+
+    // list of connected vertices
+    std::vector<pmp::Vertex> connected_vertex_ring{};
+    
+    auto h_circulator = mesh.halfedges(vert);
     for(auto h:h_circulator)
       {
+	// from = V, to = X
+	connected_vertex_ring.push_back(mesh.to_vertex(h));
 	const auto& X = mesh.position(mesh.to_vertex(h));
+	
+	// this edge length
 	double len = std::sqrt((V[0]-X[0])*(V[0]-X[0]) + (V[1]-X[1])*(V[1]-X[1]));
-	if(len>max_h)
-	  max_h = len;
+	if(len>max_h) max_h = len;
+
+	// append set of linestrings
+	ls_halfedges.push_back(boost_linestring_t{{V[0],V[1]},{X[0],X[1]}});
       }
 
-    // return the ratio
-    return min_dist/max_h;
+    // ring vertices unconnected to "vertex"
+    std::vector<pmp::Vertex> unconnected_vertex_ring{};
+    for(auto& v:vertex_ring)
+      if(std::find(connected_vertex_ring.begin(), connected_vertex_ring.end(), v)==connected_vertex_ring.end())
+	unconnected_vertex_ring.push_back(v);
+
+    // measure the min distance of unconnected vertices to the halfedges
+    double h_dist = max_h;
+    for(auto& v:unconnected_vertex_ring)
+      {
+	const auto& X = mesh.position(v);
+	const boost_point_t  pt(X[0],X[1]);
+	for(auto& h:ls_halfedges)
+	  {
+	    const double mydist = bg::distance(pt, h);
+	    if(mydist<h_dist)
+	      h_dist = mydist;
+	  }
+      }	
+    
+    // return the ratio min(h_dist, min_dist)/max_h
+    if(h_dist<min_dist)
+      return h_dist/max_h;
+    else
+      return min_dist/max_h;
   }
 
 

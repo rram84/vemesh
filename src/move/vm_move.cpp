@@ -3,34 +3,49 @@
 #include <vm_move.h>
 #include <vm_visibility.h>
 #include <vm_polygon_sampling.h>
+#include <vm_vertex_ring.h>
 #include <vm_quality.h>
-#include <vm_inspect.h>
 #include <limits>
 #include <set>
 
 namespace vm
 {
-  bool is_vertex_connected_to_hanging_node(const pmp::SurfaceMesh& mesh,
-					   const pmp::Vertex&      vertex)
+  // decide quality dominance
+  struct QualityDominance
   {
-    // the one-ring of vertices should not have any repetitions
-    const std::vector<pmp::Vertex> vertex_ring = get_vertex_ring(mesh, vertex);
-    const int nRingVerts = static_cast<int>(vertex_ring.size());
-    std::set<int> vertex_set{};
-    for(auto& v:vertex_ring)
-      vertex_set.insert(v.idx());
+    double eps_length_ratio;
+    double eps_degrees;
+    double norm_angle;
+    
+    QualityDominance(const double eps_length_ratio_val, const double eps_degrees_val)
+      :eps_length_ratio(eps_length_ratio_val),
+       eps_degrees(eps_degrees_val)
+    {}
 
-    // true if there is a repetition, false otherwise
-    return (static_cast<int>(vertex_set.size())!=nRingVerts);
-  }
+    // determine if quality A dominates quality B
+    bool operator()(const std::pair<double,double>& A,
+		    const std::pair<double,double>& B)
+    {
+      // A better than B in both metrics
+      if(A.first>B.first && A.second>B.second)
+	return true;
+      
+      // A lies outside the forbidden zone while B lies within
+      if( (A.first>eps_length_ratio && A.second>eps_degrees) && (B.first<eps_length_ratio || B.second<eps_degrees))
+	return true;
+      
+      // Otherwise, assume B dominates A
+      return false;
+    }
+  };
 
   
   // identify a feasible point to move a vertex
-  std::pair<bool, std::pair<double,double>> compute_feasible_vertex_position(pmp::SurfaceMesh& mesh,
-									     const pmp::Vertex&      vertex,
-									     const double            eps_length_ratio,
-									     const double            eps_degrees,
-									     const int               num_samples)
+  std::pair<bool, std::pair<double,double>> compute_feasible_vertex_position(pmp::SurfaceMesh&  mesh,
+									     const pmp::Vertex& vertex,
+									     const double       eps_length_ratio,
+									     const double       eps_degrees,
+									     const int          num_samples)
   {
     assert(mesh.is_valid(vertex)==true);
     assert(mesh.is_boundary(vertex)==false);
@@ -42,7 +57,7 @@ namespace vm
     // this case is not currently dealt with
     if(is_vertex_connected_to_hanging_node(mesh, vertex))
       return {false, {given_vertex_pos[0], given_vertex_pos[1]}};
-    
+
     // compute the visibility polygon
     const std::vector<std::pair<double,double>> vis_poly_verts = compute_visibility_polygon(mesh, vertex);
     
@@ -51,7 +66,10 @@ namespace vm
 
     // use the current vertex quality as the datum
     std::pair<double,double> curr_best_pos     = {given_vertex_pos[0], given_vertex_pos[1]};
-    std::pair<double,double> curr_best_quality = vertex_quality(mesh, vertex);
+    std::pair<double,double> curr_best_quality = {compute_distance_based_vertex_quality(mesh, vertex), compute_angle_based_vertex_quality(mesh, vertex)};
+
+    // Quality dominance
+    QualityDominance QD(eps_length_ratio, eps_degrees);
     
     // examine vertex qualities at the sample points
     pmp::Point& running_vert_pos = mesh.position(vertex);
@@ -63,23 +81,17 @@ namespace vm
 	running_vert_pos[1] = sample.second;
 	
 	// evaluate the resulting vertex quality
-	const std::pair<double,double> sample_quality = vertex_quality(mesh, vertex);
-
-	// this vertex is better:
-	// (i)  if it improves both metrics
-	// (ii) otherwise
-	//    (a) improves edge length that is below tolerance, while keeping angle above tolerance
-	//    (b) improves angle that is below tolerance,       while keeping edge length above tolerance
-	if( (sample_quality.first>curr_best_quality.first && sample_quality.second>curr_best_quality.second) || 	               
-	    (curr_best_quality.first<eps_length_ratio     && sample_quality.first>curr_best_quality.first   && sample_quality.second>eps_degrees) ||
-	    (curr_best_quality.second<eps_degrees         && sample_quality.second>curr_best_quality.second && sample_quality.first>eps_length_ratio))
+	std::pair<double,double> sample_quality = {compute_distance_based_vertex_quality(mesh, vertex), compute_angle_based_vertex_quality(mesh, vertex)};
+	
+	// Does sample_quality dominate curr_best_quality
+	if( QD(sample_quality, curr_best_quality)==true )
 	  {
 	    curr_best_quality = sample_quality;
 	    curr_best_pos     = sample;
 	    success           = true;
 	  }
       }
-
+    
     // restore the vertex position
     mesh.position(vertex) = given_vertex_pos;
 
