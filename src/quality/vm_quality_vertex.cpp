@@ -1,6 +1,5 @@
 // Sriramajayam
 
-#include <iostream>
 #include <vm_vertex_ring.h>
 #include <vm_quality.h>
 #include <cmath>
@@ -10,7 +9,7 @@
 // boost polygon utilities
 #include <boost/geometry/geometry.hpp>
 #include <boost/geometry/geometries/polygon.hpp>
-  
+
 namespace vm
 {
   // boost aliases
@@ -52,10 +51,7 @@ namespace vm
 	const auto& X = mesh.position(mesh.to_vertex(h));
 	double len = std::sqrt((V[0]-X[0])*(V[0]-X[0]) + (V[1]-X[1])*(V[1]-X[1]));
 	if(len>max_h)
-	  {
-	    max_h = len;
-	    std::cout << "Updating longest edfe based on vertex: "<< mesh.to_vertex(h).idx() << std::endl;
-	  }
+	  max_h = len;
       }
 
     // return the ratio

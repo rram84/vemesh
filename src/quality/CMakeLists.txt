@@ -1,15 +1,19 @@
 # Sriramajayam
 
 add_library(vm_quality STATIC
-		 vm_face_quality.cpp
-		 vm_vertex_quality.cpp)
+		 vm_quality_angle.cpp
+		 vm_quality_face.cpp
+		 vm_quality_vertex.cpp)
 
 # include headers in the current directory
 target_include_directories(vm_quality PUBLIC
 					$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
 
 # link
-target_link_libraries(vm_quality PUBLIC pmp Eigen3::Eigen Boost::boost)
+target_link_libraries(vm_quality PUBLIC
+				 pmp Eigen3::Eigen
+				 Boost::boost
+				 vm_vertex_ring)
 
 # Add required flags
 target_compile_features(vm_quality PUBLIC ${VM_COMPILE_FEATURES})

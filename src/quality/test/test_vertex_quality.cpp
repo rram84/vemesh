@@ -49,6 +49,13 @@ int main()
 
 
   // check the vertex quality
-  auto q = vm::vertex_quality(mesh, inner_vertex);
-  std::cout << "Edge ratio and min angle: " << q.first << ", " << q.second << std::endl;
+  double compute_distance_based_vertex_quality(const pmp::SurfaceMesh& mesh, const pmp::Vertex& vert);
+
+  // measure quality as the smallest included face angle among faces incident at a vertex
+  // define only for non-boundary vertices, not connected to hanging nodes
+  double compute_angle_based_vertex_quality(const pmp::SurfaceMesh& mesh, const pmp::Vertex& vert);
+  
+  double q_edge  = vm::compute_distance_based_vertex_quality(mesh, inner_vertex);
+  double q_angle = vm::compute_angle_based_vertex_quality(mesh, inner_vertex);
+  std::cout << "Edge ratio and min angle: " << q_edge << ", " << q_angle << std::endl;
 }

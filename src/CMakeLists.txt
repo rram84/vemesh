@@ -1,5 +1,6 @@
 # Sriramajayam
 
+add_subdirectory(vertex-ring)
 add_subdirectory(quality)
 add_subdirectory(inspect)
 add_subdirectory(merge)
