@@ -7,7 +7,11 @@ target_include_directories(vm_visibility PUBLIC
 					$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
 
 # link
-target_link_libraries(vm_visibility PUBLIC CGAL::CGAL pmp Eigen3::Eigen Boost::boost)
+target_link_libraries(vm_visibility PUBLIC
+				    CGAL::CGAL
+				    pmp Eigen3::Eigen
+				    Boost::boost
+				    vm_vertex_ring)
 
 # Add required flags
 target_compile_features(vm_visibility PUBLIC ${VM_COMPILE_FEATURES})

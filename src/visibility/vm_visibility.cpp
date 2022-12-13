@@ -1,7 +1,7 @@
 // Sriramajayam
 
 #include <vm_visibility.h>
-#include <iostream>
+#include <vm_vertex_ring.h>
 
 // cgal visibility utilities
 #include <CGAL/Exact_predicates_exact_constructions_kernel.h>

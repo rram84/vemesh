@@ -39,6 +39,11 @@ int main()
   vm::write_off(mesh, "mesh.off");
   
   // visibility polygon
-  vm::compute_visibility_polygon(mesh, guard_vertex);
+  auto vis_poly_verts = vm::compute_visibility_polygon(mesh, guard_vertex);
+  pfile.open("vis.dat", std::ios::out);
+  for(auto& v:vis_poly_verts)
+    pfile << v.first << " " << v.second << std::endl;
+  pfile << vis_poly_verts.front().first << " " << vis_poly_verts.front().second << std::endl;
+  pfile.close();
 }
 
