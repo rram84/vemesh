@@ -49,7 +49,7 @@ namespace vm
 
 	      // quality of the candidate merged face
 	      assert(inspect_face(verts)==true);
-	      double quality = face_quality(verts);
+	      double quality = compute_angle_based_face_quality(verts);
 	      if(quality>best_quality)
 		{
 		  best_quality = quality;
