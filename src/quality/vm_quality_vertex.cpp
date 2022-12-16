@@ -150,6 +150,7 @@ namespace vm
 	  }
       }
 
+    // HACK HACK HACK: HOW CAN THIS HAPPEN?
     //assert(compute_flag==true);
     
     // done

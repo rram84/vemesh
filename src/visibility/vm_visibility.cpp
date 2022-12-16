@@ -65,7 +65,8 @@ namespace vm
     CGAL::Arr_naive_point_location<Arrangement_2> pl(env);
     CGAL::Arr_point_location_result<Arrangement_2>::Type obj = pl.locate(Point_2(X[0],X[1]));
     face = boost::get<Arrangement_2::Face_const_handle> (&obj);
-
+    assert((*face)->is_unbounded()==false);
+    
     // compute the regularized visibility polygon from each of the guard vertices
     const double EPS = 0.01;
     RSPV regular_visibility(env);
