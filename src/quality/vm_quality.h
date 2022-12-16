@@ -23,8 +23,4 @@ namespace vm
   // measure quality as the ratio of the distance of a vertex to its enclosing linestring to the longest halfedge
   // defined only for non-boundary vertices, not connected to hanging nodes
   double compute_distance_based_vertex_quality(const pmp::SurfaceMesh& mesh, const pmp::Vertex& vert);
-
-  // measure quality as the smallest included face angle among faces incident at a vertex
-  // define only for non-boundary vertices, not connected to hanging nodes
-  double compute_angle_based_vertex_quality(const pmp::SurfaceMesh& mesh, const pmp::Vertex& vert);
 }

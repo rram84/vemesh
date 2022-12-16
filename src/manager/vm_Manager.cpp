@@ -62,7 +62,7 @@ namespace vm
     auto face_circulator = mesh.faces();
     for(auto face:face_circulator)
       {
-	double min_angle = face_quality(mesh, face);
+	double min_angle = compute_angle_based_face_quality(mesh, face);
 	if(min_angle<eps_degrees)
 	  facelist.push_back(face);
       }

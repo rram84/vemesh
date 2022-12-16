@@ -38,8 +38,8 @@ namespace vm
     // snap vertices to nearby edges
     int snap_vertices(const double eps_dist_ratio);
 
-    // moves vertices if the length of an incident edge is small
-    int move_vertices(const double eps_len_ratio, const double eps_degrees, const int num_samples);
+    // moves vertices if the non-dimensional vertex quality is smaller than a tolerance
+    std::pair<int, int> move_vertices(const double eps_len_ratio, const int num_samples);
 
     // visualize
     void write(const std::string filename);

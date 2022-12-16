@@ -23,7 +23,7 @@ namespace vm
     auto face_circulator = mesh.faces();
     for(auto face:face_circulator)
       {
-	double quality = face_quality(mesh, face);
+	double quality = compute_angle_based_face_quality(mesh, face);
 	if(quality <eps_degrees)
 	  bad_faces.insert({face, quality});
       }

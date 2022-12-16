@@ -13,7 +13,7 @@ int main()
   const int nVertices = 10;
   
   // guard
-  const double guard[] = {2.88,0.85};
+  const double guard[] = {4.5, 0.85}; //{2.88,0.85};
   
   std::fstream pfile;
   pfile.open("env.dat", std::ios::out);
@@ -51,9 +51,10 @@ int main()
   }
   
   // compute a feasible location
-  auto move_result = vm::compute_feasible_vertex_position(mesh, guard_vertex, 0.2, 20.0, 20);  // edge ratio, angle tolerance, num_samples
+  auto move_result = vm::compute_feasible_vertex_position(mesh, guard_vertex, 20);  // edge ratio, angle tolerance, num_samples
   if(move_result.first==true)
     {
+      std::cout << "Successful move " << std::endl;
       mesh.position(guard_vertex) = pmp::Point(move_result.second.first, move_result.second.second, 0.);
       pfile.open("out-edges.dat", std::ios::out);
       auto h_circulator = mesh.halfedges(guard_vertex);

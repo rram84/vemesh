@@ -7,10 +7,6 @@
 namespace vm
 {
   // identify a feasible point to move a vertex
-  std::pair<bool, std::pair<double,double>> compute_feasible_vertex_position(pmp::SurfaceMesh& mesh,
-									     const pmp::Vertex& vertex,
-									     const double eps_length_ratio,
-									     const double eps_degrees,
-									     const int num_samples);
+  std::pair<bool, std::pair<double,double>> compute_feasible_vertex_position(pmp::SurfaceMesh& mesh, const pmp::Vertex& vertex, const int num_samples);
   
 }
