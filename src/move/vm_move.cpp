@@ -13,8 +13,8 @@ namespace vm
 {
   // identify a feasible point to move a vertex
   std::pair<bool, std::pair<double,double>> compute_feasible_vertex_position(pmp::SurfaceMesh&  mesh,
-							   const pmp::Vertex& vertex,
-							   const int          num_samples)
+									     const pmp::Vertex& vertex,
+									     const int          num_samples)
   {
     assert(mesh.is_valid(vertex)==true);
     assert(mesh.is_boundary(vertex)==false);
