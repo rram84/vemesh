@@ -2,6 +2,7 @@
 
 #include <vm_vertex_ring.h>
 #include <vm_quality.h>
+#include <iostream>
 
 #include <cmath>
 #include <cassert>
@@ -104,6 +105,9 @@ namespace vm
 	    {
 	      // check the minimum altitude
 	      double alt = bg::length(segCD);
+
+	      std::cout << "Computing altitude of " << v.idx() << " to " << vA.idx() <<" -- " << vB.idx() << ", altitude = " << alt << std::endl;
+	      
 	      if(alt<min_altitude)
 		{
 		  min_altitude = alt;

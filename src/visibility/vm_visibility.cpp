@@ -14,6 +14,8 @@
 #include <boost/geometry/geometry.hpp>
 #include <boost/geometry/geometries/polygon.hpp>
 
+#include <vm_io.h>
+
 namespace vm
 {
   
@@ -65,10 +67,28 @@ namespace vm
     CGAL::Arr_naive_point_location<Arrangement_2> pl(env);
     CGAL::Arr_point_location_result<Arrangement_2>::Type obj = pl.locate(Point_2(X[0],X[1]));
     face = boost::get<Arrangement_2::Face_const_handle> (&obj);
-    assert((*face)->is_unbounded()==false);
+
+    // sanity check
+    if((*face)->is_unbounded())
+      {
+	pmp::SurfaceMesh interim = mesh;
+	write_off(interim, "interim.off");
+	
+	std::cout << "Encounted an unbounded polygon " << std::endl;
+	std::cout << "Vertex: "<< vertex.idx();
+	
+	std::cout << "Vertices: " ;
+	for(int n=0; n<nRingVerts+1; ++n)
+	  {
+	    const auto& A = mesh.position(vertex_ring[n%nRingVerts]);
+	    std::cout << std::endl << vertex_ring[n%nRingVerts].idx() << " : " << A[0] <<" " << A[1];
+	  }
+	std::cout << std::endl << std::endl << "Point: " << X[0] << " " << X[1] << std::endl;
+	exit(1);
+      }
     
     // compute the regularized visibility polygon from each of the guard vertices
-    const double EPS = 0.01;
+    const double EPS = 0.0001;
     RSPV regular_visibility(env);
     Arrangement_2 regular_output;
     std::vector<boost_polygon_t> visibility_polygons{};

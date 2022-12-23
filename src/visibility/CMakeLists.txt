@@ -11,7 +11,8 @@ target_link_libraries(vm_visibility PUBLIC
 				    CGAL::CGAL
 				    pmp Eigen3::Eigen
 				    Boost::boost
-				    vm_vertex_ring)
+				    vm_vertex_ring
+				    vm_io)
 
 # Add required flags
 target_compile_features(vm_visibility PUBLIC ${VM_COMPILE_FEATURES})
