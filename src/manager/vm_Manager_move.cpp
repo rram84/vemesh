@@ -1,70 +1,43 @@
 // Sriramajayam
 
 #include <vm_Manager.h>
-#include <vm_quality.h>
 #include <vm_move.h>
+#include <iostream>
 
 namespace vm
 {
-  // compute the average edge length emanating from a vertex
-  double compute_average_edge_length_at_vertex(const pmp::SurfaceMesh& mesh, const pmp::Vertex& vertex)
+  // moves a vertex
+  std::pair<bool, LimitCircle_t> Manager::move_vertex(const pmp::Vertex& vertex, const int num_samples)
   {
-    double hsum   = 0.;
-    int    hcount = 0;
-    
-    auto h_circulator = mesh.halfedges(vertex);
-    const auto& X     = mesh.position(vertex);
-    for(auto h:h_circulator)
+    // cannot move boundary vertices
+    if(mesh.is_boundary(vertex)==true)
       {
-	const auto& Y = mesh.position(mesh.to_vertex(h));
-	hsum += std::sqrt((X[0]-Y[0])*(X[0]-Y[0])+(X[1]-Y[1])*(X[1]-Y[1]));
-	++hcount;
+	LimitCircle_t lc;
+	return {false, lc};
       }
-    return hsum/static_cast<double>(hcount);
-  }
 
-  
-  // moves vertices if the length of an incident edge is small
-  std::pair<int,int> Manager::move_vertices(const double eps_len_ratio, const int num_samples)
-  {
-    int num_vertices_needs_move = 0;
-    int num_vertices_moved      = 0;
-
-    // identify vertices to be be moved.
-    // identify a feasible new position
-    // move
-    auto vert_circulator = mesh.vertices();
-    for(auto vertex:vert_circulator)
-      if(mesh.is_boundary(vertex)==false)
-	{
-	  // average edge length at this vertex
-	  const double havg = compute_average_edge_length_at_vertex(mesh, vertex);
-								    
-	  // distance-based quality at this vertex
-	  auto vertex_quality = compute_distance_based_vertex_quality(mesh, vertex);
-
-	  // needs to be moved?
-	  if(vertex_quality.radius/havg < eps_len_ratio)
-	    {
-	      ++num_vertices_needs_move;
-	      
-	      // this vertex needs to be moved. identify a feasible point
-	      const auto result = compute_feasible_vertex_position(mesh, vertex, num_samples);
-	      if(std::get<0>(result)==true)
-		{
-		  const auto& update_pos = std::get<1>(result);
-		    
-		  // move
-		  pmp::Point& X = mesh.position(vertex);
-		  X[0] = update_pos.first;
-		  X[1] = update_pos.second;
-		  ++num_vertices_moved;
-		}
-	    }
-	}
     
+    // identify a feasible new position & move
+    const auto result = compute_feasible_vertex_position(mesh, vertex, num_samples);
+
+    // no feasible point
+    if(std::get<0>(result)==false)
+      {
+	LimitCircle_t lc;
+	return {false, lc};
+      }
+
+    // found a feasible point
+    const auto& update_pos = std::get<1>(result);
+    
+    // move
+    pmp::Point& X = mesh.position(vertex);
+    X[0] = update_pos.first;
+    X[1] = update_pos.second;
+    const auto& lc = std::get<2>(result);
+
     // done
-    return {num_vertices_moved, num_vertices_needs_move-num_vertices_moved};
+    return {true, lc};
   }
 
 }

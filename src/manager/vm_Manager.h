@@ -3,6 +3,7 @@
 #pragma once
 
 #include <pmp/SurfaceMesh.h>
+#include <vm_quality.h>
 #include <string>
 #include <map>
 
@@ -38,8 +39,8 @@ namespace vm
     // snap vertices to nearby edges
     int snap_vertices(const double eps_dist_ratio);
 
-    // moves vertices if the non-dimensional vertex quality is smaller than a tolerance
-    std::pair<int, int> move_vertices(const double eps_len_ratio, const int num_samples);
+    // moves a vertex to a more favorable position
+    std::pair<bool, LimitCircle_t> move_vertex(const pmp::Vertex& vertex, const int num_samples);
 
     // visualize
     void write(const std::string filename);
