@@ -44,18 +44,20 @@ namespace vm
 	  auto vertex_quality = compute_distance_based_vertex_quality(mesh, vertex);
 
 	  // needs to be moved?
-	  if(vertex_quality/havg < eps_len_ratio)
+	  if(vertex_quality.radius/havg < eps_len_ratio)
 	    {
 	      ++num_vertices_needs_move;
 	      
 	      // this vertex needs to be moved. identify a feasible point
-	      const std::pair<bool, std::pair<double,double>> feasible_point = compute_feasible_vertex_position(mesh, vertex, num_samples);
-	      if(feasible_point.first==true)
+	      const auto result = compute_feasible_vertex_position(mesh, vertex, num_samples);
+	      if(std::get<0>(result)==true)
 		{
+		  const auto& update_pos = std::get<1>(result);
+		    
 		  // move
 		  pmp::Point& X = mesh.position(vertex);
-		  X[0] = feasible_point.second.first;
-		  X[1] = feasible_point.second.second;
+		  X[0] = update_pos.first;
+		  X[1] = update_pos.second;
 		  ++num_vertices_moved;
 		}
 	    }
