@@ -3,10 +3,12 @@
 #pragma once
 
 #include <pmp/SurfaceMesh.h>
+#include <vm_quality.h>
+#include <tuple>
 
 namespace vm
 {
   // identify a feasible point to move a vertex
-  std::pair<bool, std::pair<double,double>> compute_feasible_vertex_position(pmp::SurfaceMesh& mesh, const pmp::Vertex& vertex, const int num_samples);
+  std::tuple<bool, std::pair<double,double>, LimitCircle_t> compute_feasible_vertex_position(pmp::SurfaceMesh& mesh, const pmp::Vertex& vertex, const int num_samples);
   
 }

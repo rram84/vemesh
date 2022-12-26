@@ -13,7 +13,7 @@ int main()
   const int nVertices = 10;
   
   // guard
-  const double guard[] = {4.5, 0.85}; //{2.88,0.85};
+  const double guard[] =  {2.88,0.85}; //{4.5, 0.85};
   
   std::fstream pfile;
   pfile.open("env.dat", std::ios::out);
@@ -49,13 +49,25 @@ int main()
       }
     pfile.close();
   }
-  
+
   // compute a feasible location
   auto move_result = vm::compute_feasible_vertex_position(mesh, guard_vertex, 20);  // edge ratio, angle tolerance, num_samples
-  if(move_result.first==true)
+  if(std::get<0>(move_result)==true)
     {
       std::cout << "Successful move " << std::endl;
-      mesh.position(guard_vertex) = pmp::Point(move_result.second.first, move_result.second.second, 0.);
+
+      auto pre_quality = vm::compute_distance_based_vertex_quality(mesh, guard_vertex);
+      
+      const auto& move_pos = std::get<1>(move_result);
+      mesh.position(guard_vertex) = pmp::Point(move_pos.first, move_pos.second, 0.);
+      auto post_quality = vm::compute_distance_based_vertex_quality(mesh, guard_vertex);
+
+      assert(post_quality.radius>=pre_quality.radius);
+      std::cout << "Pre and post limit circles: "
+		<< std::endl << pre_quality.center[0] << " " << pre_quality.center[1] << " " << pre_quality.radius
+		<< std::endl << post_quality.center[0] << " " << post_quality.center[1] << " " << post_quality.radius
+		<< std::endl;
+	 
       pfile.open("out-edges.dat", std::ios::out);
       auto h_circulator = mesh.halfedges(guard_vertex);
       for(auto h:h_circulator)
@@ -65,8 +77,8 @@ int main()
 	  pfile << X[0] << " " << X[1] << std::endl
 		<< Y[0] << " " << Y[1] << std::endl << std::endl;
 	}
-      pfile.close();  
+      pfile.close();
     }
-  
+ 
 }
 

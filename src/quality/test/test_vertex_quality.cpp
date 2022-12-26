@@ -16,7 +16,7 @@ int main()
     vertices.push_back(mesh.add_vertex(pmp::Point(coords[n][0],coords[n][1],0.)));
   
   // inner vertex
-  const double vert[] = {3.81,0.91}; //{2.81,1.35};
+  const double vert[] = {2.81,1.35}; //{3.81,0.91}; 
   auto inner_vertex = mesh.add_vertex(pmp::Point(vert[0],vert[1],0.));
 
   // add faces
@@ -48,6 +48,6 @@ int main()
   pfile.close();
 
   // check the vertex quality
-  double vertex_quality = compute_distance_based_vertex_quality(mesh, inner_vertex);
-  std::cout << "Distance-based quality: " << vertex_quality << std::endl;
+  auto lc = vm::compute_distance_based_vertex_quality(mesh, inner_vertex);
+  std::cout << "Limiting circle: " << lc.center[0] <<" " << lc.center[1] <<" " << lc.radius << std::endl;
 }

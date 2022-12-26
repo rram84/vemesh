@@ -23,8 +23,8 @@ namespace vm
 
   
   // minimum distance of a vertex from its connected ring
-  double compute_minimum_vertex_to_ring_distance(const pmp::SurfaceMesh& mesh,
-						 const pmp::Vertex& vertex)
+  LimitCircle_t compute_minimum_vertex_to_ring_distance(const pmp::SurfaceMesh& mesh,
+							const pmp::Vertex& vertex)
   {
     // get the ring of vertices around this vertex
     const std::vector<pmp::Vertex> vertex_ring = get_vertex_ring(mesh, vertex);
@@ -45,18 +45,23 @@ namespace vm
 
     // return distance of the vertex from the linestring
     const auto& V = mesh.position(vertex);
-    return bg::distance(boost_point_t(V[0], V[1]), ls);
+
+    LimitCircle_t lc;
+    lc.center[0] = V[0];
+    lc.center[1] = V[1];
+    lc.radius    = bg::distance(boost_point_t(V[0], V[1]), ls);
+    return lc;
   }
   
 
 
   // measure the minimum visible altitude of face vertices to a given halfedge
-  std::pair<bool, double> compute_minimum_visible_altitude_to_halfedge(const pmp::SurfaceMesh& mesh,
-								       const pmp::Halfedge& h)
+  std::pair<bool, LimitCircle_t> compute_minimum_visible_altitude_to_halfedge(const pmp::SurfaceMesh& mesh,
+									      const pmp::Halfedge& h)
   {
     // this face
     auto face = mesh.face(h);
-
+    
     // vertices
     auto v_circulator = mesh.vertices(mesh.face(h));
 
@@ -77,12 +82,14 @@ namespace vm
     bg::correct(poly);
 
     // vertices to exclude when computing altitude
-    double min_altitude  = std::numeric_limits<double>::max();
+    LimitCircle_t lc;
+    lc.radius            = std::numeric_limits<double>::max();
     bool compute_flag    = false;
     const pmp::Vertex vA = mesh.from_vertex(h);
     const pmp::Vertex vB = mesh.to_vertex(h);
     const auto& xA       = mesh.position(vA);
     const auto& xB       = mesh.position(vB);
+    const double EPS     = 0.01;
     const double tvec[]  = {xB[0]-xA[0], xB[1]-xA[1]};
     const double len2    = tvec[0]*tvec[0]+tvec[1]*tvec[1];
     double lambda, xD[2];
@@ -98,58 +105,67 @@ namespace vm
 	  if(lambda<=0 || lambda>=1)
 	    continue;
 	  
+	  xD[0] = xA[0]+lambda*tvec[0];
+	  xD[1] = xA[1]+lambda*tvec[1];
 
 	  // does the segment CD lie within this polygon
-	  boost_linestring_t segCD{ {xC[0],xC[1]}, {xA[0]+lambda*tvec[0],xA[1]+lambda*tvec[1]} };
+	  boost_linestring_t segCD{ {(1.-EPS)*xC[0]+EPS*xD[0], (1.-EPS)*xC[1]+EPS*xD[1]},  {EPS*xC[0]+(1.-EPS)*xD[0], EPS*xC[1]+(1.-EPS)*xD[1]} };
 	  if(bg::within(segCD,poly))
 	    {
 	      // check the minimum altitude
-	      double alt = bg::length(segCD);
-
-	      std::cout << "Computing altitude of " << v.idx() << " to " << vA.idx() <<" -- " << vB.idx() << ", altitude = " << alt << std::endl;
+	      const double alt = std::sqrt((xC[0]-xD[0])*(xC[0]-xD[0]) + (xC[1]-xD[1])*(xC[1]-xD[1]));
 	      
-	      if(alt<min_altitude)
+	      if(alt<lc.radius)
 		{
-		  min_altitude = alt;
+		  lc.radius = alt;
+		  lc.center[0] = xC[0];
+		  lc.center[1] = xC[1];
 		  compute_flag = true; 
 		}
 	    }
 	}
 
+
     // done
-    return {compute_flag, min_altitude};
+    return {compute_flag, lc};
   }
 
 
   // compute the minimum distance of ring vertices to the edges incident at a vertex
-  double compute_minimum_ring_vertices_to_inner_halfedges_distance(const pmp::SurfaceMesh& mesh,
-								   const pmp::Vertex& vertex)
+  LimitCircle_t compute_minimum_ring_vertices_to_inner_halfedges_distance(const pmp::SurfaceMesh& mesh,
+									  const pmp::Vertex& vertex)
 								   
   {
+    LimitCircle_t lc;
+    lc.radius = std::numeric_limits<double>::max();
+    
     // half-edges incident at the vertex
     auto h_circulator = mesh.halfedges(vertex);
 
     // for each halfedge, examine the two faces on either side
     // determine the smallest visible altitude
-    double min_altitude = std::numeric_limits<double>::max();
     bool compute_flag   = false;
-    std::pair<bool, double> trial_altitude;
+    std::pair<bool, LimitCircle_t> trial;
     for(auto h:h_circulator)
       {
 	// this half edge
-	trial_altitude = compute_minimum_visible_altitude_to_halfedge(mesh, h);
-	if(trial_altitude.first==true && trial_altitude.second<min_altitude)
+	trial = compute_minimum_visible_altitude_to_halfedge(mesh, h);
+	if(trial.first==true && trial.second.radius<lc.radius)
 	  {
-	    min_altitude = trial_altitude.second;
+	    lc.radius    = trial.second.radius;
+	    lc.center[0] = trial.second.center[0];
+	    lc.center[1] = trial.second.center[1];
 	    compute_flag = true;
 	  }
 
 	// its opposite halfedge
 	auto h_opp = mesh.opposite_halfedge(h);
-	trial_altitude = compute_minimum_visible_altitude_to_halfedge(mesh, h_opp);
-	if(trial_altitude.first==true && trial_altitude.second<min_altitude)
+	trial = compute_minimum_visible_altitude_to_halfedge(mesh, h_opp);
+	if(trial.first==true && trial.second.radius<lc.radius)
 	  {
-	    min_altitude = trial_altitude.second;
+	    lc.radius    = trial.second.radius;
+	    lc.center[0] = trial.second.center[0];
+	    lc.center[1] = trial.second.center[1];
 	    compute_flag = true;
 	  }
       }
@@ -158,23 +174,23 @@ namespace vm
     //assert(compute_flag==true);
     
     // done
-    return min_altitude;
+    return lc;
   }
 
 
   // compute the minimum of vertex-to-ring distance, and ring-to-inner-edge distance
-  double compute_distance_based_vertex_quality(const pmp::SurfaceMesh& mesh, const pmp::Vertex& vertex)
+  LimitCircle_t compute_distance_based_vertex_quality(const pmp::SurfaceMesh& mesh, const pmp::Vertex& vertex)
   {
     // minimum distance of a vertex from its connected ring
-    const double h1 = compute_minimum_vertex_to_ring_distance(mesh, vertex);
+    const auto lc_1 = compute_minimum_vertex_to_ring_distance(mesh, vertex);
 
     // minimum distance of ring vertex to inner halfedges
-    const double h2 = compute_minimum_ring_vertices_to_inner_halfedges_distance(mesh, vertex);
+    const auto lc_2 = compute_minimum_ring_vertices_to_inner_halfedges_distance(mesh, vertex);
 
-    if(h1<h2)
-      return h1;
+    if(lc_1.radius < lc_2.radius)
+      return lc_1;
     else
-      return h2;
+      return lc_2;
   }
   
 }
