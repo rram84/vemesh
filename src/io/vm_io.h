@@ -21,6 +21,9 @@ namespace vm
   // filename [in]       : name of the file
   void write_off(pmp::SurfaceMesh& mesh, const std::string filename);
 
+  // Writes a mesh in .dat format, suitable for plotting with gnuplot
+  void write_dat(const pmp::SurfaceMesh &mesh, const std::string filename);
+
   // Writes a mesh in .off format
   void write_off(const pmp::SurfaceMesh& mesh,
 		 const std::map<pmp::Vertex, pmp::Vertex>& vertex_map,
