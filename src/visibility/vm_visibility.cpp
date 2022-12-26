@@ -88,7 +88,7 @@ namespace vm
       }
     
     // compute the regularized visibility polygon from each of the guard vertices
-    const double EPS = 0.0001;
+    const double EPS = 0.001;
     RSPV regular_visibility(env);
     Arrangement_2 regular_output;
     std::vector<boost_polygon_t> visibility_polygons{};
