@@ -35,8 +35,8 @@ int main()
   const int nVertices = 10;
    
   // guard
-  //const double guard[] = {0.872102, 0.362904}; 
-  const double guard[] = {0.9197, 0.4968}; 
+  const double guard[] = {0.872102, 0.42904}; 
+  //const double guard[] = {0.9197, 0.4968}; 
   
   std::fstream pfile;
   pfile.open("env.dat", std::ios::out);
@@ -77,8 +77,8 @@ int main()
   }
 
   // compute the minimum distance of ring vertices to the edges incident at a vertex
-  double  min_dist = vm::compute_minimum_ring_vertices_to_inner_halfedges_distance(mesh, guard_vertex);
-  std::cout << "Min distance: " << min_dist << std::endl;
+  //double  min_dist = vm::compute_minimum_ring_vertices_to_inner_halfedges_distance(mesh, guard_vertex);
+  //std::cout << "Min distance: " << min_dist << std::endl;
 
   // compute the visibility polygon
   auto vis_poly = vm::compute_visibility_polygon(mesh, guard_vertex);
