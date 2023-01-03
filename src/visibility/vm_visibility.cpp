@@ -18,18 +18,15 @@
 
 namespace vm
 {
-  
-
   // cgal aliases
-  using Kernel                  = CGAL::Exact_predicates_inexact_constructions_kernel;
+  using Kernel                  = CGAL::Exact_predicates_exact_constructions_kernel;
   using Point_2                 = Kernel::Point_2;
   using Segment_2               = Kernel::Segment_2;
   using Traits_2                = CGAL::Arr_segment_traits_2<Kernel>;
   using Arrangement_2           = CGAL::Arrangement_2<Traits_2>;
   using Face_handle             = Arrangement_2::Face_handle;                                      
-  using Vertex_const_iterator   = Arrangement_2::Vertex_const_iterator;
-  using RSPV                    = CGAL::Simple_polygon_visibility_2<Arrangement_2, CGAL::Tag_true>;
-
+  using RSPV                    = CGAL::Simple_polygon_visibility_2<Arrangement_2, CGAL::Tag_false>;
+  
   // boost aliases
   namespace bg  = boost::geometry;
   namespace bgm = bg::model;
@@ -54,7 +51,7 @@ namespace vm
 	const auto& A = mesh.position(vertex_ring[n]);
 	env_vertices.push_back(Point_2(A[0],A[1]));
       }
-    std::vector<Segment_2> segments{};
+    std::vector<Segment_2> segments{}; 
     for(int n=0; n<nRingVerts; ++n)
       segments.push_back( Segment_2(env_vertices[n], env_vertices[(n+1)%nRingVerts]) );
     
@@ -69,26 +66,10 @@ namespace vm
     face = boost::get<Arrangement_2::Face_const_handle> (&obj);
 
     // sanity check
-    if((*face)->is_unbounded())
-      {
-	pmp::SurfaceMesh interim = mesh;
-	write_off(interim, "interim.off");
-	
-	std::cout << "Encounted an unbounded polygon " << std::endl;
-	std::cout << "Vertex: "<< vertex.idx();
-	
-	std::cout << "Vertices: " ;
-	for(int n=0; n<nRingVerts+1; ++n)
-	  {
-	    const auto& A = mesh.position(vertex_ring[n%nRingVerts]);
-	    std::cout << std::endl << vertex_ring[n%nRingVerts].idx() << " : " << A[0] <<" " << A[1];
-	  }
-	std::cout << std::endl << std::endl << "Point: " << X[0] << " " << X[1] << std::endl;
-	exit(1);
-      }
+    assert((*face)->is_unbounded()==false);
     
     // compute the regularized visibility polygon from each of the guard vertices
-    const double EPS = 0.001;
+    const double EPS = 0.01;
     RSPV regular_visibility(env);
     Arrangement_2 regular_output;
     std::vector<boost_polygon_t> visibility_polygons{};
@@ -98,24 +79,33 @@ namespace vm
 	const auto& Y = mesh.position(guard);
 	const Point_2 guard_eps( (1.-EPS)*Y[0]+EPS*X[0], (1.-EPS)*Y[1]+EPS*X[1] );
 	regular_visibility.compute_visibility(guard_eps, *face, regular_output);
-	auto v_begin = regular_output.vertices_begin();
-	auto v_end   = regular_output.vertices_end();
+	
+	// this visibility polygon
 	boost_polygon_t vp;
-	for(Vertex_const_iterator it=v_begin; it!=v_end; ++it)
+	const int num_halfedges = regular_output.number_of_halfedges();
+	auto hedge = regular_output.halfedges_begin();
+	for(int hcount=0; hcount<num_halfedges; ++hcount)
 	  {
-	    const auto& P = it->point();
-	    bg::append(vp.outer(), boost_point_t(P.x(),P.y()));
+	    const auto& P = hedge->source()->point();
+	    bg::append(vp.outer(), boost_point_t(CGAL::to_double(P.x()), CGAL::to_double(P.y())));
+	    hedge = hedge->next();
 	  }
 	// repeat the first vertex
 	{
-	  const auto& P = v_begin->point();
-	  bg::append(vp.outer(), boost_point_t(P.x(), P.y()));
+	  const auto& P = hedge->source()->point();
+	  bg::append(vp.outer(), boost_point_t(CGAL::to_double(P.x()), CGAL::to_double(P.y())));
 	}
-
 	bg::correct(vp);
+
+	// sanity checks
+	bg::is_valid(vp);
+	bg::is_simple(vp);
+
+	// append
 	visibility_polygons.push_back(vp);
       }
-
+    
+    
     // intersection of visibility polygones
     boost_polygon_t poly = visibility_polygons.back();
     visibility_polygons.pop_back();
@@ -130,6 +120,10 @@ namespace vm
 	
 	// update the kernel
 	poly = std::move(intersections[0]);
+
+	// sanity checks
+	bg::is_valid(poly);
+	bg::is_simple(poly);
       }
 
     // return the vertices of the intersection polygon
