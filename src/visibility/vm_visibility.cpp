@@ -82,7 +82,7 @@ namespace vm
 	
 	// this visibility polygon
 	boost_polygon_t vp;
-	const int num_halfedges = regular_output.number_of_halfedges();
+	const int num_halfedges = regular_output.number_of_halfedges()/2;
 	auto hedge = regular_output.halfedges_begin();
 	for(int hcount=0; hcount<num_halfedges; ++hcount)
 	  {
@@ -117,7 +117,7 @@ namespace vm
 	// intersection should be non empty, with one connected component
 	assert(intersections.empty()==false);
 	assert(static_cast<int>(intersections.size())==1);
-	
+
 	// update the kernel
 	poly = std::move(intersections[0]);
 
