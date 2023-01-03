@@ -124,6 +124,7 @@ namespace vm
 	// sanity checks
 	bg::is_valid(poly);
 	bg::is_simple(poly);
+	assert(bg::within(boost_point_t(X[0],X[1]), poly)==true);
       }
 
     // return the vertices of the intersection polygon
@@ -132,9 +133,6 @@ namespace vm
       poly_verts.push_back({bg::get<0>(v), bg::get<1>(v)});
     poly_verts.pop_back();
 
-    // sanity check: poly should contain the given vertex and all its halfedges
-    assert(bg::within(boost_point_t(X[0],X[1]), poly)==true);
-      
     return std::move(poly_verts);
   }
 
