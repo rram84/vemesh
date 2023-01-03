@@ -3,7 +3,6 @@
 add_library(vm_manager STATIC
 		 vm_Manager.cpp
 		 vm_Manager_merge.cpp
-		 vm_Manager_snap.cpp
 		 vm_Manager_move.cpp
 		 vm_Manager_inspect.cpp)
 		 
@@ -15,7 +14,6 @@ target_include_directories(vm_manager PUBLIC
 target_link_libraries(vm_manager PUBLIC
 		 	     vm_merge
 			     vm_io
-			     vm_snap
 			     vm_quality
 			     vm_move)
 

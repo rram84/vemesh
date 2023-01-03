@@ -11,7 +11,6 @@ namespace vm
   Manager::Manager(const std::string coord_file, const std::string conn_file)
   {
     mesh.clear();
-    curr2ref_vertex_map.clear();
     read_triangles(coord_file, conn_file, mesh);
 
     // only triangles
@@ -26,7 +25,6 @@ namespace vm
   Manager::Manager(const std::string off_file)
   {
     mesh.clear();
-    curr2ref_vertex_map.clear();
     read_off(off_file, mesh);
 
     // sanity checks
@@ -47,10 +45,7 @@ namespace vm
   // visualize
   void Manager::write(const std::string filename) 
   {
-    if(curr2ref_vertex_map.empty())
-      write_off(mesh, filename);
-    else
-      write_off(mesh, curr2ref_vertex_map, filename);
+    write_off(mesh, filename);
     return;
   }
   

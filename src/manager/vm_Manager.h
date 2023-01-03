@@ -36,9 +36,6 @@ namespace vm
     // returns the number of merging operations performed
     int merge_faces(const double eps_degrees);
 
-    // snap vertices to nearby edges
-    int snap_vertices(const double eps_dist_ratio);
-
     // moves a vertex to a more favorable position
     std::pair<bool, LimitCircle_t> move_vertex(const pmp::Vertex& vertex, const int num_samples);
 
@@ -53,6 +50,5 @@ namespace vm
     
   private:
     pmp::SurfaceMesh mesh;
-    std::map<pmp::Vertex, pmp::Vertex> curr2ref_vertex_map;
   };
 }
