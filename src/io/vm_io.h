@@ -30,5 +30,10 @@ namespace vm
   // filename [in]       : name of the file
   void write_off(pmp::SurfaceMesh& mesh,
 		 const std::list<pmp::Face>& faces,
-		 const std::string filename); 
+		 const std::string filename);
+
+  // Writes a mesh in Sukumar's format
+  void write_suku_format(pmp::SurfaceMesh& mesh,
+			 const std::string filename);
+    
 }

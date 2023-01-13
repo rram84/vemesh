@@ -208,4 +208,56 @@ namespace vm
     return;    
   }
   
+
+  // Writes a mesh in Sukumar's format
+  void write_suku_format(const pmp::SurfaceMesh& mesh,
+			 const std::string filename)
+  {
+    const std::string extension = std::filesystem::path(filename).extension();
+    assert(extension.empty()==true);
+
+    
+    // Node file   : X, Y, boundary flag
+    // Element file: material id, #edges, #nodes per edge, vertex ids
+
+    // node file
+    std::fstream pfile;
+    pfile.open(filename+".node", std::ios::out);
+    assert(pfile.good());
+    const auto& v_circulator = mesh.vertices();
+    for(auto v:v_circulator)
+      {
+	const auto& X = mesh.position(v); 
+	bool bd_flag  = mesh.is_boundary(v);
+	pfile << X[0] << "  " << X[1] << " " << static_cast<int>(bd_flag) << std::endl;
+      }
+    pfile.close();
+    
+    // element file
+    const int mat_id = 1;
+    pfile.open(filename+".ele", std::ios::out);
+    assert(pfile.good());
+    const auto& f_circulator = mesh.faces();
+    for(auto f:f_circulator)
+      {
+	const int nedges = mesh.valence(f); // same as #vertices
+	pfile << mat_id << " " << nedges << " " << 2 << " "; 
+	const auto h0 = mesh.halfedge(f);
+	pmp::Halfedge h = h0;
+	while(true)
+	  {
+	    auto v0 = mesh.from_vertex(h);
+	    auto v1 = mesh.to_vertex(h);
+	    pfile << v0.idx() << " " << v1.idx() << " ";
+	    h = mesh.next_halfedge(h);
+	    if(h==h0)
+	      break;
+	  }
+	pfile << std::endl;
+      }
+    pfile.close();
+
+    // done
+    return;
+  }
 }
