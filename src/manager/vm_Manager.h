@@ -32,6 +32,10 @@ namespace vm
     // access the mesh
     pmp::SurfaceMesh& get_mesh();
 
+    // merge poor quality triangles, having one or more angles smaller than the tolerance provided, with neighbors
+    // returns the number of merging operations performed
+    int agglomerate_triangles(const double eps_degrees);
+    
     // merge poor quality elements with neighbors
     // returns the number of merging operations performed
     int merge_faces(const double eps_degrees);
