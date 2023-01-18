@@ -3,7 +3,8 @@
 add_library(vm_quality STATIC
 		 vm_quality_angle.cpp
 		 vm_quality_face.cpp
-		 vm_quality_vertex.cpp)
+		 vm_quality_vertex.cpp
+		 vm_quality_triangles.cpp)
 
 # include headers in the current directory
 target_include_directories(vm_quality PUBLIC

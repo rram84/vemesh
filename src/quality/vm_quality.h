@@ -4,6 +4,8 @@
 
 #include <pmp/SurfaceMesh.h>
 #include <utility>
+#include <set>
+#include <map>
 
 namespace vm
 {
@@ -37,4 +39,8 @@ namespace vm
   // minimum distance of a vertex from its connected ring
   LimitCircle_t compute_minimum_vertex_to_ring_distance(const pmp::SurfaceMesh& mesh,
 							const pmp::Vertex& vertex);
+
+  // triangle qualities
+  std::map<int, double> get_triangle_qualities_map(const pmp::SurfaceMesh& mesh);
+  std::set<double>      get_triangle_qualities_set(const pmp::SurfaceMesh& mesh);
 }
