@@ -8,10 +8,6 @@
 
 namespace vm
 {
-  // Reads a surface mesh
-  void read_triangles(const std::string coord_file, const std::string conn_file,
-		      pmp::SurfaceMesh& mesh);
-
   // Reads a .OFF mesh
   void read_off(const std::string filename, pmp::SurfaceMesh& mesh);
   
@@ -33,7 +29,7 @@ namespace vm
 		 const std::string filename);
 
   // Writes a mesh in Sukumar's format
-  void write_suku_format(pmp::SurfaceMesh& mesh,
+  void write_suku_format(const pmp::SurfaceMesh& mesh,
 			 const std::string filename);
     
 }

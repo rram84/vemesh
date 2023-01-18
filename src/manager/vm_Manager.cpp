@@ -7,20 +7,6 @@
 
 namespace vm
 {
-  // Constructor
-  Manager::Manager(const std::string coord_file, const std::string conn_file)
-  {
-    mesh.clear();
-    read_triangles(coord_file, conn_file, mesh);
-
-    // only triangles
-    assert(mesh.is_triangle_mesh()==true);
-    
-    // sanity checks
-    inspect_mesh();
-  }
-
-
   // Constructor: from a .OFF file
   Manager::Manager(const std::string off_file)
   {

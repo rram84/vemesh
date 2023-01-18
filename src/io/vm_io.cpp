@@ -8,49 +8,6 @@
 
 namespace vm
 {
-  // Reads a surface mesh
-  void read_triangles(const std::string coord_file,
-		      const std::string conn_file,
-		      pmp::SurfaceMesh& mesh)
-  {
-    mesh.clear();
-    
-    // read vertex coordinates
-    std::vector<pmp::Vertex> vertices{};
-    std::fstream pfile;
-    pfile.open(coord_file, std::ios::in);
-    assert(pfile.good() && pfile.is_open());
-    double xy[2];
-    pfile >> xy[0];
-    while(pfile.good())
-      {
-	pfile >> xy[1];
-	vertices.push_back( mesh.add_vertex(pmp::Point(xy[0], xy[1], 0.)) );
-	pfile >> xy[0];
-      }
-    pfile.close();
-    
-    // read triangle connectivities
-    pfile.open(conn_file, std::ios::in);
-    assert(pfile.good() && pfile.is_open());
-    int conn[3];
-    pfile >> conn[0];
-    while(pfile.good())
-      {
-	pfile >> conn[1];
-	pfile >> conn[2];
-	mesh.add_triangle(vertices[conn[0]-1], vertices[conn[1]-1], vertices[conn[2]-1]);
-	pfile >> conn[0];
-      }
-    pfile.close();
-    std::cout << "Read " << mesh.n_vertices() << " vertices and "
-	      << mesh.n_faces() << " triangles " << std::endl;
-
-    // done
-    return;
-  }
-
-
   // Reads a .OFF mesh
   void read_off(const std::string filename, pmp::SurfaceMesh& mesh)
   {
@@ -241,14 +198,14 @@ namespace vm
     for(auto f:f_circulator)
       {
 	const int nedges = mesh.valence(f); // same as #vertices
-	pfile << mat_id << " " << nedges << " " << 2 << " "; 
+	pfile << mat_id << " " << nedges << " ";
 	const auto h0 = mesh.halfedge(f);
 	pmp::Halfedge h = h0;
 	while(true)
 	  {
 	    auto v0 = mesh.from_vertex(h);
 	    auto v1 = mesh.to_vertex(h);
-	    pfile << v0.idx() << " " << v1.idx() << " ";
+	    pfile << 2 << " " << v0.idx()+1 << " " << v1.idx()+1 << " ";  // node numbering from 1
 	    h = mesh.next_halfedge(h);
 	    if(h==h0)
 	      break;

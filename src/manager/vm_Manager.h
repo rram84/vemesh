@@ -14,9 +14,6 @@ namespace vm
   {
   public:
     //! Constructor
-    Manager(const std::string coord_file, const std::string conn_file);
-
-    //! Constructor
     Manager(const std::string off_file);
     
     //! Destructor
