@@ -23,11 +23,22 @@ int main(int argc, char** argv)
   // parse options
   CLI11_PARSE(app, argc, argv);
 
+  // checks on filenames: input/output cannot differ just in the extension
+  assert(std::string(std::filesystem::path(input_file).stem())!=std::string(std::filesystem::path(output_file).stem()));
+  
   // Mesh manager
   const std::string in_file_extension = std::filesystem::path(input_file).extension();
   assert(in_file_extension==".off" || in_file_extension==".OFF");
   vm::Manager mesh_manager(input_file);
+  auto& mesh = mesh_manager.get_mesh();
 
+  // write the input mesh in suku's format
+  const std::string in_file_stem = std::filesystem::path(input_file).stem();
+  vm::write_suku_format(mesh, in_file_stem);
+  
+  // triangle qualities at input
+  auto in_tria_qualities = vm::get_triangle_qualities_set(mesh);
+  
   // iteratively merge triangles
   int iter = 0;
   while(true)
@@ -39,8 +50,10 @@ int main(int argc, char** argv)
 	break;
     }
 
+  // triangle qualities after merging
+  auto out_tria_qualities = vm::get_triangle_qualities_set(mesh);
+  
   // write
-  auto& mesh = mesh_manager.get_mesh();
   const std::string out_file_extension = std::filesystem::path(output_file).extension();
   const std::string out_file_stem      = std::filesystem::path(output_file).stem();
   if(out_file_extension==".off" || out_file_extension==".OFF")
@@ -51,6 +64,25 @@ int main(int argc, char** argv)
       vm::write_suku_format(mesh, output_file);
     }
 
+  // triangle qualities in the input mesh
+  std::fstream pfile;
+  std::string filename = std::string(std::filesystem::path(input_file).stem())+"-tria-quality.dat";
+  pfile.open(filename, std::ios::out);
+  assert(pfile.good());
+  int indx = 0;
+  for(auto& it:in_tria_qualities)
+    pfile << indx++ << " " << it << std::endl;
+  pfile.close();
+
+  // triangle qualities in the output mesh
+  filename = std::string(std::filesystem::path(output_file).stem())+"-tria-quality.dat";
+  pfile.open(filename, std::ios::out);
+  assert(pfile.good());
+  indx = 0;
+  for(auto& it:out_tria_qualities)
+    pfile << indx++ << " " << it << std::endl;
+  pfile.close();
+  
   // done
 }
 	 
