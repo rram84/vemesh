@@ -2,6 +2,7 @@
 
 #include <vm_visibility.h>
 #include <vm_vertex_ring.h>
+#include <vm_inspect.h>
 
 // cgal visibility utilities
 #include <CGAL/Exact_predicates_exact_constructions_kernel.h>
@@ -106,7 +107,7 @@ namespace vm
       }
     
     
-    // intersection of visibility polygones
+    // intersection of visibility polygons
     boost_polygon_t poly = visibility_polygons.back();
     visibility_polygons.pop_back();
     for(auto& vp:visibility_polygons)
@@ -133,6 +134,9 @@ namespace vm
       poly_verts.push_back({bg::get<0>(v), bg::get<1>(v)});
     poly_verts.pop_back();
 
+    // inspect the correctness of a computed visibility polygon
+    assert(inspect_visibility_polygon(mesh, vertex, poly_verts)==true);
+    
     return std::move(poly_verts);
   }
 

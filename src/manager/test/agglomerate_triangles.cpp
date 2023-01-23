@@ -37,7 +37,7 @@ int main(int argc, char** argv)
   vm::write_suku_format(mesh, in_file_stem);
   
   // triangle qualities at input
-  auto in_tria_qualities = vm::get_triangle_qualities_set(mesh);
+  auto in_tria_qualities = vm::get_triangle_qualities_map(mesh);
   
   // iteratively merge triangles
   int iter = 0;
@@ -51,7 +51,7 @@ int main(int argc, char** argv)
     }
 
   // triangle qualities after merging
-  auto out_tria_qualities = vm::get_triangle_qualities_set(mesh);
+  auto out_tria_qualities = vm::get_triangle_qualities_map(mesh);
   
   // write
   const std::string out_file_extension = std::filesystem::path(output_file).extension();
@@ -71,7 +71,7 @@ int main(int argc, char** argv)
   assert(pfile.good());
   int indx = 0;
   for(auto& it:in_tria_qualities)
-    pfile << indx++ << " " << it << std::endl;
+    pfile << indx++ << " " << it.first << " " << it.second << std::endl;
   pfile.close();
 
   // triangle qualities in the output mesh
@@ -80,7 +80,7 @@ int main(int argc, char** argv)
   assert(pfile.good());
   indx = 0;
   for(auto& it:out_tria_qualities)
-    pfile << indx++ << " " << it << std::endl;
+    pfile << indx++ << " " << it.first << " " << it.second << " " << std::endl;
   pfile.close();
   
   // done

@@ -12,6 +12,7 @@ target_link_libraries(vm_visibility PUBLIC
 				    pmp Eigen3::Eigen
 				    Boost::boost
 				    vm_vertex_ring
+				    vm_inspect
 				    vm_io)
 
 # Add required flags
