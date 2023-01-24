@@ -8,44 +8,44 @@
 
 int main()
 {
-  //vm::Manager manager("coordinates.dat", "connectivity.dat");
   vm::Manager manager("slice.OFF");
-  //manager.write_bad_angles("bad_angles.off", 20.);
-
-  // merge
-  int nmerged = manager.merge_faces(20.);
-  manager.inspect_mesh();
-  std::cout << "Merged "<<nmerged << " elements "<< std::endl;
-  manager.write("merged.off");
-  pmp::SurfaceMesh merged_mesh = manager.get_mesh();
-  vm::write_dat(manager.get_mesh(), "merged.dat");
-  
-  // move vertices
-  std::set<pmp::Vertex> moved_verts{};
   auto& mesh = manager.get_mesh();
-  auto v_circulator = mesh.vertices();
-  int count = 0;
-  for(auto vertex:v_circulator)
-    if(!mesh.is_boundary(vertex))
-      {
-	auto lc_1 = vm::compute_distance_based_vertex_quality(mesh, vertex);
-	auto havg = vm::compute_average_edge_length_at_vertex(mesh, vertex);
-	if(lc_1.radius/havg < 0.2)
+  
+  // algorithm: alternately merge triangles and move vertices
+  const int nIters = 10;
+  for(int iter=0; iter<nIters; ++iter)
+    {
+      std::cout << std::endl << "Iteration " << iter << std::endl;
+
+      // merge triangles
+      int num_trias_merged = manager.agglomerate_triangles(20.);
+      std::cout << "Merged " << num_trias_merged << " triangles " << std::endl;
+      manager.write("merged-"+std::to_string(iter)+".off");
+      
+      // move nodes
+      auto v_circulator = mesh.vertices();
+      int move_count = 0;
+      for(auto vertex:v_circulator)
+	if(!mesh.is_boundary(vertex))
 	  {
-	    std::cout << "Attempting to move vertex " << vertex.idx() << std::endl;
-	    auto move_result = manager.move_vertex(vertex, 20);
-	    if(move_result.first==true)
+	    auto lc_1 = vm::compute_distance_based_vertex_quality(mesh, vertex);
+	    auto havg = vm::compute_average_edge_length_at_vertex(mesh, vertex);
+	    if(lc_1.radius/havg < 0.2)
 	      {
-		moved_verts.insert(vertex);
-		auto lc_2 = move_result.second;
-		assert(lc_1.radius<=lc_2.radius);
-		//vm::write_off(mesh, "moved-"+std::to_string(count++)+".off");
+		auto move_result = manager.move_vertex(vertex, 20);
+		if(move_result.first==true)
+		  {
+		    ++move_count;
+		    auto lc_2 = move_result.second;
+		    assert(lc_1.radius<=lc_2.radius);
+		  }
 	      }
 	  }
-      }
-  manager.inspect_mesh();
-  manager.write("moved.off");
-  vm::write_dat(mesh, "moved.dat");
+      manager.inspect_mesh();
+
+      std::cout << "Moved " << move_count << " vertices " << std::endl;
+      manager.write("moved-" + std::to_string(iter)+".off");
+    }
 
   // vertex qualities before movement
   std::vector<double> pre_qualities{};
