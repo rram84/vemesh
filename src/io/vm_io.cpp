@@ -69,21 +69,24 @@ namespace vm
   
 
   // Writes a mesh in .off format
-  void write_off(pmp::SurfaceMesh& mesh, const std::string filename)
+  void write_off(const pmp::SurfaceMesh& mesh, const std::string filename)
   {
     const std::string extension = std::filesystem::path(filename).extension();
     assert(extension==".off" || extension==".OFF");
-    
-    const auto& positions = mesh.positions();
+
     std::fstream out;
     out.open(filename, std::ios::out);
     assert(out.good() && out.is_open());
     out << "OFF" << std::endl
-	<< positions.size() << " " << mesh.n_faces() << " " << 0;
+	<< mesh.n_vertices() << " " << mesh.n_faces() << " " << 0;
 
     // vertex coordinates
-    for(auto& pt:positions)
-      out << std::endl << pt[0] <<" " << pt[1] <<" " << pt[2];
+    auto v_circulator = mesh.vertices();
+    for(auto v:v_circulator)
+      {
+	const auto& X = mesh.position(v);
+	out << std::endl << X[0] << " " << X[1] << " " << X[2];
+      }
 
     // connectivity
     auto face_circulator = mesh.faces();

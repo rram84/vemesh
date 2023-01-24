@@ -15,7 +15,7 @@ namespace vm
   // Note that pmp::SurfaceMesh::write() does not correctly handle non-sequential vertex indexing
   // mesh [in]           : polygon mesh
   // filename [in]       : name of the file
-  void write_off(pmp::SurfaceMesh& mesh, const std::string filename);
+  void write_off(const pmp::SurfaceMesh& mesh, const std::string filename);
 
   // Writes a mesh in .dat format, suitable for plotting with gnuplot
   void write_dat(const pmp::SurfaceMesh &mesh, const std::string filename);
