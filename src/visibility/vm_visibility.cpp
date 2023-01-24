@@ -11,10 +11,7 @@
 #include <CGAL/Arrangement_2.h>
 #include <CGAL/Arr_segment_traits_2.h>
 #include <CGAL/Arr_naive_point_location.h>
-
-// boost polygon utilities
-#include <boost/geometry/geometry.hpp>
-#include <boost/geometry/geometries/polygon.hpp>
+#include <CGAL/Boolean_set_operations_2.h>
 
 #include <vm_io.h>
 
@@ -24,16 +21,34 @@ namespace vm
   using Kernel                  = CGAL::Exact_predicates_exact_constructions_kernel;
   using Point_2                 = Kernel::Point_2;
   using Segment_2               = Kernel::Segment_2;
+  using Polygon_2               = CGAL::Polygon_2<Kernel>;
+  using Polygon_with_holes_2    = CGAL::Polygon_with_holes_2<Kernel>;
   using Traits_2                = CGAL::Arr_segment_traits_2<Kernel>;
   using Arrangement_2           = CGAL::Arrangement_2<Traits_2>;
   using Face_handle             = Arrangement_2::Face_handle;                                      
   using RSPV                    = CGAL::Simple_polygon_visibility_2<Arrangement_2, CGAL::Tag_false>; //CGAL::Triangular_expansion_visibility_2<Arrangement_2>; 
+
+
+  // sanity checks intermediate visibility polygons
+  template<class Polygon_t, class Point_t>
+  void check_visibility_polygon(const Polygon_t& vp, const Point_t& pt)
+  {
+    // (i) should be counter-clockwise
+    assert(vp.orientation()==CGAL::COUNTERCLOCKWISE);
+
+    // (ii) should be simple
+    assert(vp.is_simple()==true);
+
+    // (iii) should have positive area
+    assert(vp.area()>0.);
+
+    // (iv) should contain X
+    assert(vp.bounded_side(pt)==true);
+
+    // done
+    return;
+  }
   
-  // boost aliases
-  namespace bg  = boost::geometry;
-  namespace bgm = bg::model;
-  using boost_point_t    = bgm::point<double, 2, bg::cs::cartesian>;
-  using boost_polygon_t  = bgm::polygon<boost_point_t, false>;
   
   std::vector<std::pair<double,double>>
   compute_visibility_polygon(const pmp::SurfaceMesh& mesh,
@@ -74,7 +89,7 @@ namespace vm
     const double EPS = 0.01;
     RSPV regular_visibility(env);
     Arrangement_2 regular_output;
-    std::vector<boost_polygon_t> visibility_polygons{};
+    std::vector<Polygon_2> visibility_polygons{};
     for(auto guard:vertex_guards)
       {
 	regular_output.clear();
@@ -83,57 +98,58 @@ namespace vm
 	regular_visibility.compute_visibility(guard_eps, *face, regular_output);
 	
 	// this visibility polygon
-	boost_polygon_t vp;
+	Polygon_2 vp;
 	const int num_halfedges = regular_output.number_of_halfedges()/2;
 	auto hedge = regular_output.halfedges_begin();
 	for(int hcount=0; hcount<num_halfedges; ++hcount)
 	  {
 	    const auto& P = hedge->source()->point();
-	    bg::append(vp.outer(), boost_point_t(CGAL::to_double(P.x()), CGAL::to_double(P.y())));
+	    vp.push_back(Point_2(CGAL::to_double(P.x()), CGAL::to_double(P.y())));
 	    hedge = hedge->next();
 	  }
-	// repeat the first vertex
-	{
-	  const auto& P = hedge->source()->point();
-	  bg::append(vp.outer(), boost_point_t(CGAL::to_double(P.x()), CGAL::to_double(P.y())));
-	}
-	bg::correct(vp);
 
+	// fix orientation
+	if(vp.orientation()==CGAL::CLOCKWISE)
+	  vp.reverse_orientation();
+	
 	// sanity checks
-	bg::is_valid(vp);
-	bg::is_simple(vp);
+	check_visibility_polygon(vp, Point_2(X[0],X[1]));
 
 	// append
 	visibility_polygons.push_back(vp);
       }
 
-    // intersection of visibility polygons
-    boost_polygon_t poly = visibility_polygons.back();
-    visibility_polygons.pop_back();
-    for(auto& vp:visibility_polygons)
+    // intersect visibility polygons
+    const int npolygons = static_cast<int>(visibility_polygons.size());
+    Polygon_2 vis_poly = visibility_polygons[0];
+    for(int i=0; i<npolygons; ++i)
       {
-	std::vector<boost_polygon_t> intersections{};
-	bg::intersection(poly, vp, intersections);
+	// intersect vis_poly with visibility_polygons[i]
+	std::vector<Polygon_with_holes_2> intersection{};
+	CGAL::intersection(vis_poly, visibility_polygons[i], std::back_inserter(intersection));
 
-	// intersection should be non empty, with one connected component
-	assert(intersections.empty()==false);
-	assert(static_cast<int>(intersections.size())==1);
+	// expect one connected component with no holes
+	assert(static_cast<int>(intersection.size())==1);
+	assert(intersection[0].holes().empty()==true);
+	
+	// sanity checks on the intersection
+	check_visibility_polygon(intersection[0].outer_boundary(), Point_2(X[0],X[1]));
+	
+	// update the visibility polygon to the intersection
+	vis_poly.clear();
+	vis_poly = intersection[0].outer_boundary();
 
-	// update the kernel
-	poly = std::move(intersections[0]);
-
-	// sanity checks
-	bg::is_valid(poly);
-	bg::is_simple(poly);
-	assert(bg::within(boost_point_t(X[0],X[1]), poly)==true);
+	// next
       }
 
+    // final check on the visibility polygon
+    check_visibility_polygon(vis_poly, Point_2(X[0],X[1]));
+    
     // return the vertices of the intersection polygon
     std::vector<std::pair<double,double>> poly_verts{};
-    for(auto& v:poly.outer())
-      poly_verts.push_back({bg::get<0>(v), bg::get<1>(v)});
-    poly_verts.pop_back();
-
+    for (Polygon_2::Vertex_iterator vi=vis_poly.vertices_begin(); vi!=vis_poly.vertices_end(); ++vi)
+      poly_verts.push_back({CGAL::to_double(vi->x()), CGAL::to_double(vi->y())});
+    
     // inspect the correctness of a computed visibility polygon
     assert(inspect_visibility_polygon(mesh, vertex, poly_verts)==true);
     
