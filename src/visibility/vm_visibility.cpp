@@ -83,7 +83,21 @@ namespace vm
     face = boost::get<Arrangement_2::Face_const_handle> (&obj);
 
     // sanity check
-    assert((*face)->is_unbounded()==false);
+    //assert((*face)->is_unbounded()==false);
+    if((*face)->is_unbounded()==true)
+      {
+	std::cout << "DETECTED UNBOUNDED FACE IN VISIBILITY CALCULATION. " << std::endl;
+	std::cout << "Environment: " << std::endl;
+	for(auto& v:vertex_ring)
+	  {
+	    const auto& Y = mesh.position(v);
+	    std::cout << Y[0] << "  " << Y[1] << std::endl;
+	  }
+	std::cout << "Vertex: id = " << vertex.idx() << ", coord: " << X[0] << " " << X[1] << std::endl;
+	vm::write_off(mesh, "problem-mesh.off");
+	assert(false);
+      }
+
     
     // compute the regularized visibility polygon from each of the guard vertices
     const double EPS = 0.01;
