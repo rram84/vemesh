@@ -52,6 +52,9 @@ namespace vm
 	bad_trias.erase(bad_trias.begin());
       }
 
+    // inspect the mesh
+    inspect_mesh();
+    
     // done
     return agg_count;
   }

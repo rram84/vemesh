@@ -17,7 +17,7 @@ namespace vm
 
   void inspect_face(const pmp::SurfaceMesh& mesh, pmp::Face& face)
   {
-    assert(mesh.is_valid(face)==true);
+    assert(mesh.is_valid(face)==true && mesh.is_deleted(face)==false);
     
     // vertices of this face
     auto vertex_circulator = mesh.vertices(face);

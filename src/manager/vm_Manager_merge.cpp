@@ -50,6 +50,10 @@ namespace vm
 	bad_faces.erase(bad_faces.begin());
       }
 
+     // inspect the mesh
+    inspect_mesh();
+
+    // done
     return merge_count;
   }
   
