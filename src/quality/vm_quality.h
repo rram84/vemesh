@@ -4,8 +4,7 @@
 
 #include <pmp/SurfaceMesh.h>
 #include <utility>
-#include <set>
-#include <map>
+#include <list>
 
 namespace vm
 {
@@ -41,6 +40,5 @@ namespace vm
 							const pmp::Vertex& vertex);
 
   // triangle qualities
-  std::map<int, double> get_triangle_qualities_map(const pmp::SurfaceMesh& mesh);
-  std::set<double>      get_triangle_qualities_set(const pmp::SurfaceMesh& mesh);
+  std::list<std::pair<int,double>> get_triangle_qualities(const pmp::SurfaceMesh& mesh);
 }
