@@ -7,6 +7,7 @@
 // cgal visibility utilities
 #include <CGAL/Exact_predicates_exact_constructions_kernel.h>
 #include <CGAL/Simple_polygon_visibility_2.h>
+//#include <CGAL/Triangular_expansion_visibility_2.h>
 #include <CGAL/Arrangement_2.h>
 #include <CGAL/Arr_segment_traits_2.h>
 #include <CGAL/Arr_naive_point_location.h>
@@ -26,7 +27,7 @@ namespace vm
   using Traits_2                = CGAL::Arr_segment_traits_2<Kernel>;
   using Arrangement_2           = CGAL::Arrangement_2<Traits_2>;
   using Face_handle             = Arrangement_2::Face_handle;                                      
-  using RSPV                    = CGAL::Simple_polygon_visibility_2<Arrangement_2, CGAL::Tag_false>;
+  using RSPV                    = CGAL::Simple_polygon_visibility_2<Arrangement_2, CGAL::Tag_false>; //CGAL::Triangular_expansion_visibility_2<Arrangement_2>; 
   
   // boost aliases
   namespace bg  = boost::geometry;
@@ -105,8 +106,7 @@ namespace vm
 	// append
 	visibility_polygons.push_back(vp);
       }
-    
-    
+
     // intersection of visibility polygons
     boost_polygon_t poly = visibility_polygons.back();
     visibility_polygons.pop_back();
