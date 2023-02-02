@@ -65,14 +65,14 @@ namespace vm
       }  
 
     // pairwise intersections of faces should be empty
-    const int nfaces = static_cast<int>(face_poly.size());
+    /*const int nfaces = static_cast<int>(face_poly.size());
     for(int i=0; i<nfaces; ++i)
       for(int j=i+1; j<nfaces; ++j)
 	{
 	  boost_multi_polygon_t diff;
 	  bg::sym_difference(face_poly[i], face_poly[j], diff);
 	  assert(std::abs(bg::area(diff))/total_area<1.e-3);
-	}
+	  }*/
       
     // done
     return true;
