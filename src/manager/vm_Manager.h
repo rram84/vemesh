@@ -40,6 +40,9 @@ namespace vm
     // moves a vertex to a more favorable position
     std::pair<bool, LimitCircle_t> move_vertex(const pmp::Vertex& vertex, const int num_samples);
 
+    // try to move all vertices to favorable positions. returns the number of moved vertices
+    int move_all_vertices(const int num_samples);
+    
     // visualize
     void write(const std::string filename);
 

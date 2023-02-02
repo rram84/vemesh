@@ -19,7 +19,7 @@ namespace vm
     
     // identify a feasible new position & move
     const auto result = compute_feasible_vertex_position(mesh, vertex, num_samples);
-
+        
     // no feasible point
     if(std::get<0>(result)==false)
       {
@@ -40,4 +40,42 @@ namespace vm
     return {true, lc};
   }
 
+
+  // try to move all vertices to favorable positions. returns the number of moved vertices
+  int Manager::move_all_vertices(const int num_samples)
+  {
+    // list of vertex qualities
+    std::list<std::pair<pmp::Vertex, double>> vlist{};
+    auto v_circulator = mesh.vertices();
+    for(auto v:v_circulator)
+      if(mesh.is_boundary(v)==false)
+	{
+	  auto lc = compute_distance_based_vertex_quality(mesh, v);
+	  vlist.push_back({v,lc.radius});
+	}
+
+    // sort the list of vertices in increasing order of quality
+    vlist.sort( [](const auto& a, const auto& b){ return a.second<b.second; } );
+
+    // attempt to relax vertices in order
+    int nmoved = 0;
+    for(auto& it:vlist)
+      {
+	const auto& vertex = it.first;
+	const auto result  = compute_feasible_vertex_position(mesh, vertex, num_samples);
+	if(std::get<0>(result)==true)
+	  {
+	    ++nmoved;
+
+	    // update coordinates
+	    pmp::Point& X = mesh.position(vertex);
+	    const auto& Y = std::get<1>(result);
+	    X[0] = Y.first;
+	    X[1] = Y.second;
+	  }
+      }
+    
+    return nmoved;
+  }
+  
 }
