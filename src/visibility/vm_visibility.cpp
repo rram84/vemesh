@@ -6,8 +6,8 @@
 
 // cgal visibility utilities
 #include <CGAL/Exact_predicates_exact_constructions_kernel.h>
-#include <CGAL/Simple_polygon_visibility_2.h>
-//#include <CGAL/Triangular_expansion_visibility_2.h>
+//#include <CGAL/Simple_polygon_visibility_2.h>
+#include <CGAL/Triangular_expansion_visibility_2.h>
 #include <CGAL/Arrangement_2.h>
 #include <CGAL/Arr_segment_traits_2.h>
 #include <CGAL/Arr_naive_point_location.h>
@@ -26,7 +26,7 @@ namespace vm
   using Traits_2                = CGAL::Arr_segment_traits_2<Kernel>;
   using Arrangement_2           = CGAL::Arrangement_2<Traits_2>;
   using Face_handle             = Arrangement_2::Face_handle;                                      
-  using RSPV                    = CGAL::Simple_polygon_visibility_2<Arrangement_2, CGAL::Tag_false>; //CGAL::Triangular_expansion_visibility_2<Arrangement_2>; 
+  using RSPV                    = CGAL::Triangular_expansion_visibility_2<Arrangement_2>; //CGAL::Simple_polygon_visibility_2<Arrangement_2, CGAL::Tag_false>; 
 
 
   // sanity checks intermediate visibility polygons
@@ -56,7 +56,7 @@ namespace vm
   {
     // vertex ring
     const auto vertex_ring = get_vertex_ring(mesh, vertex);
-
+    
     // connected vertices
     auto vertex_guards = mesh.vertices(vertex);
 
@@ -71,7 +71,7 @@ namespace vm
     std::vector<Segment_2> segments{}; 
     for(int n=0; n<nRingVerts; ++n)
       segments.push_back( Segment_2(env_vertices[n], env_vertices[(n+1)%nRingVerts]) );
-    
+
     Arrangement_2 env;
     CGAL::insert_non_intersecting_curves(env, segments.begin(), segments.end());
     
@@ -98,7 +98,6 @@ namespace vm
 	assert(false);
       }
 
-    
     // compute the regularized visibility polygon from each of the guard vertices
     const double EPS = 0.01;
     RSPV regular_visibility(env);
@@ -132,7 +131,7 @@ namespace vm
 	// append
 	visibility_polygons.push_back(vp);
       }
-
+    
     // intersect visibility polygons
     const int npolygons = static_cast<int>(visibility_polygons.size());
     Polygon_2 vis_poly = visibility_polygons[0];
