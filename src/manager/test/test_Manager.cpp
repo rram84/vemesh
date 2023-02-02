@@ -47,6 +47,7 @@ int main()
       manager.write("moved-" + std::to_string(iter)+".off");
     }
 
+  /*
   // vertex qualities before movement
   std::vector<double> pre_qualities{};
   std::fstream pfile;
@@ -79,4 +80,5 @@ int main()
   for(int i=0; i<nEntries; ++i)
     pfile << i+1 << " " << pre_qualities[i] << " " << post_qualities[i] << std::endl;
   pfile.close();
+  */
 }
