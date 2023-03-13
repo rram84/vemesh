@@ -26,7 +26,7 @@ namespace vm
       {
 	// quad to clip and its local inner vertices
 	const auto& e        = it.first;
-	const auto& in_verts = it.second;
+	auto& in_verts = it.second;
 	const int n_in_verts = static_cast<int>(in_verts.size());
 	assert(n_in_verts>0 && n_in_verts<4);
 
@@ -88,6 +88,12 @@ namespace vm
 	else if(n_in_verts==2)
 	  {
 	    // inner vertices should be successive
+	    if(in_verts[0]==0 && in_verts[1]==3)
+	      {
+		in_verts[0] = 3;
+		in_verts[1] = 0;
+	      }
+	    
 	    assert(in_verts[1]==(in_verts[0]+1)%4);
 	    const int a0 = in_verts[0];
 	    const int a1 = in_verts[1];  // (a0+1)%4
@@ -105,10 +111,10 @@ namespace vm
 	    mesh.delete_face(e);
 
 	    // add new face
-	    mesh.add_face({it->second, my_verts[a2], my_verts[a3], jt->second});
+	    mesh.add_face({it->second, jt->second, my_verts[a0], my_verts[a1]});
 	  }
       }
-
+      
     // renumber the mesh
     mesh = renumber_mesh_vertices(mesh);
 
