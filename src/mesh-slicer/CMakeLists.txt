@@ -1,7 +1,9 @@
 # Sriramajayam
 
 add_library(vm_mesh_slicer STATIC
-                 vm_MeshSlicer.cpp)
+		 vm_MeshSlicer.cpp
+                 vm_MeshSlicer_tri.cpp
+		 vm_MeshSlicer_quad.cpp)
 
 # include headers in the current directory
 target_include_directories(vm_mesh_slicer PUBLIC

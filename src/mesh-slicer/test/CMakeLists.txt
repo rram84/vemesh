@@ -5,8 +5,8 @@ cmake_minimum_required(VERSION 3.12)
 project(tri_slice_tests
   DESCRIPTION "Unit tests for the Manager class")
 
-file(GLOB MESH_FILES "${CMAKE_SOURCE_DIR}/src/tri-slicer/test/*.OFF")
-file(COPY ${MESH_FILES} DESTINATION ${CMAKE_BINARY_DIR}/src/tri-slicer/test/)
+file(GLOB MESH_FILES "${CMAKE_SOURCE_DIR}/src/mesh-slicer/test/*.OFF")
+file(COPY ${MESH_FILES} DESTINATION ${CMAKE_BINARY_DIR}/src/mesh-slicer/test/)
 
 foreach(TARGET
 	test_tri_slicer)
