@@ -1,6 +1,6 @@
 // Sriramajayam
 
-#include <vm_TriSlicer.h>
+#include <vm_MeshSlicer.h>
 #include <cassert>
 #include <list>
 #include <map>
