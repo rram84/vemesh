@@ -32,5 +32,6 @@ add_subdirectory(src/quality/test)
 add_subdirectory(src/move/test)	
 add_subdirectory(src/tet-slicer/test)
 add_subdirectory(src/mesh-slicer/test)
+add_subdirectory(src/special-meshes/test)
 
 
