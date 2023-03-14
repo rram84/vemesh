@@ -27,6 +27,6 @@ int main()
 
   // clip
   vm::LevelSetFunction_t lsfunc = level_set_circle;
-  vm::clip_quad_mesh(mesh, lsfunc);
+  vm::clip_mesh(mesh, lsfunc);
   vm::write_off(mesh, "ls.OFF");
 }

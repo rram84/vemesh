@@ -18,6 +18,6 @@ int main()
   pmp::SurfaceMesh mesh;
   vm::read_off("random_triangles.OFF", mesh);
   vm::LevelSetFunction_t lsfunc = level_set_circle;
-  vm::clip_tri_mesh(mesh, lsfunc);
+  vm::clip_mesh(mesh, lsfunc);
   vm::write_off(mesh, "ls.OFF");
 }
