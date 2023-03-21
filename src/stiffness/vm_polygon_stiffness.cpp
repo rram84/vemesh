@@ -25,7 +25,6 @@ namespace vm
   // normals at vertices
   std::vector<std::array<double,2>> compute_vertex_normals(const std::vector<std::array<double,2>>& coords);
 
-  
   Eigen::MatrixXd compute_polygon_stiffness_matrix(const std::vector<std::array<double,2>>& coords, const double tau)
   {
     // # vertices
