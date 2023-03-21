@@ -26,14 +26,14 @@ namespace vm
   std::vector<std::array<double,2>> compute_vertex_normals(const std::vector<std::array<double,2>>& coords);
 
   
-  Eigen::MatrixXd compute_element_stiffness(const std::vector<std::array<double,2>>& coords)
+  Eigen::MatrixXd compute_polygon_stiffness_matrix(const std::vector<std::array<double,2>>& coords, const double tau)
   {
     // # vertices
     const int nverts = static_cast<int>(coords.size());
     
     // farthest two points
     const double hE = compute_polygon_dia(coords);
-
+    
     // centroid
     const auto XE = compute_polygon_centroid(coords);
     
@@ -42,13 +42,13 @@ namespace vm
     
     // vertex normals
     const auto bvecs = compute_vertex_normals(coords);
-
+ 
     // G matrix
     Eigen::MatrixXd G = Eigen::MatrixXd::Zero(3,3);
     G(0,0) = 1.;
     G(1,1) = area/hE;
     G(2,2) = area/hE;
-
+    
     // B matrix
     Eigen::MatrixXd B(3, nverts);
     for(int j=0; j<nverts; ++j)
@@ -57,7 +57,7 @@ namespace vm
 	B(1,j) = bvecs[j][0]/hE;
 	B(2,j) = bvecs[j][1]/hE;
       }
-
+    
     // Pi*_Delta matrix
     Eigen::MatrixXd Pi_star_delta = G.inverse()*B;
 
@@ -72,15 +72,15 @@ namespace vm
 
     // Pi^Delta matrix
     Eigen::MatrixXd Pi_delta = Delta*Pi_star_delta;
-    
+
     // Modify G
     G(0,0) = 0.;
 
     // Identity
     Eigen::MatrixXd Id = Eigen::MatrixXd::Identity(nverts, nverts);
-    
+
     // stiffness matrix
-    return Pi_star_delta.transpose()*G*Pi_star_delta + (Id-Pi_delta)*(Id-Pi_delta);
+    return Pi_star_delta.transpose()*G*Pi_star_delta + tau*(Id-Pi_delta)*(Id-Pi_delta);
   }
 
 
