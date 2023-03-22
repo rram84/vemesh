@@ -6,7 +6,7 @@ project(vemesh
   VERSION 1.0
   DESCRIPTION "Universal Meshes in 2D"
   LANGUAGES CXX)
-
+ 
 # Set runtime path (for Linux)
 set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}/lib")
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
