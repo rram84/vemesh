@@ -45,8 +45,8 @@ namespace vm
     // G matrix
     Eigen::MatrixXd G = Eigen::MatrixXd::Zero(3,3);
     G(0,0) = 1.;
-    G(1,1) = area/hE;
-    G(2,2) = area/hE;
+    G(1,1) = area/(hE*hE);
+    G(2,2) = area/(hE*hE);
     
     // B matrix
     Eigen::MatrixXd B(3, nverts);

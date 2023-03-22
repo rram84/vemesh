@@ -19,7 +19,7 @@ int main()
   auto Ktri = triangle_stiffness(coords);
   
   std::cout << "Polygon stiffness matrix: "
-	    << std::endl << Kmat*sqrt(2.) << std::endl;
+	    << std::endl << Kmat << std::endl;
   std::cout << "Matrix eigenvalues: " << Kmat.selfadjointView<Eigen::Lower>().eigenvalues() << std::endl;
 
   std::cout<< "Triangle stiffness matrix: "
