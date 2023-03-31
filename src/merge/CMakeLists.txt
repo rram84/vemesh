@@ -1,6 +1,6 @@
 # Sriramajayam
 
-add_library(vm_merge STATIC vm_merge.cpp)
+add_library(vm_merge STATIC vm_face_merge.cpp)
 
 # include headers in the current directory
 target_include_directories(vm_merge PUBLIC
@@ -14,5 +14,5 @@ target_compile_features(vm_merge PUBLIC ${VM_COMPILE_FEATURES})
 
 # install headers
 install(FILES
-	vm_merge.h
+	vm_face_merge.h
   	DESTINATION ${PROJECT_NAME}/include)

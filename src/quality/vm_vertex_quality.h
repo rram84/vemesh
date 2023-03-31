@@ -8,6 +8,8 @@
 
 namespace vm
 {
+  using MeshVertexQuality_f = std::function<double(const pmp::SurfaceMesh&, const pmp::Vertex&)>;
+  
   // measure quality as the ratio of the distance of a vertex to its enclosing linestring to the longest halfedge
   // defined only for non-boundary vertices, not connected to hanging nodes
   double compute_distance_based_vertex_quality(const pmp::SurfaceMesh& mesh, const pmp::Vertex& vert);
@@ -19,7 +21,7 @@ namespace vm
   struct LimitCircle_t
   {
     double center[2];
-    double radius;
+    double radius; 
   };
   
   // measure quality as the ratio of the distance of a vertex to its enclosing linestring to the longest halfedge

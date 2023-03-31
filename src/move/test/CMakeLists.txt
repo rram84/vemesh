@@ -5,8 +5,7 @@ cmake_minimum_required(VERSION 3.12)
 project(move_tests
   DESCRIPTION "Unit tests for computing visibility in polygons")
 
-foreach(TARGET test_move
-	       problem)
+foreach(TARGET test_move)
 
   # add executable
   add_executable(${TARGET} ${TARGET}.cpp)

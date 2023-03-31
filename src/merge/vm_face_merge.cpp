@@ -1,14 +1,13 @@
 // Sriramajayam
 
-#include <vm_merge.h>
+#include <vm_face_merge.h>
 #include <vm_inspect.h>
-#include <vm_quality.h>
 #include <list>
 
 namespace vm
 {
   // identify the face along which to merger a given face
-  std::pair<bool, pmp::Halfedge> merge_halfedge(const pmp::SurfaceMesh& mesh, const pmp::Face& face)
+  std::pair<bool, pmp::Halfedge> find_merge_halfedge(const pmp::SurfaceMesh& mesh, const pmp::Face& face, FaceQuality_f qfunc)
   {
     // face needs to be merged with a neighbor
     // pick the neighbor so that the resulting face has the best quality among all possibilities
@@ -49,7 +48,7 @@ namespace vm
 
 	      // quality of the candidate merged face
 	      assert(inspect_face(verts)==true);
-	      double quality = compute_angle_based_face_quality(verts);
+	      double quality = qfunc(verts);
 	      if(quality>best_quality)
 		{
 		  best_quality = quality;

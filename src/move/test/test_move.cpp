@@ -1,6 +1,6 @@
 // Sriramajayam
 
-#include <vm_move.h>
+#include <vm_vertex_move.h>
 #include <iostream>
 #include <cassert>
 #include <fstream>
@@ -51,23 +51,22 @@ int main()
   }
 
   // compute a feasible location
-  auto move_result = vm::compute_feasible_vertex_position(mesh, guard_vertex, 20);  // edge ratio, angle tolerance, num_samples
+  vm::MeshVertexQuality_f qfunc = vm::compute_distance_based_vertex_quality;
+  auto move_result = vm::compute_feasible_vertex_position(mesh, guard_vertex, 20, qfunc);  // edge ratio, angle tolerance, num_samples
   if(std::get<0>(move_result)==true)
     {
       std::cout << "Successful move " << std::endl;
 
-      auto pre_quality = vm::compute_distance_based_vertex_quality(mesh, guard_vertex);
+      auto pre_quality = qfunc(mesh, guard_vertex);
       
       const auto& move_pos = std::get<1>(move_result);
-      mesh.position(guard_vertex) = pmp::Point(move_pos.first, move_pos.second, 0.);
-      auto post_quality = vm::compute_distance_based_vertex_quality(mesh, guard_vertex);
+      mesh.position(guard_vertex) = move_pos;
+      auto post_quality = qfunc(mesh, guard_vertex);
 
-      assert(post_quality.radius>=pre_quality.radius);
-      std::cout << "Pre and post limit circles: "
-		<< std::endl << pre_quality.center[0] << " " << pre_quality.center[1] << " " << pre_quality.radius
-		<< std::endl << post_quality.center[0] << " " << post_quality.center[1] << " " << post_quality.radius
-		<< std::endl;
-	 
+      assert(post_quality>=pre_quality);
+      std::cout << "Pre and post qualities: "
+		<< std::endl << pre_quality << " --> " << post_quality << std::endl;
+      
       pfile.open("out-edges.dat", std::ios::out);
       auto h_circulator = mesh.halfedges(guard_vertex);
       for(auto h:h_circulator)

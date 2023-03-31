@@ -5,9 +5,13 @@
 #include <pmp/SurfaceMesh.h>
 #include <utility>
 #include <list>
+#include <functional>
 
 namespace vm
 {
+  using FaceQuality_f     = std::function<double(const std::vector<pmp::Point>&)>;
+  using MeshFaceQuality_f = std::function<double(const pmp::SurfaceMesh&, const pmp::Face&)>;
+  
   // measure quality of a face as the smallest included angle
   double compute_angle_based_face_quality(const pmp::SurfaceMesh& mesh, const pmp::Face& face);
   double compute_angle_based_face_quality(const std::vector<pmp::Point>& coords);
@@ -18,9 +22,10 @@ namespace vm
    * \  /
    *  v
    */
-  double compute_included_angle_in_degrees(const pmp::Point& U, const pmp::Point& V, const pmp::Point& W);
+  //double compute_included_angle_in_degrees(const pmp::Point& U, const pmp::Point& V, const pmp::Point& W);
 
 
   // measure quality of a face as the smallest nonzero eigenvalue of the vem stiffness matrix
   double compute_stiffness_based_face_quality(const pmp::SurfaceMesh& mesh, const pmp::Face& face);
+  double compute_stiffness_based_face_quality(const std::vector<pmp::Point>& coords);
 }

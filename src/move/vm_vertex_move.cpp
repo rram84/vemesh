@@ -1,6 +1,6 @@
 // Sriramajayam
 
-#include <vm_move.h>
+#include <vm_vertex_move.h>
 #include <vm_visibility.h>
 #include <vm_polygon_sampling.h>
 #include <vm_vertex_ring.h>
@@ -11,9 +11,10 @@
 namespace vm
 {
   // identify a feasible point to move a vertex
-  std::tuple<bool, std::pair<double,double>, LimitCircle_t> compute_feasible_vertex_position(pmp::SurfaceMesh&  mesh,
-											     const pmp::Vertex& vertex,
-											     const int          num_samples)
+  std::tuple<bool, pmp::Point, double> compute_feasible_vertex_position(pmp::SurfaceMesh&         mesh,
+									const pmp::Vertex&        vertex,
+									const int                 num_samples,
+									const MeshVertexQuality_f qfunc)
   {
     assert(mesh.is_valid(vertex)==true);
     assert(mesh.is_boundary(vertex)==false);
@@ -24,10 +25,8 @@ namespace vm
     // check if "vertex" is connected to a neighbor with valence = 2
     // this case is not currently dealt with
     if(is_vertex_connected_to_hanging_node(mesh, vertex))
-      {
-	LimitCircle_t lc;
-	return {false, {given_vertex_pos[0], given_vertex_pos[1]}, lc};
-      }
+      return {false, given_vertex_pos, -1.0};
+      
     
     // compute the visibility polygon
     const std::vector<std::pair<double,double>> vis_poly_verts = compute_visibility_polygon(mesh, vertex);
@@ -37,7 +36,7 @@ namespace vm
 
     // use the current vertex quality as the datum
     std::pair<double,double> curr_best_pos = {given_vertex_pos[0], given_vertex_pos[1]};
-    auto curr_best_quality                 = compute_distance_based_vertex_quality(mesh, vertex);
+    double curr_best_quality = qfunc(mesh, vertex);
     
     // examine vertex qualities at the sample points
     pmp::Point& running_vert_pos = mesh.position(vertex);
@@ -49,14 +48,12 @@ namespace vm
 	running_vert_pos[1] = sample.second;
 	
 	// evaluate the resulting vertex quality
-	auto sample_quality = compute_distance_based_vertex_quality(mesh, vertex);
+	double sample_quality = qfunc(mesh, vertex);
 	
 	// Does sample_quality dominate curr_best_quality
-	if(sample_quality.radius>curr_best_quality.radius)
+	if(sample_quality>curr_best_quality)
 	  {
-	    curr_best_quality.center[0] = sample_quality.center[0];
-	    curr_best_quality.center[1] = sample_quality.center[1];
-	    curr_best_quality.radius    = sample_quality.radius;
+	    curr_best_quality = sample_quality;
 	    curr_best_pos               = sample;
 	    success                     = true;
 	  }
@@ -66,7 +63,7 @@ namespace vm
     mesh.position(vertex) = given_vertex_pos;
 
     // done
-    return {success, curr_best_pos, curr_best_quality};
+    return {success, pmp::Point(curr_best_pos.first,curr_best_pos.second,given_vertex_pos[2]), curr_best_quality};
   }
 
 }
