@@ -36,6 +36,4 @@ namespace vm
   LimitCircle_t compute_minimum_vertex_to_ring_distance(const pmp::SurfaceMesh& mesh,
 							const pmp::Vertex& vertex);
 
-  // triangle qualities
-  std::list<std::pair<int,double>> get_triangle_qualities(const pmp::SurfaceMesh& mesh);
 }

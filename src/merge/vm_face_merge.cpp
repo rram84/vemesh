@@ -7,7 +7,7 @@
 namespace vm
 {
   // identify the face along which to merger a given face
-  std::pair<bool, pmp::Halfedge> find_merge_halfedge(const pmp::SurfaceMesh& mesh, const pmp::Face& face, FaceQuality_f qfunc)
+  std::pair<bool, pmp::Halfedge> find_halfedge_for_face_merge(const pmp::SurfaceMesh& mesh, const pmp::Face& face, FaceQuality_f qfunc)
   {
     // face needs to be merged with a neighbor
     // pick the neighbor so that the resulting face has the best quality among all possibilities
@@ -66,7 +66,7 @@ namespace vm
   
   
   // Agglomerate poor quality elements
-  void merge(pmp::SurfaceMesh& mesh, const pmp::Halfedge& h0)
+  void merge_face(pmp::SurfaceMesh& mesh, const pmp::Halfedge& h0)
   {
     // sanity checks 
     assert(mesh.is_valid(h0) && !mesh.is_deleted(h0) && !mesh.is_boundary(h0));
