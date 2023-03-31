@@ -17,7 +17,6 @@ int main()
 
   // compute face quality
   double quality = vm::compute_stiffness_based_face_quality(mesh, tri);
-  std::cout << std::endl
-	    << "Triangle quality: " << quality << std::endl;
+  std::cout << std::endl << "Triangle quality: " << quality << std::endl;
   
 }

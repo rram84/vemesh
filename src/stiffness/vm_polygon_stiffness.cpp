@@ -14,18 +14,18 @@ namespace vm
   using boost_polygon_t       = bgm::polygon<boost_point_t, false>;
 
   // distance between farthest vertices
-  double compute_polygon_dia(const std::vector<std::array<double,2>>& coords);
+  double compute_polygon_dia(const std::vector<pmp::Point>& coords);
 
   // centroid of the polygon
-  std::array<double,2> compute_polygon_centroid(const std::vector<std::array<double,2>>& coords);
+  std::array<double,2> compute_polygon_centroid(const std::vector<pmp::Point>& coords);
   
   // area of the polygon
-  double compute_polygon_area(const std::vector<std::array<double,2>>& coords);
+  double compute_polygon_area(const std::vector<pmp::Point>& coords);
 
   // normals at vertices
-  std::vector<std::array<double,2>> compute_vertex_normals(const std::vector<std::array<double,2>>& coords);
+  std::vector<std::array<double,2>> compute_vertex_normals(const std::vector<pmp::Point>& coords);
 
-  Eigen::MatrixXd compute_polygon_stiffness_matrix(const std::vector<std::array<double,2>>& coords, const double tau)
+  Eigen::MatrixXd compute_polygon_stiffness_matrix(const std::vector<pmp::Point>& coords, const double tau)
   {
     // # vertices
     const int nverts = static_cast<int>(coords.size());
@@ -85,7 +85,7 @@ namespace vm
 
 
   // distance between farthest vertices
-  double compute_polygon_dia(const std::vector<std::array<double,2>>& coords)
+  double compute_polygon_dia(const std::vector<pmp::Point>& coords)
   {
     const int nverts = static_cast<int>(coords.size());
     double dia = 0.;
@@ -106,7 +106,7 @@ namespace vm
 
 
   // centroid of the polygon
-  std::array<double,2> compute_polygon_centroid(const std::vector<std::array<double,2>>& coords)
+  std::array<double,2> compute_polygon_centroid(const std::vector<pmp::Point>& coords)
   {
     std::array<double,2> C{0.,0.};
     for(auto& X:coords)
@@ -122,7 +122,7 @@ namespace vm
 
   
   // area of the polygon
-  double compute_polygon_area(const std::vector<std::array<double,2>>& coords)
+  double compute_polygon_area(const std::vector<pmp::Point>& coords)
   {
     // create boost polygon
     boost_polygon_t poly;
@@ -135,7 +135,7 @@ namespace vm
 
   
   // vertex normals
-  std::vector<std::array<double,2>> compute_vertex_normals(const std::vector<std::array<double,2>>& coords)
+  std::vector<std::array<double,2>> compute_vertex_normals(const std::vector<pmp::Point>& coords)
   {
     // average un-normalized edge vectors
     const int nverts = static_cast<int>(coords.size());

@@ -4,15 +4,15 @@
 #include <iostream>
 
 // triangle stiffness matrix
-Eigen::MatrixXd triangle_stiffness(const std::vector<std::array<double,2>>& coords);
+Eigen::MatrixXd triangle_stiffness(const std::vector<pmp::Point>& coords);
 
 int main()
 {
   // create a triangle
-  std::vector<std::array<double,2>> coords(3);
-  coords[0] = {0.,0.};
-  coords[1] = {1.,0.}; //{1.,2.};
-  coords[2] = {0.,1.}; //{0.,3.};
+  std::vector<pmp::Point> coords(3);
+  coords[0] = pmp::Point({0.,0.,0.});
+  coords[1] = pmp::Point({1.,0.,0.}); 
+  coords[2] = pmp::Point({0.,1.,0.}); 
   auto Kmat = vm::compute_polygon_stiffness_matrix(coords, 0.0);
 
   // verify with direct computation
@@ -28,7 +28,7 @@ int main()
 }
 
 // triangle area
-double triangle_area(const std::vector<std::array<double,2>>& coords)
+double triangle_area(const std::vector<pmp::Point>& coords)
 {
   const double U[] = {coords[1][0]-coords[0][0], coords[1][1]-coords[0][1]};
   const double V[] = {coords[2][0]-coords[0][0], coords[2][1]-coords[0][1]};
@@ -36,7 +36,7 @@ double triangle_area(const std::vector<std::array<double,2>>& coords)
 }
 
 // triangle stiffness matrix
-Eigen::MatrixXd triangle_stiffness(const std::vector<std::array<double,2>>& coords)
+Eigen::MatrixXd triangle_stiffness(const std::vector<pmp::Point>& coords)
 {
   const double area = triangle_area(coords);
   
