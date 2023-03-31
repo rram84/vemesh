@@ -3,7 +3,6 @@
 add_library(vm_manager STATIC
 		 vm_Manager.cpp
 		 vm_Manager_merge.cpp
-		 vm_Manager_agglomerate.cpp
 		 vm_Manager_move.cpp
 		 vm_Manager_inspect.cpp)
 		 

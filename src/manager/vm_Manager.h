@@ -3,7 +3,8 @@
 #pragma once
 
 #include <pmp/SurfaceMesh.h>
-#include <vm_quality.h>
+#include <vm_face_quality.h>
+#include <vm_vertex_quality.h>
 #include <string>
 #include <map>
 
@@ -28,29 +29,22 @@ namespace vm
     
     // access the mesh
     pmp::SurfaceMesh& get_mesh();
-
-    // merge poor quality triangles, having one or more angles smaller than the tolerance provided, with neighbors
-    // returns the number of merging operations performed
-    int agglomerate_triangles(const double eps_degrees);
     
-    // merge poor quality elements with neighbors
-    // returns the number of merging operations performed
-    int merge_faces(const double eps_degrees);
+    // merge a face with one of the neighbors
+    // returns whether the face was merged or not, and the final quality
+    bool merge_face(const pmp::Face& f, FaceQuality_f qfunc);
 
     // moves a vertex to a more favorable position
-    std::pair<bool, LimitCircle_t> move_vertex(const pmp::Vertex& vertex, const int num_samples);
+    std::pair<bool,double> move_vertex(const pmp::Vertex& vertex, const int num_samples, MeshVertexQuality_f qfunc);
 
-    // try to move all vertices to favorable positions. returns the number of moved vertices
-    int move_all_vertices(const int num_samples);
-    
     // visualize
-    void write(const std::string filename);
+    void write_mesh(const std::string filename);
 
     // visualize elements with small angles
-    void write_bad_angles(const std::string filename, const double eps_degrees);
+    void write_bad_faces(const std::string filename, const double qeps, MeshFaceQuality_f qfunc);
 
     // visualize elements with small edges
-    void write_bad_vertices(const std::string filename, const double eps_edge_ratio);
+    void write_bad_vertices(const std::string filename, const double qeps, MeshVertexQuality_f qfunc);
     
   private:
     pmp::SurfaceMesh mesh;

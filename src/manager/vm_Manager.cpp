@@ -2,7 +2,6 @@
 
 #include <vm_Manager.h>
 #include <vm_io.h>
-#include <vm_quality.h>
 #include <filesystem>
 
 namespace vm
@@ -29,47 +28,38 @@ namespace vm
   }
 
   // visualize
-  void Manager::write(const std::string filename) 
+  void Manager::write_mesh(const std::string filename) 
   {
     write_off(mesh, filename);
     return;
   }
   
-  // visualize elements with small angles
-  void Manager::write_bad_angles(const std::string filename, const double eps_degrees) 
+  // visualize elements with poor qualities
+  void Manager::write_bad_faces(const std::string filename, const double qeps, MeshFaceQuality_f qfunc)
   {
     std::list<pmp::Face> facelist;
     facelist.clear();
     auto face_circulator = mesh.faces();
     for(auto face:face_circulator)
       {
-	double min_angle = compute_angle_based_face_quality(mesh, face);
-	if(min_angle<eps_degrees)
+	double quality = qfunc(mesh, face);
+	if(quality<qeps)
 	  facelist.push_back(face);
       }
     write_off(mesh, facelist, filename);
     return;
   }
   
-  // visualize elements with small edges
-  void Manager::write_bad_vertices(const std::string filename, const double eps_edge_ratio) 
+  // visualize elements with poor quality
+  void Manager::write_bad_vertices(const std::string filename, const double qeps, MeshVertexQuality_f qfunc)
   {
     std::list<pmp::Face> facelist;
     facelist.clear();
     auto vert_circulator = mesh.vertices();
     for(auto vert:vert_circulator)
       {
-	auto halfedge_circulator = mesh.halfedges(vert);
-	std::vector<double> edge_len{};
-	const auto& Xa = mesh.position(vert);
-	for(auto h:halfedge_circulator)
-	  {
-	    const auto& Xb = mesh.position(mesh.to_vertex(h));
-	    edge_len.push_back(std::sqrt((Xa[0]-Xb[0])*(Xa[0]-Xb[0]) + (Xa[1]-Xb[1])*(Xa[1]-Xb[1])));
-	  }
-	const auto minmax = std::minmax_element(edge_len.begin(), edge_len.end());
-
-	if((*minmax.first)/(*minmax.second)<eps_edge_ratio) // small edge at this vertex
+	double quality = qfunc(mesh, vert);
+	if(quality<qeps)
 	  {
 	    auto face_circulator = mesh.faces(vert);
 	    for(auto f:face_circulator)
