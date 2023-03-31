@@ -1,10 +1,10 @@
 # Sriramajayam
 
 add_library(vm_quality STATIC
-		 vm_quality_angle.cpp
-		 vm_quality_face.cpp
-		 vm_quality_vertex.cpp
-		 vm_quality_triangles.cpp)
+		 vm_face_quality_angle.cpp
+		 vm_face_quality_stiffness.cpp
+		 vm_vertex_quality_distance.cpp
+		 vm_vertex_quality_stiffness.cpp)
 
 # include headers in the current directory
 target_include_directories(vm_quality PUBLIC
@@ -14,12 +14,14 @@ target_include_directories(vm_quality PUBLIC
 target_link_libraries(vm_quality PUBLIC
 				 pmp Eigen3::Eigen
 				 Boost::boost
-				 vm_vertex_ring)
+				 vm_vertex_ring
+				 vm_stiffness)
 
 # Add required flags
 target_compile_features(vm_quality PUBLIC ${VM_COMPILE_FEATURES})
 
 # install headers
 install(FILES
-	vm_quality.h
+	vm_face_quality.h
+	vm_vertex_quality.h
   	DESTINATION ${PROJECT_NAME}/include)

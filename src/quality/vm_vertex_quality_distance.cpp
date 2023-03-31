@@ -1,7 +1,7 @@
 // Sriramajayam
 
 #include <vm_vertex_ring.h>
-#include <vm_quality.h>
+#include <vm_vertex_quality.h>
 #include <iostream>
 
 #include <cmath>
@@ -179,7 +179,7 @@ namespace vm
 
 
   // compute the minimum of vertex-to-ring distance, and ring-to-inner-edge distance
-  LimitCircle_t compute_distance_based_vertex_quality(const pmp::SurfaceMesh& mesh, const pmp::Vertex& vertex)
+  LimitCircle_t compute_limit_circle_for_vertex_quality(const pmp::SurfaceMesh& mesh, const pmp::Vertex& vertex)
   {
     // minimum distance of a vertex from its connected ring
     const auto lc_1 = compute_minimum_vertex_to_ring_distance(mesh, vertex);
@@ -191,6 +191,16 @@ namespace vm
       return lc_1;
     else
       return lc_2;
+  }
+
+
+  // measure quality as the ratio of the distance of a vertex to its enclosing linestring to the longest halfedge
+  // defined only for non-boundary vertices, not connected to hanging nodes
+  double compute_distance_based_vertex_quality(const pmp::SurfaceMesh& mesh, const pmp::Vertex& vert)
+  {
+    // limit circle
+    auto lc = compute_limit_circle_for_vertex_quality(mesh, vert);
+    return lc.radius;
   }
   
 }

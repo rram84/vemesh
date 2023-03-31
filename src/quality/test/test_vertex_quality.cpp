@@ -1,6 +1,6 @@
 // Sriramajayam
 
-#include <vm_quality.h>
+#include <vm_vertex_quality.h>
 #include <iostream>
 #include <fstream>
 
@@ -48,6 +48,6 @@ int main()
   pfile.close();
 
   // check the vertex quality
-  auto lc = vm::compute_distance_based_vertex_quality(mesh, inner_vertex);
+  auto lc = vm::compute_limit_circle_for_vertex_quality(mesh, inner_vertex);
   std::cout << "Limiting circle: " << lc.center[0] <<" " << lc.center[1] <<" " << lc.radius << std::endl;
 }
