@@ -17,7 +17,7 @@ namespace vm
   double compute_polygon_dia(const std::vector<pmp::Point>& coords);
 
   // centroid of the polygon
-  std::array<double,2> compute_polygon_centroid(const std::vector<pmp::Point>& coords);
+  std::array<double,2> compute_polygon_centroid(const std::vector<pmp::Point>& coords, const double area);
   
   // area of the polygon
   double compute_polygon_area(const std::vector<pmp::Point>& coords);
@@ -32,22 +32,16 @@ namespace vm
     
     // farthest two points
     const double hE = compute_polygon_dia(coords);
-    
-    // centroid
-    const auto XE = compute_polygon_centroid(coords);
-    
+        
     // area
     const double area = compute_polygon_area(coords);
-    
+
+    // centroid
+    const auto XE = compute_polygon_centroid(coords, area);
+      
     // vertex normals
     const auto bvecs = compute_vertex_normals(coords);
  
-    // G matrix
-    Eigen::MatrixXd G = Eigen::MatrixXd::Zero(3,3);
-    G(0,0) = 1.;
-    G(1,1) = area/(hE*hE);
-    G(2,2) = area/(hE*hE);
-    
     // B matrix
     Eigen::MatrixXd B(3, nverts);
     for(int j=0; j<nverts; ++j)
@@ -56,30 +50,30 @@ namespace vm
 	B(1,j) = bvecs[j][0]/hE;
 	B(2,j) = bvecs[j][1]/hE;
       }
-    
-    // Pi*_Delta matrix
-    Eigen::MatrixXd Pi_star_delta = G.inverse()*B;
 
-    // Delta matrix
-    Eigen::MatrixXd Delta(nverts,3);
+    // D matrix
+    Eigen::MatrixXd D(nverts,3);
     for(int i=0; i<nverts; ++i)
       {
-	Delta(i,0) = 1.;
-	Delta(i,1) = (coords[i][0]-XE[0])/hE;
-	Delta(i,2) = (coords[i][1]-XE[1])/hE;
+	D(i,0) = 1.;
+	D(i,1) = (coords[i][0]-XE[0])/hE;
+	D(i,2) = (coords[i][1]-XE[1])/hE;
       }
 
-    // Pi^Delta matrix
-    Eigen::MatrixXd Pi_delta = Delta*Pi_star_delta;
+    // G matrix
+    Eigen::MatrixXd G = B*D;
+    
+    // Projector: PI
+    Eigen::MatrixXd PI = G.inverse()*B;
 
-    // Modify G
-    G(0,0) = 0.;
-
-    // Identity
-    Eigen::MatrixXd Id = Eigen::MatrixXd::Identity(nverts, nverts);
+    // 1st row of G = 0
+    G.row(0).setZero();
+    
+    // stabilization term
+    Eigen::MatrixXd stab_mat = Eigen::MatrixXd::Identity(nverts, nverts)-D*PI;
 
     // stiffness matrix
-    return Pi_star_delta.transpose()*G*Pi_star_delta + tau*(Id-Pi_delta)*(Id-Pi_delta);
+    return PI.transpose()*G*PI + tau*stab_mat.transpose()*stab_mat;
   }
 
 
@@ -106,17 +100,24 @@ namespace vm
 
 
   // centroid of the polygon
-  std::array<double,2> compute_polygon_centroid(const std::vector<pmp::Point>& coords)
+  std::array<double,2> compute_polygon_centroid(const std::vector<pmp::Point>& coords, const double area)
   {
     std::array<double,2> C{0.,0.};
-    for(auto& X:coords)
+    const int nverts = static_cast<int>(coords.size());
+    for(int i=0; i<nverts; ++i)
       {
-	C[0] += X[0];
-	C[1] += X[1];
+	const double& xi = coords[i][0];
+	const double& yi = coords[i][1];
+	
+	const int j = (i+1)%nverts;
+	const double& xj = coords[j][0];
+	const double& yj = coords[j][1];
+	
+	C[0] += (xi+xj)*(xi*yj-xj*yi);
+	C[1] += (yi+yj)*(xi*yj-xj*yi);
       }
-    const double nverts = static_cast<double>(coords.size());
-    C[0] /= nverts;
-    C[1] /= nverts;
+    C[0] /= (6.*area);
+    C[1] /= (6.*area);
     return std::move(C);
   }
 
@@ -147,8 +148,8 @@ namespace vm
 	const auto& XR = coords[(i+1)%nverts];
 
 	// average = vertex normal
-	bvecs[i%nverts][0] = 0.5*(XL[1]-XR[1]);
-	bvecs[i%nverts][1] = 0.5*(XR[0]-XL[0]);
+	bvecs[i%nverts][0] = 0.5*(XR[1]-XL[1]);
+	bvecs[i%nverts][1] = 0.5*(XL[0]-XR[0]);
       }
 
     return std::move(bvecs);
