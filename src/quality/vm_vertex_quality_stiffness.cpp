@@ -16,7 +16,7 @@ namespace vm
     auto f_circulator = mesh.faces(vert);
     for(auto f:f_circulator)
       {
-  	double min_eigval = compute_stiffness_based_face_quality(mesh, f);
+  	double min_eigval = compute_stiffness_based_mesh_face_quality(mesh, f);
 	if(min_eigval<quality)
 	  quality = min_eigval;
       }

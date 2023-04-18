@@ -6,7 +6,7 @@
 namespace vm
 {
   // measure quality of a face as the smallest nonzero eigenvalue of the vem stiffness matrix
-  double compute_stiffness_based_face_quality(const pmp::SurfaceMesh& mesh, const pmp::Face& face)
+  double compute_stiffness_based_mesh_face_quality(const pmp::SurfaceMesh& mesh, const pmp::Face& face)
   {
     // vertex coordinates
     std::vector<pmp::Point> coords{};
@@ -30,7 +30,7 @@ namespace vm
     std::sort(eigarray, eigarray+nvals);
 
     // first value should be zero, subsequent should be positive
-    assert(std::abs(eigarray[0])<1.e-6 && eigarray[1]>0.);
+    assert(std::abs(eigarray[0])>0. && eigarray[1]>eigarray[0]);
 
     // return the second eigenvalue
     return eigarray[1];

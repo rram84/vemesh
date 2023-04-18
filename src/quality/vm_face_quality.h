@@ -26,6 +26,6 @@ namespace vm
 
 
   // measure quality of a face as the smallest nonzero eigenvalue of the vem stiffness matrix
-  double compute_stiffness_based_face_quality(const pmp::SurfaceMesh& mesh, const pmp::Face& face);
+  double compute_stiffness_based_mesh_face_quality(const pmp::SurfaceMesh& mesh, const pmp::Face& face);
   double compute_stiffness_based_face_quality(const std::vector<pmp::Point>& coords);
 }
