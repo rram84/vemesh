@@ -29,8 +29,8 @@ namespace vm
     auto* eigarray = eigvals.data();
     std::sort(eigarray, eigarray+nvals);
 
-    // first value should be zero, subsequent should be positive
-    assert(std::abs(eigarray[0])>0. && eigarray[1]>eigarray[0]);
+    // first value should be approximately zero, subsequent should be positive
+    assert(eigarray[1]>eigarray[0]);
 
     // return the second eigenvalue
     return eigarray[1];
