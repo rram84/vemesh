@@ -6,8 +6,8 @@ project(stiffness_tests
   DESCRIPTION "Unit tests for computing stiffness for polygons")
 
 foreach(TARGET
-		test_stiffness)
-	        test_sutton)
+	    test_stiffness
+	    test_sutton)
 
   # add executable
   add_executable(${TARGET} ${TARGET}.cpp)
