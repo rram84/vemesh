@@ -9,9 +9,9 @@ file(GLOB MESH_FILES "${CMAKE_SOURCE_DIR}/src/manager/test/*.OFF")
 file(COPY ${MESH_FILES} DESTINATION ${CMAKE_BINARY_DIR}/src/manager/test/)
 
 foreach(TARGET
-	test_Manager
-	agglomerate_triangles
-	improve_mesh)
+	agglomeration)
+	#test_Manager
+	#improve_mesh)
 
   # add executable
   add_executable(${TARGET} ${TARGET}.cpp)
