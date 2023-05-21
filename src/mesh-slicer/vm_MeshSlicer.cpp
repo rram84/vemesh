@@ -17,8 +17,10 @@ namespace vm
 		 const pmp::Face& e,  std::vector<int> in_verts);
 
   
-  void clip_mesh(pmp::SurfaceMesh& mesh, LevelSetFunction_t& lsfunc)
+  void clip_mesh(pmp::SurfaceMesh& mesh, const double phi_eps, LevelSetFunction_t& lsfunc)
   {
+    assert(phi_eps>0.);
+    
     // cut edges -> new vertex map
     std::map<pmp::Edge, pmp::Vertex> cutedgesMap{};
     
@@ -34,12 +36,15 @@ namespace vm
     auto lsvalues    = mesh.add_vertex_property<double>("level set values");
     auto v_container = mesh.vertices();
     double Y[2];
+    double lsval;
     for(auto v:v_container)
       {
 	const auto& X = mesh.position(v);
 	Y[0] = X[0];
 	Y[1] = X[1];
-	lsvalues[v] = lsfunc(Y);
+	lsval = lsfunc(Y);
+	assert(std::abs(lsval)>phi_eps && "Level set function value at node violates tolerance");
+	lsvalues[v] = lsval;
       }
 
     // remove faces that lie completely outside
@@ -62,6 +67,7 @@ namespace vm
 	const int num_verts = mesh.valence(f);
 	if(in_verts.empty())             
 	  mesh.delete_face(f);
+	
 	// at least one vertex outside
 	else if(static_cast<int>(in_verts.size())<num_verts)
 	  cutfacesMap.insert({f, in_verts});
@@ -102,7 +108,7 @@ namespace vm
 
     mesh.remove_vertex_property(lsvalues);
     assert(mesh.has_vertex_property("level set values")==false);
-    
+
     // clip triangles and quads
     for(auto& it:cutfacesMap)
       {

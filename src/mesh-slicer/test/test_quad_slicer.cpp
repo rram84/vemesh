@@ -45,7 +45,7 @@ int main()
     
   // clip
   vm::LevelSetFunction_t lsfunc = level_set_segment;  //level_set_circle; 
-  vm::clip_mesh(mesh, lsfunc);
+  vm::clip_mesh(mesh, 0.001, lsfunc);
   vm::write_off(mesh, "ls-0p2859.OFF");
   vm::write_suku_format(mesh, "ls-0p2859");
 }
