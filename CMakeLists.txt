@@ -34,4 +34,6 @@ add_subdirectory(src/tet-slicer/test)
 add_subdirectory(src/mesh-slicer/test)
 add_subdirectory(src/special-meshes/test)
 add_subdirectory(src/stiffness/test)
+add_subdirectory(cmame-paper/)
+
 

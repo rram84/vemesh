@@ -72,6 +72,9 @@ namespace vm
 	else if(static_cast<int>(in_verts.size())<num_verts)
 	  cutfacesMap.insert({f, in_verts});
       }
+
+    // should have at least some faces left
+    assert(mesh.n_faces()>0 && "Mesh does not intersect level set");
     
     // compute locations of new vertices on a per-edge basis
     cutedgesMap.clear();
@@ -218,6 +221,9 @@ namespace vm
     std::vector<pmp::Vertex> my_verts{};
     for(auto v:v_circulator)
       my_verts.push_back(v);
+
+    // keep track of the number of vertices
+    const int nverts = mesh.n_vertices();
     
     // 1-in, 3-out
     if(n_in_verts==1)
@@ -236,6 +242,9 @@ namespace vm
 	
 	// erase the old face
 	mesh.delete_face(e);
+
+	// at most 3 vertices should be deleted
+	assert(nverts-mesh.n_vertices()<=3);
 	
 	// create new face
 	mesh.add_face({my_verts[a0], it->second, jt->second});
@@ -257,6 +266,9 @@ namespace vm
 	
 	// erase the old face
 	mesh.delete_face(e);
+
+	// at most 1 vertex should have been deleted
+	assert(nverts-mesh.n_vertices()<=1);
 	
 	// create new face
 	mesh.add_face({it->second, my_verts[a1], my_verts[a2], my_verts[a3], jt->second});
@@ -286,6 +298,9 @@ namespace vm
 	
 	// erase the old face
 	mesh.delete_face(e);
+
+	// at most 2 vertices should have been deleted
+	assert(nverts-mesh.n_vertices()<=2);
 	
 	// add new face
 	mesh.add_face({it->second, jt->second, my_verts[a0], my_verts[a1]});
