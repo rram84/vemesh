@@ -16,6 +16,17 @@ namespace vm
     inspect_mesh();
   }
   
+
+  // Constructor: from .node, .ele files
+  Manager::Manager(const std::string node_file, const std::string ele_file)
+  {
+    mesh.clear();
+    read_triangles(node_file, ele_file, mesh);
+
+    // sanity checks
+    inspect_mesh();
+  }
+  
   
   // Destructor
   Manager::~Manager() {}

@@ -16,6 +16,9 @@ namespace vm
   public:
     //! Constructor
     Manager(const std::string off_file);
+
+    //! Constructor
+    Manager(const std::string node_file, const std::string ele_file);
     
     //! Destructor
     virtual ~Manager();
