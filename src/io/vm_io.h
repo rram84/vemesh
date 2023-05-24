@@ -10,6 +10,9 @@ namespace vm
 {
   // Reads a .OFF mesh
   void read_off(const std::string filename, pmp::SurfaceMesh& mesh);
+
+  // Reads a mesh in triangle format
+  void read_triangles(const std::string node_file, const std::string ele_file, pmp::SurfaceMesh& mesh);
   
   // Writes a mesh in .off format
   // Note that pmp::SurfaceMesh::write() does not correctly handle non-sequential vertex indexing
