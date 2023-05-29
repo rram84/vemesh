@@ -42,15 +42,12 @@ namespace vm
 
     // visualize
     void write_mesh(const std::string filename);
-
-    // visualize mesh along with qualities
+    
+    // visualize mesh along with face qualities
     void write_mesh(const std::string filename, MeshFaceQuality_f qfunc);
 
-    // visualize elements with small angles
-    void write_bad_faces(const std::string filename, const double qeps, MeshFaceQuality_f qfunc);
-
-    // visualize elements with small edges
-    void write_bad_vertices(const std::string filename, const double qeps, MeshVertexQuality_f qfunc);
+    // visualize mesh along with vertex qualities
+    void write_mesh(const std::string filename, MeshVertexQuality_f qfunc);
     
   private:
     pmp::SurfaceMesh mesh;

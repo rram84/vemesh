@@ -69,11 +69,12 @@ int main(int argc, char* argv[])
   vm::Manager manager("clipped.OFF");
   auto& mesh = manager.get_mesh();
   vm::write_suku_format(mesh, "clipped");
-  
+    
   // mesh quality metric
   vm::MeshFaceQuality_f qfunc = vm::compute_stiffness_based_mesh_face_quality;
   vm::FaceQuality_f     qface = vm::compute_stiffness_based_face_quality;
-
+  manager.write_mesh("clipped.vtk", qfunc);
+  
   // compute face qualities
   std::set<std::pair<int,double>, decltype(cmp)> q_pre(cmp);
   auto f_iterator = mesh.faces();
@@ -88,23 +89,25 @@ int main(int argc, char* argv[])
   // threshold for element quality
   const double qeps = 0.1;
   
-  // mesh of faces with bad qualities
-  manager.write_bad_faces(std::string("bad_faces.off"), qeps, qfunc);
-  
   // agglomerate poor quality faces
+  int count = 0;
   for(auto f:f_iterator)
     if(!mesh.is_deleted(f) && mesh.is_valid(f))
       if(qfunc(mesh,f)<qeps)
-	auto success = manager.merge_face(f, qface);
-
+	{
+	  auto success = manager.merge_face(f, qface);
+	  ++count;
+	  manager.write_mesh("merged-"+std::to_string(count)+".vtk", qfunc);
+	}
+  
   // print mesh
-  manager.write_mesh("merged.OFF");
+  manager.write_mesh("merged.vtk", qfunc);
   vm::write_suku_format(mesh, "merged_agg");
   
   // recompute poorest 10 qualities
   std::set<std::pair<int,double>, decltype(cmp)> q_post(cmp);
   auto f_iterator_post = mesh.faces();
-  for(auto f:f_iterator_post)
+    for(auto f:f_iterator_post)
     q_post.insert({f.idx(), qfunc(mesh,f)});
 
   // print the poorest 10 face qualities

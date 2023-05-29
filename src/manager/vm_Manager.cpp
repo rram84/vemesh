@@ -43,7 +43,7 @@ namespace vm
   {
     // distinguish file formats
     const std::string extension = std::filesystem::path(filename).extension();
-    if(extension==".off" || extension==".OFF")
+    if(extension==".off" || extension==".OFF")„
       write_off(mesh, filename);
     else if(extension==".dat")
       write_dat(mesh, filename);
@@ -54,54 +54,29 @@ namespace vm
   }
 
   
-  // visualize mesh along with qualities
+  // visualize mesh along with face qualities
   void Manager::write_mesh(const std::string filename, MeshFaceQuality_f qfunc)
   {
     // Only vtk is supported
     const std::string extension = std::filesystem::path(filename).extension();
     assert(extension==".vtk" && "Only vtk file format is supported");
-    write_vtk(mesh, qfunc, filename);
+    write_vtk_with_cell_data(mesh, qfunc, filename);
+
+    return;
+  }
+
+  
+  // visualize mesh along with vertex qualities
+  void Manager::write_mesh(const std::string filename, MeshVertexQuality_f qfunc)
+  {
+    // Only vtk is supported
+    const std::string extension = std::filesystem::path(filename).extension();
+    assert(extension==".vtk" && "Only vtk file format is supported");
+    write_vtk_with_vertex_data(mesh, qfunc, filename);
 
     return;
   }
 
 
   
-  // visualize elements with poor qualities
-  void Manager::write_bad_faces(const std::string filename, const double qeps, MeshFaceQuality_f qfunc)
-  {
-    std::list<pmp::Face> facelist;
-    facelist.clear();
-    auto face_circulator = mesh.faces();
-    for(auto face:face_circulator)
-      {
-	double quality = qfunc(mesh, face);
-	if(quality<qeps)
-	  facelist.push_back(face);
-      }
-    write_off(mesh, facelist, filename);
-    return;
-  }
-  
-  // visualize elements with poor quality
-  void Manager::write_bad_vertices(const std::string filename, const double qeps, MeshVertexQuality_f qfunc)
-  {
-    std::list<pmp::Face> facelist;
-    facelist.clear();
-    auto vert_circulator = mesh.vertices();
-    for(auto vert:vert_circulator)
-      {
-	double quality = qfunc(mesh, vert);
-	if(quality<qeps)
-	  {
-	    auto face_circulator = mesh.faces(vert);
-	    for(auto f:face_circulator)
-	      facelist.push_back(f);
-	  }
-      }
-    
-    write_off(mesh, facelist, filename);
-    return;	
-  }
-
 }

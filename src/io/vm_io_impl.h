@@ -12,7 +12,7 @@ namespace vm
   // qfunc [in]     : face quality function
   // filename [in]  : name of the file
   template<typename FuncType>
-    void write_vtk(const pmp::SurfaceMesh& mesh, FuncType func, const std::string filename)
+    void write_vtk_with_cell_data(const pmp::SurfaceMesh& mesh, FuncType func, const std::string filename)
     {
       // write the mesh in vtk format
       write_vtk(mesh, filename);
@@ -22,11 +22,36 @@ namespace vm
       out.open(filename, std::ios::app);
       out << std::endl;
       out << "CELL_DATA " << mesh.n_faces() << std::endl;
-      out << "SCALARS" << " Q " << "double" << std::endl;
+      out << "SCALARS Q double" << std::endl;
       out << "LOOKUP_TABLE default" << std::endl;
       auto f_circulator = mesh.faces();
       for(auto f:f_circulator)
 	out << func(mesh, f) << std::endl;
+
+      return;
+    }
+
+
+  // Write a polygonal mesh and vertex qualities in vtk file format
+  // mesh  [in]     : polygonal mesh
+  // qfunc [in]     : vertex quality function
+  // filename [in]  : name of the file
+  template<typename FuncType>
+    void write_vtk_with_vertex_data(const pmp::SurfaceMesh& mesh, FuncType func, const std::string filename)
+    {
+      // write the mesh in vtk format
+      write_vtk(mesh, filename);
+
+      // append vertex qualities
+      std::fstream out;
+      out.open(filename, std::ios::app);
+      out << std::endl;
+      out << "POINT_DATA " << mesh.n_vertices() << std::endl;
+      out << "SCALARS Q double" << std::endl;
+      out << "LOOKUP_TABLE default" << std::endl;
+      auto v_circulator = mesh.vertices();
+      for(auto v:v_circulator)
+	out << func(mesh, v) << std::endl;
 
       return;
     }

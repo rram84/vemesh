@@ -42,7 +42,14 @@ namespace vm
   // qfunc [in]     : face quality function
   // filename [in]  : name of the file
   template<typename FuncType>
-    void write_vtk(const pmp::SurfaceMesh& mesh, FuncType func, const std::string filename);
+    void write_vtk_with_cell_data(const pmp::SurfaceMesh& mesh, FuncType func, const std::string filename);
+
+  // Write a polygonal mesh and vertex qualities in vtk file format
+  // mesh  [in]     : polygonal mesh
+  // qfunc [in]     : vertex quality function
+  // filename [in]  : name of the file
+  template<typename FuncType>
+    void write_vtk_with_vertex_data(const pmp::SurfaceMesh& mesh, FuncType func, const std::string filename);
 
   // Writes a mesh in Sukumar's format
   void write_suku_format(const pmp::SurfaceMesh& mesh,

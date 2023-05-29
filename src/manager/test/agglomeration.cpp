@@ -46,9 +46,6 @@ int main()
   // threshold for element quality
   const double qeps = 0.1;
   
-  // mesh of faces with bad qualities
-  manager.write_bad_faces(std::string("bad-faces.off"), qeps, qfunc);
-  
   // agglomerate poor quality faces
   for(auto f:f_iterator)
     if(!mesh.is_deleted(f) && mesh.is_valid(f))
