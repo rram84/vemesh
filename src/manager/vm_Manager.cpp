@@ -43,7 +43,7 @@ namespace vm
   {
     // distinguish file formats
     const std::string extension = std::filesystem::path(filename).extension();
-    if(extension==".off" || extension==".OFF")„
+    if(extension==".off" || extension==".OFF")
       write_off(mesh, filename);
     else if(extension==".dat")
       write_dat(mesh, filename);
