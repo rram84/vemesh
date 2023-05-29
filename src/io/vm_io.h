@@ -1,6 +1,7 @@
 // Sriramajayam
 
-#pragma once
+#ifndef VM_IO_H
+#define VM_IO_H
 
 #include <pmp/SurfaceMesh.h>
 #include <list>
@@ -36,8 +37,20 @@ namespace vm
   // filename [in] : name of the file
   void write_vtk(const pmp::SurfaceMesh& mesh, const std::string filename);
 
+  // Write a polygonal mesh and cell face qualities in vtk file format
+  // mesh  [in]     : polygonal mesh
+  // qfunc [in]     : face quality function
+  // filename [in]  : name of the file
+  template<typename FuncType>
+    void write_vtk(const pmp::SurfaceMesh& mesh, FuncType func, const std::string filename);
+
   // Writes a mesh in Sukumar's format
   void write_suku_format(const pmp::SurfaceMesh& mesh,
 			 const std::string filename);
     
 }
+
+#endif
+
+// implementation of template functions
+#include <vm_io_impl.h>

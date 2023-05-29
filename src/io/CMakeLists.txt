@@ -15,4 +15,5 @@ target_compile_features(vm_io PUBLIC ${VM_COMPILE_FEATURES})
 # install headers
 install(FILES
 	vm_io.h
+	vm_io_impl.h
   	DESTINATION ${PROJECT_NAME}/include)

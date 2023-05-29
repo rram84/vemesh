@@ -41,9 +41,31 @@ namespace vm
   // visualize
   void Manager::write_mesh(const std::string filename) 
   {
-    write_off(mesh, filename);
+    // distinguish file formats
+    const std::string extension = std::filesystem::path(filename).extension();
+    if(extension==".off" || extension==".OFF")
+      write_off(mesh, filename);
+    else if(extension==".dat")
+      write_dat(mesh, filename);
+    else if(extension==".vtk")
+      write_vtk(mesh, filename);
+    
     return;
   }
+
+  
+  // visualize mesh along with qualities
+  void Manager::write_mesh(const std::string filename, MeshFaceQuality_f qfunc)
+  {
+    // Only vtk is supported
+    const std::string extension = std::filesystem::path(filename).extension();
+    assert(extension==".vtk" && "Only vtk file format is supported");
+    write_vtk(mesh, qfunc, filename);
+
+    return;
+  }
+
+
   
   // visualize elements with poor qualities
   void Manager::write_bad_faces(const std::string filename, const double qeps, MeshFaceQuality_f qfunc)

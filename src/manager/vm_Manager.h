@@ -43,6 +43,9 @@ namespace vm
     // visualize
     void write_mesh(const std::string filename);
 
+    // visualize mesh along with qualities
+    void write_mesh(const std::string filename, MeshFaceQuality_f qfunc);
+
     // visualize elements with small angles
     void write_bad_faces(const std::string filename, const double qeps, MeshFaceQuality_f qfunc);
 
