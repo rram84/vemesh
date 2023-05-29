@@ -31,6 +31,11 @@ namespace vm
 		 const std::list<pmp::Face>& faces,
 		 const std::string filename);
 
+  // Write a polygonal mesh in vtk file format
+  // mesh [in]     : polygonal mesh
+  // filename [in] : name of the file
+  void write_vtk(const pmp::SurfaceMesh& mesh, const std::string filename);
+
   // Writes a mesh in Sukumar's format
   void write_suku_format(const pmp::SurfaceMesh& mesh,
 			 const std::string filename);
