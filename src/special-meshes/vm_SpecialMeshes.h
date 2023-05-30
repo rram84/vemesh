@@ -11,6 +11,6 @@ namespace vm
   // points are assumed to lie in the plane (spatial dimension = 2)
   pmp::SurfaceMesh create_delaunay_triangulation(const std::vector<std::pair<double,double>>& points);
 
-  // delaunay triangulation of a random distribution of points within the unit square
+  // delaunay triangulation of a random distribution of points within a given bounding box
   pmp::SurfaceMesh create_random_delaunay(const double* bot_left_cnr, const double* top_right_cnr, const int num_points);
 }
