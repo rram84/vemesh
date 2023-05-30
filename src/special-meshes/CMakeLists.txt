@@ -1,7 +1,8 @@
 # Sriramajayam
 
 add_library(vm_spl_meshes STATIC
-		 vm_SpecialMeshes_quad.cpp)
+		 vm_SpecialMeshes_quad.cpp
+		 vm_SpecialMeshes_delaunay.cpp)
 
 # include headers in the current directory
 target_include_directories(vm_spl_meshes PUBLIC
