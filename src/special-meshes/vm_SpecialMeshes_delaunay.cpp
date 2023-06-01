@@ -4,7 +4,6 @@
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Triangulation_vertex_base_with_info_2.h>
 #include <CGAL/Delaunay_triangulation_2.h>
-#include <random>
 
 namespace vm
 {
@@ -58,25 +57,5 @@ namespace vm
       }
         
     return mesh;
-  }
-
-
-
-  // delaunay triangulation of a random distribution of points within the unit square
-  pmp::SurfaceMesh create_random_delaunay(const double* bot_left_cnr,
-					  const double* top_right_cnr,
-					  const int num_points)
-  {
-    // generate a random collection of points
-    std::random_device rd;  
-    std::mt19937 gen(rd()); 
-    std::uniform_real_distribution<> xdis(bot_left_cnr[0], top_right_cnr[0]);
-    std::uniform_real_distribution<> ydis(bot_left_cnr[1], top_right_cnr[1]);
-    std::vector<std::pair<double,double>> points(num_points);
-    for(int i=0; i<num_points; ++i)
-      points[i] = {xdis(gen), ydis(gen)};
-
-    return create_delaunay_triangulation(points);
-  }
-  
+  } 
 }
