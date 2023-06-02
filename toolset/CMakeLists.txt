@@ -14,6 +14,7 @@ foreach(TARGET
 		generate_random_circle_tri_mesh
 		generate_structured_quad_mesh
 		line_clipper
+		circle_clipper
 		agglomerator)
 
   # add executable
