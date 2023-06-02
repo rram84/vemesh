@@ -2,6 +2,7 @@
 
 #include <vm_SpecialMeshes.h>
 #include <vm_io.h>
+#include <random>
 int main()
 {
   // delaunay triangulation
@@ -14,7 +15,14 @@ int main()
   const double bot_left_cnr[]  = {-1.,0.};
   const double top_right_cnr[] = {2.,3.};
   const int num_points = 150;
-  auto mesh_2 = vm::create_random_delaunay(bot_left_cnr, top_right_cnr, num_points);
+  std::random_device rd;  
+  std::mt19937 gen(rd()); 
+  std::uniform_real_distribution<> xdis(bot_left_cnr[0], top_right_cnr[0]);
+  std::uniform_real_distribution<> ydis(bot_left_cnr[1], top_right_cnr[1]);
+  std::vector<std::pair<double,double>> rand_points(num_points);
+  for(int i=0; i<num_points; ++i)
+    rand_points[i] = {xdis(gen), ydis(gen)};
+  auto mesh_2 = vm::create_delaunay_triangulation(rand_points);
   vm::write_off(mesh_2, "random_tri.OFF");
 }
 

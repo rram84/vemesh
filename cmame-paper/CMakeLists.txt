@@ -9,8 +9,7 @@ file(GLOB MESH_FILES "${CMAKE_SOURCE_DIR}/src/manager/test/*.OFF")
 file(COPY ${MESH_FILES} DESTINATION ${CMAKE_BINARY_DIR}/src/manager/test/)
 
 foreach(TARGET
-		rect_mesh_problem1
-		random_tri_mesh)
+		rect_mesh_problem1)
 
   # add executable
   add_executable(${TARGET} ${TARGET}.cpp)
