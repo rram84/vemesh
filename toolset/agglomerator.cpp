@@ -3,10 +3,10 @@
 // Agglomerate elements in a mesh based on quality
 
 // Options
-// -m Input mesh file in OFF format
+// -i Input mesh file in OFF format
 // -o output directory, will be cleared if it already exists. will be created otherwise
 // -q threshold tolerance
-// -i number of iterations to perform
+// -n number of iterations to perform
 // -v optional argument to print meshes after successive merges (within each iteration)
 
 #include <vm_Manager.h>
@@ -28,28 +28,19 @@ bool Compare(const FQ_pair_t& A, const FQ_pair_t& B)
 
 int main(int argc, char** argv)
 {
+  std::string meshfile;    // input mesh
+  std::string outdir;      // output directory
+  double qmin;             // quality threshold
+  int  num_iters;          // iteration count
+  bool vis_flag = false;   // detailed visualization
+  
   // Command line options
   CLI::App app;
-
-  // input mesh
-  std::string meshfile;
-  app.add_option("-m", meshfile, "input mesh file in OFF format")->required()->check(CLI::ExistingFile);
-
-  // output directory
-  std::string outdir;
+  app.add_option("-i", meshfile, "input mesh file in OFF format")->required()->check(CLI::ExistingFile);
   app.add_option("-o", outdir, "output directory. will be cleared if it exists")->required();
-
-  // quality threshold
-  double qmin;
   app.add_option("-q", qmin, "quality threshold")->required()->check(CLI::PositiveNumber);
-
-  // iteration count
-  int  num_iters;
-  app.add_option("-i", num_iters, "number of agglomeration iterations")->required()->check(CLI::PositiveNumber);
-
-  // visualization
-  bool vis_flag = false;
-  app.add_flag("-v", vis_flag, "mesh output after every merge");
+  app.add_option("-n", num_iters, "number of agglomeration iterations")->required()->check(CLI::PositiveNumber);
+  app.add_flag("-v", vis_flag, "detailed mesh output after every merge, use sparingly");
   
   // parse
   CLI11_PARSE(app, argc, argv);
@@ -116,7 +107,6 @@ int main(int argc, char** argv)
 	    face_queue.push({fq.first,curr_q});
 	  
 	  // this face occupies the correct position in the queue
-	  std::cout << "Attempting merge for face with quality " << curr_q;
 	  auto success = manager.merge_face(f, qface);
 	  if(success==true)
 	    {
