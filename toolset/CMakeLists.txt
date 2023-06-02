@@ -9,6 +9,7 @@ file(GLOB MESH_FILES "${CMAKE_SOURCE_DIR}/src/manager/test/*.OFF")
 file(COPY ${MESH_FILES} DESTINATION ${CMAKE_BINARY_DIR}/src/manager/test/)
 
 foreach(TARGET
+		convert_mesh_format
 		generate_random_square_tri_mesh
 		generate_random_circle_tri_mesh
 		generate_structured_quad_mesh
