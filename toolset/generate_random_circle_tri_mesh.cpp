@@ -4,6 +4,7 @@
 
 // Required options:
 // -n: Number of random vertices to generate
+// -b: Number of uniformly spaced vertices along the boundary
 // -m: Output mesh file name in off format, does not overwrite. Also writes a file in vtk format with element qualities
 
 #include <vm_SpecialMeshes.h>
@@ -14,20 +15,29 @@
 #include <random>
 
 // random points in a unit circle
-std::vector<std::pair<double,double>> generate_points(const int num_points)
+std::vector<std::pair<double,double>> generate_points(const int num_int_points, const int num_bd_points)
 {
-  // generate a random collection of points
+  // generate a random collection of interior points
   std::random_device rd;  
   std::mt19937 gen(rd()); 
   std::uniform_real_distribution<> rdis(0.,1.);
   std::uniform_real_distribution<> tdis(0.,2.*M_PI);
-  std::vector<std::pair<double,double>> points(num_points);
-  for(int i=0; i<num_points; ++i)
+  std::vector<std::pair<double,double>> points(num_int_points);
+  for(int i=0; i<num_int_points; ++i)
     {
       const double r = std::sqrt(rdis(gen));
       const double t = tdis(gen);
       points[i] = {r*std::cos(t), r*std::sin(t)};
     }
+
+  // uniformly spaced boundary points
+  const double dt = 2.*M_PI/static_cast<double>(num_bd_points);
+  for(int i=0; i<num_bd_points; ++i)
+    {
+      const double t = i*dt;
+      points.push_back({std::cos(t), std::sin(t)});
+    }
+  
   return points;
 }
 
@@ -37,10 +47,14 @@ int main(int argc, char** argv)
   // Either provide the number of sample points or the input mesh file
   CLI::App app;
 
-  // Number of random points to generate over the unit circle
-  int num_points;
-  app.add_option("-n", num_points, "number of random points over unit circle")->required()->check(CLI::PositiveNumber);
+  // Number of random points to generate in the interior of a unit circle
+  int num_int_points;
+  app.add_option("-n", num_int_points, "number of random interior points over unit circle")->required()->check(CLI::PositiveNumber);
 
+  // Number of uniformly spaced boundary points to generate along the periphery
+  int num_bd_points;
+  app.add_option("-b", num_bd_points, "number of equi-spaced boundary points")->required()->check(CLI::PositiveNumber);
+  
   // mesh file
   std::string meshfile;
   app.add_option("-m", meshfile, "output mesh file with OFF extension")->required()->check(!CLI::ExistingFile);
@@ -51,7 +65,7 @@ int main(int argc, char** argv)
   assert((ext==".off" || ext==".OFF") && "Expected mesh file name in OFF format");
   
   // sampling
-  auto points = generate_points(num_points);
+  auto points = generate_points(num_int_points, num_bd_points);
 
   // mesh
   auto mesh = vm::create_delaunay_triangulation(points);
