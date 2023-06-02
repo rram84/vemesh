@@ -118,8 +118,6 @@ int main(int argc, char** argv)
 	  // this face occupies the correct position in the queue
 	  std::cout << "Attempting merge for face with quality " << curr_q;
 	  auto success = manager.merge_face(f, qface);
-	  if(success==true) std::cout << " pass " << std::endl;
-	  else std::cout << " fail " << std::endl;
 	  if(success==true)
 	    {
 	      ++nmerged;
