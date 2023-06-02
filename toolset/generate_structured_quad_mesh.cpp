@@ -5,7 +5,7 @@
 // Required options:
 // --nx: Number of nodes along the x-direction
 // --ny: Number of nodes along the y-direction
-// -m  : Output mesh file name in off format, does not overwrite. Also writes a file in vtk format with element qualities
+// -o  : Output mesh file name in off format, does not overwrite. Also writes a file in vtk format with element qualities
 
 #include <vm_SpecialMeshes.h>
 #include <vm_face_quality.h>
@@ -26,7 +26,7 @@ int main(int argc, char* argv[])
 
   // mesh file
   std::string meshfile;
-  app.add_option("-m", meshfile, "output mesh file with OFF extension")->required()->check(!CLI::ExistingFile);
+  app.add_option("-o", meshfile, "output mesh file with OFF extension")->required()->check(!CLI::ExistingFile);
 
   // parse
   CLI11_PARSE(app, argc, argv);
