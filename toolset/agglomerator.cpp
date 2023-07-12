@@ -107,9 +107,11 @@ int main(int argc, char** argv)
 	    face_queue.push({fq.first,curr_q});
 	  
 	  // this face occupies the correct position in the queue
-	  auto success = manager.merge_face(f, qface);
+	  auto result = manager.merge_face(f, qface);
+	  auto success = result.first;
 	  if(success==true)
 	    {
+	      std::cout << "Merged " << f.idx() << " with " << result.second.idx() << std::endl;
 	      ++nmerged;
 	      if(vis_flag)
 		manager.write_mesh(outdir+"mesh-i"+std::to_string(iter)+"-"+std::to_string(nmerged)+".vtk", qfunc);

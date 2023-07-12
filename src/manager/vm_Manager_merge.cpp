@@ -2,11 +2,12 @@
 
 #include <vm_Manager.h>
 #include <vm_face_merge.h>
+#include <iostream>
 
 namespace vm
 {
   // merge poor quality elements with neighbors
-  bool Manager::merge_face(const pmp::Face& face, FaceQuality_f qfunc)
+  std::pair<bool, pmp::Face> Manager::merge_face(const pmp::Face& face, FaceQuality_f qfunc)
   {
     assert(mesh.is_valid(face) && !mesh.is_deleted(face));
     
@@ -15,10 +16,12 @@ namespace vm
     const auto& success       = result.first;
     const auto& best_halfedge = result.second;
     if(success==true)
-      vm::merge_face(mesh, best_halfedge);
-    
-    // done
-    return success;
+      {
+	vm::merge_face(mesh, best_halfedge);
+	return {success, mesh.face(mesh.opposite_halfedge(best_halfedge))};
+      }
+    else
+      return {success, face};
   }
   
 }
