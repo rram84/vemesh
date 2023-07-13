@@ -104,7 +104,10 @@ int main(int argc, char** argv)
 	  
 	  // reposition this face in the queue if its quality has changed
 	  if(std::abs(curr_q-fq.second)>qeps)
-	    face_queue.push({fq.first,curr_q});
+	    {
+	      face_queue.push({fq.first,curr_q});
+	      continue;
+	    }
 	  
 	  // this face occupies the correct position in the queue
 	  auto result = manager.merge_face(f, qface);
