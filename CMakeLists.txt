@@ -23,6 +23,52 @@ list(APPEND VM_COMPILE_FEATURES cxx_std_17)
 # Compile code in src and mesh
 add_subdirectory(src)
 
+# Install
+include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
+
+install(TARGETS
+  vm_inspect
+  vm_io
+  vm_manager
+  vm_merge
+  vm_mesh_slicer
+  vm_move
+  vm_quality
+  vm_sampling
+  vm_spl_meshes
+  vm_stiffness
+  vm_tet_slicer
+  vm_vertex_ring
+  vm_visibility
+  EXPORT ${PROJECT_NAME}Targets
+  DESTINATION ${PROJECT_NAME}/${CMAKE_INSTALL_LIBDIR}
+  INCLUDES DESTINATION ${PROJECT_NAME}/${CMAKE_INSTALL_INCLUDEDIR})
+
+install(EXPORT ${PROJECT_NAME}Targets
+  DESTINATION ${PROJECT_NAME}/${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+  NAMESPACE vm::
+  FILE ${PROJECT_NAME}Targets.cmake)
+
+set(VM_INCLUDE_DIRS_VAR ${PROJECT_NAME}/${CMAKE_INSTALL_INCLUDEDIR})
+set(VM_LIBRARY_DIRS_VAR ${PROJECT_NAME}/${CMAKE_INSTALL_LIBDIR})
+
+configure_package_config_file(
+  "cmake/${PROJECT_NAME}Config.cmake.in" "${PROJECT_NAME}Config.cmake"
+  INSTALL_DESTINATION
+  ${PROJECT_NAME}/${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+  PATH_VARS VM_INCLUDE_DIRS_VAR VM_LIBRARY_DIRS_VAR)
+
+write_basic_package_version_file(
+  ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
+  VERSION ${PACKAGE_VERSION}
+  COMPATIBILITY AnyNewerVersion)
+
+install(FILES
+  "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+  "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
+  DESTINATION "${PROJECT_NAME}/${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}")
+
 # Testing
 include(CTest)
 add_subdirectory(src/manager/test)
@@ -35,7 +81,8 @@ add_subdirectory(src/mesh-slicer/test)
 add_subdirectory(src/special-meshes/test)
 add_subdirectory(src/stiffness/test)
 add_subdirectory(toolset)
-add_subdirectory(cmame-paper/)
+#add_subdirectory(cmame-paper/)
+add_subdirectory(ppt/)
 
 
 
