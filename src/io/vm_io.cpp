@@ -276,6 +276,57 @@ namespace vm
     return;    
   }
 
+
+  // Write a triangle or quad mesh in tec file format
+  // mesh [in]     : tri or quad mesh
+  // filename [in] : name of the file
+  void write_tec(const pmp::SurfaceMesh& mesh, const std::string filename)
+  {
+    assert(std::string(std::filesystem::path(filename).extension())==".tec");
+    auto f_circulator = mesh.faces();
+    int nvalence = 0;
+    for(auto f:f_circulator)
+      {
+	nvalence = mesh.valence(f);
+	break;
+      }
+    assert(nvalence==3 || nvalence==4);
+
+    std::fstream outfile;
+    outfile.open(filename, std::ios::out);
+    assert(outfile.good());
+    
+    // Line 1:
+    outfile<<"VARIABLES = \"X\", \"Y\" " << std::endl;
+
+    // Line 2:
+    const std::string ElmType = (nvalence==3) ? "TRIANGLE" :  "QUADRILATERAL";
+    outfile<<"ZONE t=\"t:0\", N="<< mesh.n_vertices()
+	   <<", E="<<mesh.n_faces()
+	   <<", F=FEPOINT, ET="<<ElmType;
+
+    // nodal coordinates
+    auto v_circulator = mesh.vertices();
+    for(auto v:v_circulator)
+      {
+	const auto& X = mesh.position(v);
+	outfile << std::endl << X[0] << " " << X[1];
+      }
+
+    // element connectivities
+    for(auto f:f_circulator)
+      {
+	auto conn = mesh.vertices(f);
+	outfile << std::endl;
+	for(auto v:conn)
+	  outfile << v.idx()+1 << " "; 
+      }
+    outfile.close();
+
+    // done
+    return;
+  }
+
   
   // Write a polygonal mesh in vtk file format
   // mesh [in]     : polygonal mesh

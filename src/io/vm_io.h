@@ -37,6 +37,11 @@ namespace vm
   // filename [in] : name of the file
   void write_vtk(const pmp::SurfaceMesh& mesh, const std::string filename);
 
+  // Write a triangle or quad mesh in tec file format
+  // mesh [in]     : tri or quad mesh
+  // filename [in] : name of the file
+  void write_tec(const pmp::SurfaceMesh& mesh, const std::string filename);
+  
   // Write a polygonal mesh and cell face qualities in vtk file format
   // mesh  [in]     : polygonal mesh
   // qfunc [in]     : face quality function
