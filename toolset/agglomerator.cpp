@@ -6,7 +6,7 @@
 // -i Input mesh file in OFF format
 // -o output directory, will be cleared if it already exists. will be created otherwise
 // -q threshold tolerance
-// -n number of iterations to perform
+// -n number of agglomeration iterations to perform
 // -v optional argument to print meshes after successive merges (within each iteration)
 
 #include <vm_Manager.h>
