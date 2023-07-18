@@ -273,8 +273,8 @@ namespace vm
 	// create new face
 	mesh.add_face({it->second, my_verts[a1], my_verts[a2], my_verts[a3], jt->second});
       }
-    // 2-in, 2-out
-    else if(n_in_verts==2)
+    // 2-in, 2-out, successive
+    else if(n_in_verts==2 && ((in_verts[0]+1)%4==in_verts[1] || (in_verts[1]+1)%4==in_verts[0]))
       {
 	// inner vertices should be successive
 	if(in_verts[0]==0 && in_verts[1]==3)
@@ -290,21 +290,52 @@ namespace vm
 	const int a3 = (a0+3)%4;
 	const auto e0 = mesh.find_edge(my_verts[a1], my_verts[a2]);
 	const auto e1 = mesh.find_edge(my_verts[a3], my_verts[a0]);
-	
+	    
 	// vertices inserted along e0 and e1
 	auto it = cutedgesMap.find(e0);
 	auto jt = cutedgesMap.find(e1);
 	assert(it!=cutedgesMap.end() && jt!=cutedgesMap.end());
-	
+	    
 	// erase the old face
 	mesh.delete_face(e);
-
+	    
 	// at most 2 vertices should have been deleted
 	assert(nverts-mesh.n_vertices()<=2);
-	
+	    
 	// add new face
 	mesh.add_face({it->second, jt->second, my_verts[a0], my_verts[a1]});
       }
+    // 2-in, 2-out, not successive
+    else 
+      {
+	assert(n_in_verts==2);
+	const int a0 = in_verts[0];       // in
+	const int a1 = (in_verts[0]+1)%4; // out
+	const int a2 = (in_verts[0]+2)%4; // in
+	const int a3 = (in_verts[0]+3)%4; // out
+
+	const auto e0 = mesh.find_edge(my_verts[a0], my_verts[a1]);
+	const auto e1 = mesh.find_edge(my_verts[a1], my_verts[a2]);
+	const auto e2 = mesh.find_edge(my_verts[a2], my_verts[a3]);
+	const auto e3 = mesh.find_edge(my_verts[a3], my_verts[a0]);
+
+	// new vertices along the 4 edges
+	auto it0 = cutedgesMap.find(e0);
+	auto it1 = cutedgesMap.find(e1);
+	auto it2 = cutedgesMap.find(e2);
+	auto it3 = cutedgesMap.find(e3);
+	assert(it0!=cutedgesMap.end() && it1!=cutedgesMap.end() && it2!=cutedgesMap.end() && it3!=cutedgesMap.end());
+
+	// erase the old face
+	mesh.delete_face(e);
+
+	// at most two vertices should have been deleted
+	assert(nverts-mesh.n_vertices()<=2);
+
+	// add new face
+	mesh.add_face({my_verts[a0], it0->second, it1->second, my_verts[a2], it2->second, it3->second});
+      }
+    
     
     // done
     return;
