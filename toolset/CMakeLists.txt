@@ -15,7 +15,8 @@ foreach(TARGET
 		generate_structured_quad_mesh
 		line_clipper
 		circle_clipper
-		agglomerator)
+		agglomerator
+		relaxer)
 
   # add executable
   add_executable(${TARGET} ${TARGET}.cpp)
