@@ -64,6 +64,7 @@ int main(int argc, char** argv)
   manager.write_mesh(outdir+"init.vtk", qfunc);
   auto& mesh = manager.get_mesh();
   write_element_qualities(mesh, outdir+"q-init.dat");
+  vm::write_suku_format(mesh, outdir+"init");
   
   // relaxation iterations
   for(int iter=0; iter<num_iters; ++iter)
@@ -113,6 +114,7 @@ int main(int argc, char** argv)
       // save output
       manager.write_mesh(outdir+"mesh-i"+std::to_string(iter)+".OFF");
       manager.write_mesh(outdir+"mesh-i"+std::to_string(iter)+".vtk", qfunc);
+      vm::write_suku_format(mesh, outdir+"mesh-i"+std::to_string(iter));
     }
 
   // done

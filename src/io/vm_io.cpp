@@ -418,21 +418,13 @@ namespace vm
     const auto& f_circulator = mesh.faces();
     for(auto f:f_circulator)
       {
-	const int nedges = mesh.valence(f); // same as #vertices
-	pfile << mat_id << " " << nedges << " ";
-	const auto h0 = mesh.halfedge(f);
-	pmp::Halfedge h = h0;
-	while(true)
-	  {
-	    auto v0 = mesh.from_vertex(h);
-	    auto v1 = mesh.to_vertex(h);
-	    pfile << 2 << " " << v0.idx()+1 << " " << v1.idx()+1 << " ";  // node numbering from 1
-	    h = mesh.next_halfedge(h);
-	    if(h==h0)
-	      break;
-	  }
+	pfile << mesh.valence(f) << " " ;
+	auto f_verts = mesh.vertices(f);
+	for(auto v:f_verts)
+	  pfile << v.idx()+1 << " " ;
 	pfile << std::endl;
       }
+
     pfile.close();
 
     // done
