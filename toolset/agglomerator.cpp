@@ -63,7 +63,8 @@ int main(int argc, char** argv)
   // initial mesh quality
   manager.write_mesh(outdir+"init.vtk", qfunc);
   auto& mesh = manager.get_mesh();
-
+  vm::write_suku_format(mesh, outdir+"/suku/init");
+      
   // iterations
   for(int iter=0; iter<num_iters; ++iter)
     {
@@ -123,8 +124,9 @@ int main(int argc, char** argv)
       std::cout << "#faces merged: " << nmerged << std::endl << std::endl;
 
       // save output
-      manager.write_mesh(outdir+"mesh-i"+std::to_string(iter)+".OFF");
-      manager.write_mesh(outdir+"mesh-i"+std::to_string(iter)+".vtk", qfunc);
+      manager.write_mesh(outdir+"/off/mesh-i"+std::to_string(iter)+".OFF");
+      manager.write_mesh(outdir+"/vtk/mesh-i"+std::to_string(iter)+".vtk", qfunc);
+      vm::write_suku_format(mesh, outdir+"/suku/mesh-i"+std::to_string(iter));
     }
 
   // done
@@ -154,6 +156,12 @@ void manage_output_directory(const std::string outdir)
     {
       std::cout << "Creating output directory \"" << outdir << "\"" << std::endl;
       auto flag  = std::filesystem::create_directory(outdir);
+      assert(flag==true && "Could not create output directory");
+      flag = std::filesystem::create_directory(outdir+"/vtk");
+      assert(flag==true && "Could not create output directory");
+      flag = std::filesystem::create_directory(outdir+"/off");
+      assert(flag==true && "Could not create output directory");
+      flag = std::filesystem::create_directory(outdir+"/suku");
       assert(flag==true && "Could not create output directory");
     }
 

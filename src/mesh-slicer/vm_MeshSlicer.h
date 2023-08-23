@@ -14,4 +14,25 @@ namespace vm
   
   void clip_mesh(pmp::SurfaceMesh& mesh, const double phi_eps, LevelSetFunction_t& lsfunc);
 
+  void embed_interface(pmp::SurfaceMesh& mesh, const double phi_eps, LevelSetFunction_t& lsfunc, const std::pair<int,int> domain_id);
+
+  namespace slicer
+  {
+    void prep_mesh(pmp::SurfaceMesh& mesh, const double phi_eps, LevelSetFunction_t& lsfunc,
+		   const bool discard_outer_faces,
+		   std::map<pmp::Edge, pmp::Vertex>& cutedgesMap,             // cut edges -> new vertex map
+		   std::map<pmp::Face, std::vector<int>>& cutfacesMap);       // cut faces -> local vertices in phi<0
+
+    void slice_triangle(pmp::SurfaceMesh& mesh,
+		       const std::map<pmp::Edge, pmp::Vertex>& cutedgesMap,
+		       const pmp::Face& e, const std::vector<int>& in_verts,
+		       const bool discard_outer);    // discard the element portion in phi>0
+
+    void slice_quad(pmp::SurfaceMesh& mesh,
+		    const std::map<pmp::Edge, pmp::Vertex>& cutedgesMap,
+		    const pmp::Face& e,  std::vector<int> in_verts,
+		    const bool discard_outer);     // discard the element portion in phi>0
+    
+      }
+
 }
