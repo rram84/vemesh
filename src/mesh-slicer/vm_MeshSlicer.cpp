@@ -1,7 +1,6 @@
 // Sriramajayam
 
 #include <vm_MeshSlicer.h>
-#include <iostream>
 
 namespace vm
 {
@@ -13,7 +12,6 @@ namespace vm
 		   std::map<pmp::Face, std::vector<int>>& cutfacesMap)
     {
       assert(phi_eps>0.);
-      std::cout << "phi_eps: " << phi_eps << std::endl;
       
       // cut edges -> new vertex map
       cutedgesMap.clear();
@@ -32,7 +30,6 @@ namespace vm
 	  Y[0] = X[0];
 	  Y[1] = X[1];
 	  lsval = lsfunc(Y);
-	  std::cout << "lsval: " << lsval << std::endl;
 	  assert(std::abs(lsval)>phi_eps && "Level set function value at node violates tolerance");
 	  lsvalues[v] = lsval;
 	}
@@ -53,11 +50,14 @@ namespace vm
 	    }
 
 	  // at least one vertex outside => cut face
-	  const int num_verts = mesh.valence(f);
-	  if(discard_outer_faces==true && in_verts.empty())  // no vertices inside? erase face
-	    mesh.delete_face(f);
-	  else if(static_cast<int>(in_verts.size())<num_verts)
+	  const int num_verts   = mesh.valence(f);
+	  const int n_in_verts  =  static_cast<int>(in_verts.size());
+	  const int n_out_verts = num_verts-n_in_verts;
+
+	  if(n_in_verts>0 && n_out_verts>0) 	               // cut face
 	    cutfacesMap.insert({f, in_verts});
+	  else if(discard_outer_faces==true && n_in_verts==0)  // discard outside face
+	    mesh.delete_face(f);
 	}
 
       // should have at least some faces left
@@ -206,7 +206,7 @@ namespace vm
     {
       const int n_in_verts = static_cast<int>(in_verts.size());
       assert(n_in_verts>0 && n_in_verts<4);
-    
+      
       // outer vertices
       const std::vector<int> all_verts{0,1,2,3};
       std::vector<int> out_verts{};
@@ -302,14 +302,14 @@ namespace vm
 	  const int a1 = in_verts[1];  // (a0+1)%4
 	  const int a2 = (a0+2)%4;
 	  const int a3 = (a0+3)%4;
-	  const auto e0 = mesh.find_edge(my_verts[a1], my_verts[a2]);
+	  const auto e1 = mesh.find_edge(my_verts[a1], my_verts[a2]);
 	  const auto e3 = mesh.find_edge(my_verts[a3], my_verts[a0]);
 	    
-	  // vertices inserted along e0 and e3
-	  auto it = cutedgesMap.find(e0);
+	  // vertices inserted along e1 and e3
+	  auto it = cutedgesMap.find(e1);
 	  auto jt = cutedgesMap.find(e3);
 	  assert(it!=cutedgesMap.end() && jt!=cutedgesMap.end());
-	    
+
 	  // erase the old face
 	  mesh.delete_face(e);
 	    

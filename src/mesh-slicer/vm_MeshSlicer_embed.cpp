@@ -32,7 +32,7 @@ namespace vm
 	else
 	  slicer::slice_quad(mesh, cutedgesMap, e, in_verts, discard_outer);
       }
-
+    
     // done
     return;
   }

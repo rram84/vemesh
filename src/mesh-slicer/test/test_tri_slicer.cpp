@@ -7,7 +7,7 @@
 double level_set_circle(const double* X)
 {
   const double center[] {0.5,0.5};
-  const double rad = 0.35;
+  const double rad = 0.25;
   double Y[] = {X[0]-center[0], X[1]-center[1]};
   double r = std::sqrt(Y[0]*Y[0]+Y[1]*Y[1]);
   return r-rad;
@@ -15,9 +15,19 @@ double level_set_circle(const double* X)
 
 int main()
 {
-  pmp::SurfaceMesh mesh;
-  vm::read_off("random_triangles.OFF", mesh);
   vm::LevelSetFunction_t lsfunc = level_set_circle;
-  vm::clip_mesh(mesh, 0.001, lsfunc);
-  vm::write_off(mesh, "ls.OFF");
+  const double phi_eps = 1.e-5;
+  const double pert_eps = phi_eps/10.;
+
+  // clip
+  pmp::SurfaceMesh mesh1;
+  vm::read_off("random_triangles.OFF", mesh1);
+  vm::clip_mesh(mesh1, phi_eps, lsfunc);
+  vm::write_off(mesh1, "tri-clip.OFF");
+  
+  // embed
+  pmp::SurfaceMesh mesh2;
+  vm::read_off("random_triangles.OFF", mesh2);
+  vm::embed_interface(mesh2, phi_eps, lsfunc, {0,1});
+  vm::write_off(mesh2, "tri-embed.OFF");
 }
