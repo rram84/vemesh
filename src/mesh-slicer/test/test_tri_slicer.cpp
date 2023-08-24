@@ -22,12 +22,13 @@ int main()
   // clip
   pmp::SurfaceMesh mesh1;
   vm::read_off("random_triangles.OFF", mesh1);
-  vm::clip_mesh(mesh1, phi_eps, lsfunc, 1); 
-  vm::write_off(mesh1, "tri-clip.OFF");
+  vm::clip_mesh(mesh1, phi_eps, lsfunc); 
+  vm::write_off(mesh1, "tri-clip.OFF"); 
   
   // embed
   pmp::SurfaceMesh mesh2;
   vm::read_off("random_triangles.OFF", mesh2);
   vm::embed_interface(mesh2, phi_eps, lsfunc, {1,2}); 
   vm::write_off(mesh2, "tri-embed.OFF");
+  vm::write_vtk_with_cell_id(mesh2, "tri-embed.vtk");
 }

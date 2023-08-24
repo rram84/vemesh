@@ -1,7 +1,6 @@
 // Sriramajayam
 
-#ifndef VM_IO_IMPL_H
-#define VM_IO_IMPL_H
+#pragma once
 
 #include <fstream>
 
@@ -56,6 +55,4 @@ namespace vm
       return;
     }
 }
-
-#endif
 

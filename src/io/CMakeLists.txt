@@ -1,6 +1,10 @@
 # Sriramajayam
 
-add_library(vm_io STATIC vm_io.cpp)
+add_library(vm_io STATIC
+		  vm_io.cpp
+		  vm_io_off.cpp
+		  vm_io_vtk.cpp
+		  vm_io_suku.cpp)
 
 # include headers in the current directory
 target_include_directories(vm_io PUBLIC
@@ -15,5 +19,5 @@ target_compile_features(vm_io PUBLIC ${VM_COMPILE_FEATURES})
 # install headers
 install(FILES
 	vm_io.h
-	vm_io_impl.h
+	vm_io_vtk_impl.h
   	DESTINATION ${PROJECT_NAME}/include)

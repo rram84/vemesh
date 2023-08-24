@@ -8,12 +8,12 @@ namespace vm
 {
   pmp::SurfaceMesh renumber_mesh_vertices(const pmp::SurfaceMesh& mesh);
   
-  void clip_mesh(pmp::SurfaceMesh& mesh, const double phi_eps, LevelSetFunction_t& lsfunc, const int domain_id)
+  void clip_mesh(pmp::SurfaceMesh& mesh, const double phi_eps, LevelSetFunction_t& lsfunc)
   {
-    // domain id
+    // dummy domain id
     if(mesh.has_face_property("id")==false)
       mesh.add_face_property<int>("id", -1);
-    const std::pair<int, int> in_out_domain_id{domain_id, -1};
+    const std::pair<int, int> in_out_domain_id{-1, -1};
     
     // cut edges -> new vertex map
     std::map<pmp::Edge, pmp::Vertex> cutedgesMap{};
