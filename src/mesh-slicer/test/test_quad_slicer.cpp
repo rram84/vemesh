@@ -29,11 +29,11 @@ int main()
   
   // clip
   auto mesh1 = vm::create_rect_mesh(left_cnr, hx, nx, hy, ny);
-  vm::clip_mesh(mesh1, phi_eps, lsfunc);
+  vm::clip_mesh(mesh1, phi_eps, lsfunc, 1);
   vm::write_off(mesh1, "quad-clip.OFF");
 
   // embed
   auto mesh2 = vm::create_rect_mesh(left_cnr, hx, nx, hy, ny);
-  vm::embed_interface(mesh2, phi_eps, lsfunc, {0,1});
+  vm::embed_interface(mesh2, phi_eps, lsfunc, {1,2});
   vm::write_off(mesh2, "quad-embed.OFF");
 }

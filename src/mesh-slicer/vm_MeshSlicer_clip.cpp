@@ -8,8 +8,13 @@ namespace vm
 {
   pmp::SurfaceMesh renumber_mesh_vertices(const pmp::SurfaceMesh& mesh);
   
-  void clip_mesh(pmp::SurfaceMesh& mesh, const double phi_eps, LevelSetFunction_t& lsfunc)
+  void clip_mesh(pmp::SurfaceMesh& mesh, const double phi_eps, LevelSetFunction_t& lsfunc, const int domain_id)
   {
+    // domain id
+    if(mesh.has_face_property("id")==false)
+      mesh.add_face_property<int>("id", -1);
+    const std::pair<int, int> in_out_domain_id{domain_id, -1};
+    
     // cut edges -> new vertex map
     std::map<pmp::Edge, pmp::Vertex> cutedgesMap{};
 
@@ -18,8 +23,8 @@ namespace vm
 
     // discard faces that lie within the phi>0 domain
     const bool discard_outer = true;
-    slicer::prep_mesh(mesh, phi_eps, lsfunc, discard_outer,  // in
-		      cutedgesMap, cutfacesMap);             // out
+    slicer::prep_mesh(mesh, phi_eps, lsfunc, discard_outer, in_out_domain_id,
+		      cutedgesMap, cutfacesMap);             
     
     // clip triangles and quads
     for(auto& it:cutfacesMap)
@@ -32,9 +37,9 @@ namespace vm
 	
 	// clip a triangle/quad
 	if(n_verts==3)
-	  slicer::slice_triangle(mesh, cutedgesMap, e, in_verts, discard_outer);
+	  slicer::slice_triangle(mesh, cutedgesMap, e, in_verts, discard_outer, in_out_domain_id);
 	else 
-	  slicer::slice_quad(mesh, cutedgesMap, e, in_verts, discard_outer);
+	  slicer::slice_quad(mesh, cutedgesMap, e, in_verts, discard_outer, in_out_domain_id);
       }
     
     // renumber the mesh
