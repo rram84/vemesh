@@ -56,14 +56,20 @@ namespace vm
   // suku
   
   // Writes a mesh in Sukumar's format
-  void write_suku_format(const pmp::SurfaceMesh& mesh,
-			 const std::string filename);
-  
+  void write_suku_format(const pmp::SurfaceMesh& mesh, const std::string filename);
+
+  // Write a mesh in Sukumar's format with element ids
+  void write_suku_format_with_cell_id(const pmp::SurfaceMesh& mesh, const std::string filename);
+
+  // TRIANGLE
   // Reads a mesh in triangle format
   void read_triangles(const std::string node_file, const std::string ele_file, pmp::SurfaceMesh& mesh);
-  
+
+  // GNUPLOT
   // Writes a mesh in .dat format, suitable for plotting with gnuplot
   void write_dat(const pmp::SurfaceMesh &mesh, const std::string filename);
+
+  // TECPLOT
   
   // Write a triangle or quad mesh in tec file format
   // mesh [in]     : tri or quad mesh
