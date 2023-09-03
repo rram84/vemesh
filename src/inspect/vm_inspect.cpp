@@ -15,7 +15,7 @@ namespace vm
   using boost_point_t    = bgm::point<double, 2, bg::cs::cartesian>;
   using boost_polygon_t  = bgm::polygon<boost_point_t, false>;
 
-  void inspect_face(const pmp::SurfaceMesh& mesh, pmp::Face& face)
+  bool inspect_face(const pmp::SurfaceMesh& mesh, pmp::Face& face)
   {
     assert(mesh.is_valid(face)==true && mesh.is_deleted(face)==false);
     
@@ -32,9 +32,13 @@ namespace vm
     auto first_vert = poly.outer().begin();
     bg::append(poly.outer(), boost_point_t(bg::get<0>(*first_vert), bg::get<1>(*first_vert)));
 
-    // the face should be valid & simple
-    assert(bg::is_valid(poly));
-    assert(bg::is_simple(poly));
+    // the face should be valid, simple and have a positive area
+    if(!bg::is_valid(poly))
+      return false;
+    if(!bg::is_simple(poly))
+      return false;
+    if(bg::area(poly)<=0.)
+      return false;
 
     // check intersection with neighbors
     auto halfedge_circulator = mesh.halfedges(face);
@@ -70,17 +74,20 @@ namespace vm
 	bg::append(nb_poly.outer(), boost_point_t(bg::get<0>(*nb_first_vert), bg::get<1>(*nb_first_vert)));
 
 	// neighbor should be valid & simple
-	assert(bg::is_valid(nb_poly));
-	assert(bg::is_simple(nb_poly));
+	if(!bg::is_valid(nb_poly))
+	  return false;
+	if(!bg::is_simple(nb_poly))
+	  return false;
 
 	// intersection of neighboring faces should be an edge
 	std::vector<boost_polygon_t> intersection{};
 	bg::intersection(poly, nb_poly, intersection);
-	assert(intersection.empty()==true);
+	if(intersection.empty()==false)
+	  return false;
       }
 
     // done
-    return;
+    return true;
   }
 
 

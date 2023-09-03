@@ -16,7 +16,10 @@ namespace vm
     // inspect faces
     auto face_circulator = mesh.faces();
     for(auto face:face_circulator)
-      inspect_face(mesh, face);
+      {
+	bool flag = inspect_face(mesh, face);
+	assert(flag==true);
+      }
       
     // done
     return;
