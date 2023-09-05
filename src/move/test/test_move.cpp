@@ -52,7 +52,7 @@ int main()
 
   // compute a feasible location
   vm::MeshVertexQuality_f qfunc = vm::compute_distance_based_vertex_quality;
-  auto move_result = vm::compute_feasible_vertex_position(mesh, guard_vertex, 20, qfunc);  // edge ratio, angle tolerance, num_samples
+  auto move_result = vm::compute_improved_vertex_position(mesh, guard_vertex, 1000, 10, qfunc);  // num_poly_samples, num_edge_samples
   if(std::get<0>(move_result)==true)
     {
       std::cout << "Successful move " << std::endl;
@@ -78,6 +78,5 @@ int main()
 	}
       pfile.close();
     }
- 
 }
 

@@ -1,6 +1,7 @@
 // Sriramajayam
 
 #include <vm_vertex_sampling.h>
+#include <vm_vertex_ring.h>
 #include <boost/geometry/geometry.hpp>
 #include <random>
 
@@ -52,8 +53,8 @@ namespace vm
     
     // boost polygon of the environment around the vertex
     boost_polygon_t poly;
-    auto v_circulator = mesh.vertices(vertex);
-    for(auto v:v_circulator)
+    auto vertex_ring = get_vertex_ring(mesh, vertex);
+    for(auto& v:vertex_ring)
       {
 	const auto& X = mesh.position(v);
 	bg::append(poly.outer(), boost_point_t(X[0], X[1]));
@@ -86,6 +87,7 @@ namespace vm
     std::uniform_real_distribution<> ydis(bg::get<1>(min_corner), bg::get<1>(max_corner));
     
     // sample the bounding box
+    int num_poly_sample_feasible = 0;
     for(int iter=0; iter<num_poly_samples; ++iter)
       {
 	// sample point in the bounding box
@@ -93,11 +95,15 @@ namespace vm
 
 	// is this point feasible
 	if(is_point_feasible(poly, connected_vertices, sample)==true)
-	  feasible_points.push_back({bg::get<0>(sample), bg::get<1>(sample)});
+	  {
+	    feasible_points.push_back({bg::get<0>(sample), bg::get<1>(sample)});
+	    ++num_poly_sample_feasible;
+	  }
       }
 
 
     // sample edges incident edges at the vertex
+    int num_edge_sample_feasible = 0;
     std::uniform_real_distribution<> lambda_dis(0.,1.);
     const pmp::Point& Xv = mesh.position(vertex);
     for(auto& Y:connected_vertices)
@@ -108,7 +114,10 @@ namespace vm
 			       lambda*Xv[1]+(1.-lambda)*Y[1]);
 	  
 	  if(is_point_feasible(poly, connected_vertices, sample)==true)
-	    feasible_points.push_back({bg::get<0>(sample), bg::get<1>(sample)});
+	    {
+	      feasible_points.push_back({bg::get<0>(sample), bg::get<1>(sample)});
+	      ++num_edge_sample_feasible;
+	    }
 	}
 
     // done
