@@ -35,7 +35,7 @@ install(TARGETS
   vm_mesh_slicer
   vm_move
   vm_quality
-  vm_sampling
+  vm_vert_sampling
   vm_spl_meshes
   vm_stiffness
   vm_tet_slicer
