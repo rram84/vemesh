@@ -52,4 +52,4 @@ Thumbs.db
 build/
 
 # meshes
-*.tec
+*.tec  
