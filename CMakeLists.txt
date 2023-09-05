@@ -20,8 +20,9 @@ find_package(CGAL REQUIRED)
 
 list(APPEND VM_COMPILE_FEATURES cxx_std_17)
 
-# Compile code in src and mesh
+# Compile code in src and test
 add_subdirectory(src)
+add_subdirectory(test)
 
 # Install
 include(GNUInstallDirs)
@@ -36,7 +37,6 @@ install(TARGETS
   vm_move
   vm_quality
   vm_vert_sampling
-  vm_spl_meshes
   vm_stiffness
   vm_tet_slicer
   vm_vertex_ring
@@ -77,8 +77,8 @@ add_subdirectory(src/quality/test)
 add_subdirectory(src/move/test)	
 add_subdirectory(src/tet-slicer/test)
 add_subdirectory(src/mesh-slicer/test)
-add_subdirectory(src/special-meshes/test)
 add_subdirectory(src/stiffness/test)
+add_subdirectory(test/rect/test)
 add_subdirectory(toolset)
 #add_subdirectory(cmame-paper/)
 add_subdirectory(ppt/)

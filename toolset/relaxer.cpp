@@ -94,7 +94,7 @@ int main(int argc, char** argv)
 	  const auto& v = vq.first;
 	  vertex_queue.pop();
 
-	  auto result = manager.move_vertex(v, 10, qfunc);
+	  auto result = manager.move_vertex(v, 100, 5, qfunc);
 	  auto success = result.first;
 	  if(success==true)
 	    {

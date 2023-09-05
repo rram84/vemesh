@@ -2,18 +2,17 @@
 
 cmake_minimum_required(VERSION 3.12)
 
-project(spl_meshes_tests
-  DESCRIPTION "Unit tests for the special meshes")
+project(vm_rect_unit_test
+  DESCRIPTION "Unit tests for the rectangle meshes")
 
 foreach(TARGET
-	test_rect_mesh
-	test_delaunay)
+	test_rect_mesh)
 
   # add executable
   add_executable(${TARGET} ${TARGET}.cpp)
 
   # link 
-  target_link_libraries(${TARGET} PUBLIC vm_spl_meshes vm_io CGAL::CGAL)
+  target_link_libraries(${TARGET} PUBLIC vm_test_rect vm_io)
 
   # choose appropriate flags
   target_compile_features(${TARGET} PUBLIC ${COMPILE_FEATURES})

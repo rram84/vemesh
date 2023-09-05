@@ -16,7 +16,7 @@ foreach(TARGET
   add_executable(${TARGET} ${TARGET}.cpp)
 
   # link 
-  target_link_libraries(${TARGET} PUBLIC vm_mesh_slicer vm_io vm_spl_meshes)
+  target_link_libraries(${TARGET} PUBLIC vm_mesh_slicer vm_io vm_test_rect)
 
   # choose appropriate flags
   target_compile_features(${TARGET} PUBLIC ${COMPILE_FEATURES})

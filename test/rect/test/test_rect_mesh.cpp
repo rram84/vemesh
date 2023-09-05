@@ -1,6 +1,6 @@
 // Sriramajayam
 
-#include <vm_SpecialMeshes.h>
+#include <vm_test_rectangle_mesh.h>
 #include <vm_io.h>
 
 int main()
@@ -10,6 +10,6 @@ int main()
   const int ny = 15;
   const double hx = 1./static_cast<double>(nx-1);
   const double hy = 1./static_cast<double>(ny-1);
-  auto mesh = vm::create_rect_mesh(left_cnr, hx, nx, hy, ny);
+  auto mesh = vm::test::create_rect_mesh(left_cnr, hx, nx, hy, ny);
   vm::write_off(mesh, "rect.off");
 }
