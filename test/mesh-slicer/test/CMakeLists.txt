@@ -2,7 +2,7 @@
 
 cmake_minimum_required(VERSION 3.12)
 
-project(mesh_slice_tests
+project(slicer_unit_tests
   DESCRIPTION "Unit tests for the Manager class")
 
 file(GLOB MESH_FILES "${CMAKE_SOURCE_DIR}/src/mesh-slicer/test/*.OFF")
@@ -16,7 +16,7 @@ foreach(TARGET
   add_executable(${TARGET} ${TARGET}.cpp)
 
   # link 
-  target_link_libraries(${TARGET} PUBLIC vm_mesh_slicer vm_io vm_test_rect)
+  target_link_libraries(${TARGET} PUBLIC vm_test_mesh_slicer vm_io vm_test_rect)
 
   # choose appropriate flags
   target_compile_features(${TARGET} PUBLIC ${COMPILE_FEATURES})

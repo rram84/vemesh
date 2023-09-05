@@ -33,7 +33,6 @@ install(TARGETS
   vm_io
   vm_manager
   vm_merge
-  vm_mesh_slicer
   vm_move
   vm_quality
   vm_vert_sampling
@@ -41,6 +40,8 @@ install(TARGETS
   vm_tet_slicer
   vm_vertex_ring
   vm_visibility
+  vm_test_rect
+  vm_test_mesh_slicer
   EXPORT ${PROJECT_NAME}Targets
   DESTINATION ${PROJECT_NAME}/${CMAKE_INSTALL_LIBDIR}
   INCLUDES DESTINATION ${PROJECT_NAME}/${CMAKE_INSTALL_INCLUDEDIR})
@@ -76,12 +77,14 @@ add_subdirectory(src/visibility/test)
 add_subdirectory(src/quality/test)
 add_subdirectory(src/move/test)	
 add_subdirectory(src/tet-slicer/test)
-add_subdirectory(src/mesh-slicer/test)
 add_subdirectory(src/stiffness/test)
-add_subdirectory(test/rect/test)
 add_subdirectory(toolset)
+
+add_subdirectory(test/rect/test)
+add_subdirectory(test/mesh-slicer/test)
+
 #add_subdirectory(cmame-paper/)
-add_subdirectory(ppt/)
+#add_subdirectory(ppt/)
 
 
 

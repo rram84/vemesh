@@ -1,6 +1,6 @@
 // Sriramajayam
 
-#include <vm_MeshSlicer.h>
+#include <vm_test_mesh_slicer.h>
 #include <vm_io.h>
 
 
@@ -15,20 +15,20 @@ double level_set_circle(const double* X)
 
 int main()
 {
-  vm::LevelSetFunction_t lsfunc = level_set_circle;
+  vm::test::LevelSetFunction_t lsfunc = level_set_circle;
   const double phi_eps = 1.e-5;
   const double pert_eps = phi_eps/10.;
 
   // clip
   pmp::SurfaceMesh mesh1;
   vm::read_off("random_triangles.OFF", mesh1);
-  vm::clip_mesh(mesh1, phi_eps, lsfunc); 
+  vm::test::clip_mesh(mesh1, phi_eps, lsfunc); 
   vm::write_off(mesh1, "tri-clip.OFF"); 
   
   // embed
   pmp::SurfaceMesh mesh2;
   vm::read_off("random_triangles.OFF", mesh2);
-  vm::embed_interface(mesh2, phi_eps, lsfunc, {1,2}); 
+  vm::test::embed_interface(mesh2, phi_eps, lsfunc, {1,2}); 
   vm::write_off(mesh2, "tri-embed.OFF");
   vm::write_vtk_with_cell_id(mesh2, "tri-embed.vtk");
 }

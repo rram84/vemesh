@@ -1,10 +1,10 @@
 // Sriramajayam
 
-#include <vm_MeshSlicer.h>
+#include <vm_test_mesh_slicer.h>
 
 namespace vm
 {
-  namespace slicer
+  namespace test
   {
     void prep_mesh(pmp::SurfaceMesh& mesh, const double phi_eps, LevelSetFunction_t& lsfunc,
 		   const bool discard_outer_faces, const std::pair<int,int> domain_id,
