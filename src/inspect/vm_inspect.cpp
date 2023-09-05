@@ -39,7 +39,7 @@ namespace vm
       return false;
     if(bg::area(poly)<=0.)
       return false;
-
+    
     // check intersection with neighbors
     auto halfedge_circulator = mesh.halfedges(face);
     for(auto h:halfedge_circulator)

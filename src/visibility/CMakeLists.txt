@@ -1,6 +1,9 @@
 # Sriramajayam
 
-add_library(vm_visibility STATIC vm_visibility.cpp)
+add_library(vm_visibility STATIC
+	         vm_visibility.cpp
+		 vm_visibility_sampling.cpp
+		 vm_visibility_inspect.cpp)
 
 # include headers in the current directory
 target_include_directories(vm_visibility PUBLIC

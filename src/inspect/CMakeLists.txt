@@ -2,7 +2,6 @@
 
 add_library(vm_inspect STATIC
 		 vm_inspect.cpp
-		 vm_inspect_vis.cpp
 		 vm_inspect_ring.cpp)
 
 # include headers in the current directory

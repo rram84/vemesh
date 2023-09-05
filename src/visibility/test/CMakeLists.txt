@@ -5,7 +5,8 @@ cmake_minimum_required(VERSION 3.12)
 project(visibility_tests
   DESCRIPTION "Unit tests for computing visibility in polygons")
 
-foreach(TARGET test_visibility simple_polygon_visibility)
+foreach(TARGET test_visibility
+			test_poly_sampling)
 
   # add executable
   add_executable(${TARGET} ${TARGET}.cpp)

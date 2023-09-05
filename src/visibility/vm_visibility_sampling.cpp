@@ -1,6 +1,6 @@
 // Sriramajayam
 
-#include <vm_polygon_sampling.h>
+#include <vm_visibility.h>
 #include <boost/geometry/geometry.hpp>
 #include <random>
 
@@ -14,7 +14,7 @@ namespace vm
   using boost_linestring_t = bgm::linestring<boost_point_t>;
   
   std::vector<std::pair<double,double>>
-  compute_polygon_sampling(const std::vector<std::pair<double,double>>& vertices, const int num_points)
+  sample_visibility_polygon(const std::vector<std::pair<double,double>>& vertices, const int num_points)
   {
     // this polygon
     const int nVerts = static_cast<int>(vertices.size());

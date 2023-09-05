@@ -13,14 +13,7 @@ namespace vm
 
   bool inspect_face(const std::vector<pmp::Point>& coords);
 
-  // inspect the correctness of a computed visibility polygon
-  bool inspect_visibility_polygon(const pmp::SurfaceMesh& mesh,
-				  const pmp::Vertex& vertex,
-				  const std::vector<std::pair<double,double>>& vis_poly_verts);
-
   // inspect correctness of a vertex ring
   bool inspect_vertex_ring(const pmp::SurfaceMesh& mesh,
 			   const pmp::Vertex& vertex);
-    
-  
 }
