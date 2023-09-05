@@ -10,8 +10,7 @@ target_include_directories(vm_move PUBLIC
 # link
 target_link_libraries(vm_move PUBLIC
 			      vm_quality
-			      vm_visibility
-			      vm_sampling)
+			      vm_vert_sampling)
 
 # Add required flags
 target_compile_features(vm_move PUBLIC ${VM_COMPILE_FEATURES})

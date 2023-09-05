@@ -7,7 +7,7 @@
 namespace vm
 {
   // moves a vertex
-  std::pair<bool, double> Manager::move_vertex(const pmp::Vertex& vertex, const int num_samples, MeshVertexQuality_f qfunc)
+  std::pair<bool, double> Manager::move_vertex(const pmp::Vertex& vertex, const int num_poly_samples, const int num_edge_samples, MeshVertexQuality_f qfunc)
   {
     // cannot move boundary vertices
     if(mesh.is_boundary(vertex)==true)
@@ -16,7 +16,7 @@ namespace vm
       }
 
     // identify a feasible new position & move
-    const auto result = compute_feasible_vertex_position(mesh, vertex, num_samples, qfunc);
+    const auto result = compute_improved_vertex_position(mesh, vertex, num_poly_samples, num_edge_samples, qfunc);
         
     // no feasible point
     if(std::get<0>(result)==false)

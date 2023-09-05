@@ -38,7 +38,7 @@ namespace vm
     std::pair<bool, pmp::Face> merge_face(const pmp::Face& f, FaceQuality_f qfunc);
 
     // moves a vertex to a more favorable position
-    std::pair<bool,double> move_vertex(const pmp::Vertex& vertex, const int num_samples, MeshVertexQuality_f qfunc);
+    std::pair<bool,double> move_vertex(const pmp::Vertex& vertex, const int num_poly_samples, const int num_edge_samples, MeshVertexQuality_f qfunc);
 
     // visualize
     void write_mesh(const std::string filename);
