@@ -37,7 +37,6 @@ install(TARGETS
   vm_quality
   vm_vert_sampling
   vm_stiffness
-  vm_tet_slicer
   vm_vertex_ring
   vm_visibility
   vm_test_rect
@@ -76,7 +75,6 @@ add_subdirectory(src/manager/test)
 add_subdirectory(src/visibility/test)
 add_subdirectory(src/quality/test)
 add_subdirectory(src/move/test)	
-add_subdirectory(src/tet-slicer/test)
 add_subdirectory(src/stiffness/test)
 add_subdirectory(toolset)
 
