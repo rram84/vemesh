@@ -13,7 +13,9 @@ namespace vm
     // pick the neighbor so that the resulting face has the best quality among all possibilities
     // cannot merge along boundary faces
     // cannot merge along faces that would result in an isolated vertex
+    // cannot merge with a face having a different "id"
 
+    
     // evaluate halfedge merged -> resulting face quality
     pmp::Halfedge best_h;
     double best_quality = -1.;
