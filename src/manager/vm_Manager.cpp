@@ -12,28 +12,6 @@ namespace vm
     mesh.clear();
     read_vtk(vtk_file, mesh);
 
-    // default material id if it is not assigned
-    if(mesh.has_face_property("material_id")==false)
-      {
-	auto mat_id = mesh.add_face_property<int>("material_id");
-	auto f_container = mesh.faces();
-	for(auto f:f_container)
-	  {
-	    mat_id[f] = 0;
-	  }
-      }
-
-    // default interface vertices if it is not assigned
-    if(mesh.has_vertex_property("on_interface")==false)
-      {
-	auto on_interface = mesh.add_vertex_property<int>("on_interface");
-	auto v_container = mesh.vertices();
-	for(auto v:v_container)
-	  {
-	    on_interface[v] = 0;
-	  }
-      }
-    
     // sanity checks
     inspect_mesh();
   }

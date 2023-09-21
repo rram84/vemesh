@@ -10,6 +10,7 @@ namespace vm
   {
     pmp::SurfaceMesh create_rect_mesh(const double* left_cnr,
 				      const double hx, const int nx,
-				      const double hy, const int ny);
+				      const double hy, const int ny,
+				      const int mat_id);
   }
 }

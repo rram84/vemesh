@@ -22,7 +22,7 @@ namespace vm
       }
 
     assert(mesh.has_face_property("material_id")==true);
-    assert(mesh.has_vertex_property("on_interface")==true);
+    assert(mesh.has_vertex_property("interface_id")==true);
     
     // done
     return;

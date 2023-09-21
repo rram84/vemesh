@@ -8,14 +8,16 @@ namespace vm
 {
   namespace test
   {
-    pmp::SurfaceMesh renumber_mesh_vertices(const pmp::SurfaceMesh& mesh);
+    pmp::SurfaceMesh renumber_mesh_vertices(const pmp::SurfaceMesh& mesh, const int mat_id);
   
-    void clip_mesh(pmp::SurfaceMesh& mesh, const double phi_eps, LevelSetFunction_t& lsfunc)
+    void clip_mesh(pmp::SurfaceMesh& mesh, const double phi_eps,
+		   LevelSetFunction_t& lsfunc,
+		   const int mat_id, const int boundary_id)
     {
-      // dummy domain id
-      if(mesh.has_face_property("id")==false)
-	mesh.add_face_property<int>("id", -1);
-      const std::pair<int, int> in_out_domain_id{-1, -1};
+      assert(mesh.has_face_property("material_id")==true);
+      assert(mesh.has_vertex_property("interface_id")==true);
+
+      const std::pair<int, int> in_out_domain_id{mat_id, -1};
     
       // cut edges -> new vertex map
       std::map<pmp::Edge, pmp::Vertex> cutedgesMap{};
@@ -25,9 +27,8 @@ namespace vm
 
       // discard faces that lie within the phi>0 domain
       const bool discard_outer = true;
-      prep_mesh(mesh, phi_eps, lsfunc, discard_outer, in_out_domain_id,
-		cutedgesMap, cutfacesMap);             
-    
+      prep_mesh(mesh, phi_eps, lsfunc, discard_outer, in_out_domain_id, boundary_id, cutedgesMap, cutfacesMap);
+
       // clip triangles and quads
       for(auto& it:cutfacesMap)
 	{
@@ -43,9 +44,9 @@ namespace vm
 	  else 
 	    slice_quad(mesh, cutedgesMap, e, in_verts, discard_outer, in_out_domain_id);
 	}
-    
+
       // renumber the mesh
-      mesh = renumber_mesh_vertices(mesh);
+      mesh = renumber_mesh_vertices(mesh, mat_id);
      
       // done
       return;
@@ -53,10 +54,13 @@ namespace vm
 
   
   
-    pmp::SurfaceMesh renumber_mesh_vertices(const pmp::SurfaceMesh& mesh)
+    pmp::SurfaceMesh renumber_mesh_vertices(const pmp::SurfaceMesh& mesh, const int mat_num)
     {
+      assert(mesh.has_face_property("material_id")==true);
+      assert(mesh.has_vertex_property("interface_id")==true);
+      
       pmp::SurfaceMesh renum_mesh;
-    
+      
       // add renumbered vertices to the new mesh
       std::map<pmp::Vertex,int> old2new{};
       int vcount = 0;
@@ -87,7 +91,20 @@ namespace vm
       assert(mesh.n_vertices()==renum_mesh.n_vertices());
       assert(mesh.n_edges()==renum_mesh.n_edges());
       assert(mesh.n_faces()==renum_mesh.n_faces());
-    
+
+      // material id
+      renum_mesh.add_face_property<int>("material_id", mat_num);
+      
+      // transfer interface ids from the old mesh
+      auto renum_interface_id = renum_mesh.add_vertex_property<int>("interface_id");
+      auto interface_id       = mesh.get_vertex_property<int>("interface_id");
+      vcount = 0;
+      for(auto v:v_container)
+	{
+	  renum_interface_id[new_vertices[vcount]] = interface_id[v];
+	  ++vcount;
+	}
+      
       // done
       return renum_mesh;
     }

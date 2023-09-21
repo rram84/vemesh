@@ -9,7 +9,8 @@ namespace vm
   {
     pmp::SurfaceMesh create_rect_mesh(const double* left_cnr,
 				      const double hx, const int nx,
-				      const double hy, const int ny)
+				      const double hy, const int ny,
+				      const int mat_id)
     {
       assert(nx>1 && ny>1);
       pmp::SurfaceMesh mesh;
@@ -33,7 +34,13 @@ namespace vm
 
       assert(mesh.n_vertices()==nx*ny);
       assert(mesh.n_faces()==(nx-1)*(ny-1));
-    
+
+      // assign material id
+      mesh.add_face_property<int>("material_id", mat_id);
+      
+      // no vertices on an interface
+      mesh.add_vertex_property<int>("interface_id", -1);
+      
       // done
       return mesh;
     }

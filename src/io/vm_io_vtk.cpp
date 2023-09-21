@@ -72,11 +72,11 @@ namespace vm
 	faces.push_back(mesh.add_face(conn));
       }
 
-    // read material ids of cells
+    // material ids of cells
+    auto material_ids = mesh.add_face_property<int>("material_id", -1);
     flag = position_cursor_after_word(file, "material_id");
     if(flag==true)
       {
-	auto material_ids = mesh.add_face_property<int>("material_id");
 	std::getline(file, line);
 	std::getline(file, line);
 	for(auto& f:faces)
@@ -86,16 +86,16 @@ namespace vm
       }
     
     // vertices on interfaces
+    auto interface_id = mesh.add_vertex_property<int>("interface_id", -1);
     file.seekg(0, std::ios::beg);
-    flag = position_cursor_after_word(file, "on_interface");
+    flag = position_cursor_after_word(file, "interface_id");
     if(flag==true)
       {
-	auto on_interface = mesh.add_vertex_property<int>("on_interface");
 	std::getline(file, line);
 	std::getline(file, line);
 	for(auto& v:vertices)
 	  {
-	    file >> on_interface[v];
+	    file >> interface_id[v];
 	  }
       }
     
@@ -162,15 +162,13 @@ namespace vm
     out << std::endl << "CELL_DATA " << mesh.n_faces() << std::endl;
 
     // material ids
-    if(mesh.has_face_property("material_id")==true)
+    assert(mesh.has_face_property("material_id")==true);
+    auto mat_id = mesh.get_face_property<int>("material_id");
+    out << "SCALARS material_id int" << std::endl
+	<< "LOOKUP_TABLE default" << std::endl;
+    for(auto f:f_circulator)
       {
-	auto id_property = mesh.get_face_property<int>("material_id");
-	out << "SCALARS material_id int" << std::endl
-	    << "LOOKUP_TABLE default" << std::endl;
-	for(auto f:f_circulator)
-	  {
-	    out << id_property[f] << std::endl;
-	  }
+	out << mat_id[f] << std::endl;
       }
     
     // face qualities
@@ -187,14 +185,14 @@ namespace vm
     
     out << std::endl << "POINT_DATA " << mesh.n_vertices() << std::endl;
 
-    // on-interface property
-    if(mesh.has_vertex_property("on_interface")==true)
+    // interface id
+    assert(mesh.has_vertex_property("interface_id")==true);
+    out << "SCALARS interface_id int" << std::endl
+	<< "LOOKUP_TABLE default" << std::endl;
+    auto interface_id = mesh.get_vertex_property<int>("interface_id");
+    for(auto v:v_container)
       {
-	auto on_interface = mesh.get_vertex_property<int>("on_interface");
-	for(auto v:v_container)
-	  {
-	    out << on_interface[v] << std::endl;
-	  }
+	out << interface_id[v] << std::endl;
       }
     
     // write vertex qualities if available

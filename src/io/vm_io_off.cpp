@@ -61,6 +61,12 @@ namespace vm
     assert(mesh.n_vertices()==num_nodes);
     assert(mesh.n_faces()==num_faces);
 
+    // add default material id
+    mesh.add_face_property<int>("material_id", -1);
+    
+    // add default interface id
+    auto interface_id = mesh.add_vertex_property<int>("interface_id", -1);
+    
     // done
     return;
   }
@@ -97,39 +103,5 @@ namespace vm
       }
     out.close();
   }
-  
-
-  // Writes a given set of faces of a in .off format
-  // mesh [in]           : polygon mesh
-  // filename [in]       : name of the file
-  void write_off(pmp::SurfaceMesh& mesh,
-		 const std::list<pmp::Face>& faces,
-		 const std::string filename)
-  {
-    const std::string extension = std::filesystem::path(filename).extension();
-    assert(extension==".off" || extension==".OFF");
-    
-    const auto& positions = mesh.positions();
-    std::fstream out;
-    out.open(filename, std::ios::out);
-    assert(out.good() && out.is_open());
-    out << "OFF" << std::endl
-	<< positions.size() << " " << faces.size() << " " << 0;
-
-    // vertex coordinates
-    for(auto& pt:positions)
-      out << std::endl << pt[0] <<" " << pt[1] <<" " << pt[2];
-
-    // connectivity
-    for(auto face:faces)
-      {
-	out << std::endl << mesh.valence(face) << " ";
-	auto vertex_circulator = mesh.vertices(face);
-	for(auto v:vertex_circulator)
-	  out << v.idx() <<" ";
-      }
-    out.close();
-  }
-
 
 }
