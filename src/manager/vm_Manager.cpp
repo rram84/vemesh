@@ -7,37 +7,15 @@
 namespace vm
 {
   // Constructor: from a .OFF file
-  Manager::Manager(const std::string off_file)
+  Manager::Manager(const std::string vtk_file)
   {
     mesh.clear();
-    read_off(off_file, mesh);
+    read_vtk(vtk_file, mesh);
 
     // sanity checks
     inspect_mesh();
   }
   
-
-  // Constructor: from .node, .ele files
-  Manager::Manager(const std::string node_file, const std::string ele_file)
-  {
-    mesh.clear();
-    read_triangles(node_file, ele_file, mesh);
-
-    // sanity checks
-    inspect_mesh();
-  }
-  
-  
-  // Destructor
-  Manager::~Manager() {}
-
-
-  // access the mesh
-  pmp::SurfaceMesh& Manager::get_mesh()
-  {
-    return mesh;
-  }
-
   // visualize
   void Manager::write_mesh(const std::string filename) 
   {

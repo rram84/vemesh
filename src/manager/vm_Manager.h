@@ -15,13 +15,10 @@ namespace vm
   {
   public:
     //! Constructor
-    Manager(const std::string off_file);
+    Manager(const std::string vtk_file);
 
-    //! Constructor
-    Manager(const std::string node_file, const std::string ele_file);
-    
     //! Destructor
-    virtual ~Manager();
+    ~Manager() = default;
 
     //! Disable copy and assignment
     Manager(const Manager&) = delete;
@@ -31,7 +28,8 @@ namespace vm
     void inspect_mesh() const;
     
     // access the mesh
-    pmp::SurfaceMesh& get_mesh();
+    inline pmp::SurfaceMesh& get_mesh()
+    { return mesh; }
     
     // merge a face with one of the neighbors
     // returns whether the face was merged or not, and the final quality

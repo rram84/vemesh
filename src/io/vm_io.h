@@ -28,6 +28,9 @@ namespace vm
 
   // VTK
 
+  // read a vtk file
+  void read_vtk(const std::string filename, pmp::SurfaceMesh& mesh);
+  
   // Write a polygonal mesh in vtk file format
   // mesh [in]     : polygonal mesh
   // filename [in] : name of the file
