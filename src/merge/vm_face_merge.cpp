@@ -7,13 +7,19 @@
 namespace vm
 {
   // identify the face along which to merger a given face
-  std::pair<bool, pmp::Halfedge> find_halfedge_for_face_merge(const pmp::SurfaceMesh& mesh, const pmp::Face& face, FaceQuality_f qfunc)
+  std::pair<bool, pmp::Halfedge> find_halfedge_for_face_merge(const pmp::SurfaceMesh& mesh,
+							      const pmp::Face& face,
+							      FaceQuality_f qfunc)
   {
+    assert(mesh.has_face_property("material_id")==true);
+    auto material_id = mesh.get_face_property<int>("material_id");
+    const int my_mat_id = material_id[face];
+    
     // face needs to be merged with a neighbor
     // pick the neighbor so that the resulting face has the best quality among all possibilities
     // cannot merge along boundary faces
     // cannot merge along faces that would result in an isolated vertex
-    // cannot merge with a face having a different "id"
+    // can merge with a face having the same "material_id"
 
     
     // evaluate halfedge merged -> resulting face quality
@@ -23,9 +29,11 @@ namespace vm
     for(auto h:halfedge_circulator)
       if(mesh.valence(mesh.from_vertex(h))>2 && mesh.valence(mesh.to_vertex(h))>2)  // prevent isolated vertices
 	{
-	  auto nb_h    = mesh.opposite_halfedge(h);
-	  auto nb_face = mesh.face(nb_h);
-	  if(mesh.is_valid(nb_h) && mesh.is_valid(nb_face) && !mesh.is_deleted(nb_face))
+	  auto nb_h      = mesh.opposite_halfedge(h);
+	  auto nb_face   = mesh.face(nb_h);
+	  int  nb_mat_id = material_id[nb_face];
+	  
+	  if(mesh.is_valid(nb_h) && mesh.is_valid(nb_face) && !mesh.is_deleted(nb_face) && my_mat_id==nb_mat_id)
 	    {
 	      // vertices of the new face created by merging face/nb_face
 	      std::vector<pmp::Point> verts{};
@@ -70,7 +78,8 @@ namespace vm
   // Agglomerate poor quality elements
   void merge_face(pmp::SurfaceMesh& mesh, const pmp::Halfedge& h0)
   {
-    // sanity checks 
+    // sanity checks
+    assert(mesh.has_face_property("material_id")==true);
     assert(mesh.is_valid(h0) && !mesh.is_deleted(h0) && !mesh.is_boundary(h0));
 
     // face of h0
@@ -85,6 +94,10 @@ namespace vm
     auto f1 = mesh.face(h1);
     assert(mesh.is_valid(f1) && !mesh.is_deleted(f1));
 
+    // check on material id
+    auto material_id = mesh.get_face_property<int>("material_id");
+    assert(material_id[f0]==material_id[f1]);
+    
     const int nvertices = mesh.n_vertices();
     const int nprev_elm = mesh.n_faces();
     auto e = mesh.edge(h0);
