@@ -20,15 +20,14 @@ list(APPEND VM_LIBRARIES
   libvm_io.a
   libvm_manager.a
   libvm_merge.a
-  libvm_mesh_slicer.a
   libvm_move.a
   libvm_quality.a
-  libvm_sampling.a
-  libvm_spl_meshes.a
+  libvm_vert_sampling.a
   libvm_stiffness.a
-  libvm_tet_slicer.a
   libvm_vertex_ring.a
   libvm_visibility.a
+  libvm_test_mesh_slicer.a
+  libvm_test_rect.a
   CGAL::CGAL
   Eigen3::Eigen
   pmp
