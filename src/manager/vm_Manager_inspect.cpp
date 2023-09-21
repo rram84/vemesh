@@ -20,7 +20,10 @@ namespace vm
 	bool flag = inspect_face(mesh, face);
 	assert(flag==true);
       }
-      
+
+    assert(mesh.has_face_property("material_id")==true);
+    assert(mesh.has_vertex_property("on_interface")==true);
+    
     // done
     return;
   }
