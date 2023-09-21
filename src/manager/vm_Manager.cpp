@@ -55,28 +55,50 @@ namespace vm
 
   
   // visualize mesh along with face qualities
-  void Manager::write_mesh(const std::string filename, MeshFaceQuality_f qfunc)
+  void Manager::compute_face_qualities(MeshFaceQuality_f qfunc)
   {
-    // Only vtk is supported
-    const std::string extension = std::filesystem::path(filename).extension();
-    assert(extension==".vtk" && "Only vtk file format is supported");
-    write_vtk_with_cell_data(mesh, qfunc, filename);
+    // "face_quality" property
+    if(mesh.has_face_property("face_quality")==false)
+      {
+	mesh.add_face_property<double>("face_quality");
+      }
 
+    // (re)compute
+    auto quality = mesh.get_face_property<double>("face_quality");
+    auto f_circulator = mesh.faces();
+    double q;
+    for(auto f:f_circulator)
+      {
+	q = qfunc(mesh, f);
+	quality[f] = q;
+      }
+
+    // done
     return;
   }
-
+  
   
   // visualize mesh along with vertex qualities
-  void Manager::write_mesh(const std::string filename, MeshVertexQuality_f qfunc)
+  void Manager::compute_vertex_qualities(MeshVertexQuality_f qfunc)
   {
-    // Only vtk is supported
-    const std::string extension = std::filesystem::path(filename).extension();
-    assert(extension==".vtk" && "Only vtk file format is supported");
-    write_vtk_with_vertex_data(mesh, qfunc, filename);
+    // "vertex_quality" property
+    if(mesh.has_vertex_property("vertex_quality")==false)
+      {
+	mesh.add_vertex_property<double>("vertex_quality");
+      }
 
+    // (re)compute
+    auto quality = mesh.get_vertex_property<double>("vertex_quality");
+    auto v_circulator = mesh.vertices();
+    double q;
+    for(auto v:v_circulator)
+      {
+	q = qfunc(mesh, v);
+	quality[v] = q;
+      }
+
+    // done
     return;
   }
 
-
-  
 }

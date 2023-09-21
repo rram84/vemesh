@@ -61,7 +61,8 @@ int main(int argc, char** argv)
   vm::FaceQuality_f     qface = vm::compute_stiffness_based_face_quality;
   
   // initial mesh quality
-  manager.write_mesh(outdir+"init.vtk", qfunc);
+  manager.compute_face_qualities(qfunc);
+  manager.write_mesh(outdir+"init.vtk");
   auto& mesh = manager.get_mesh();
   vm::write_suku_format(mesh, outdir+"/suku/init");
       
@@ -118,14 +119,15 @@ int main(int argc, char** argv)
 	      std::cout << "Merged " << f.idx() << " with " << result.second.idx() << std::endl;
 	      ++nmerged;
 	      if(vis_flag)
-		manager.write_mesh(outdir+"mesh-i"+std::to_string(iter)+"-"+std::to_string(nmerged)+".vtk", qfunc);
+		manager.write_mesh(outdir+"mesh-i"+std::to_string(iter)+"-"+std::to_string(nmerged)+".vtk");
 	    }
 	}
       std::cout << "#faces merged: " << nmerged << std::endl << std::endl;
 
       // save output
+      manager.compute_face_qualities(qfunc);
       manager.write_mesh(outdir+"/off/mesh-i"+std::to_string(iter)+".OFF");
-      manager.write_mesh(outdir+"/vtk/mesh-i"+std::to_string(iter)+".vtk", qfunc);
+      manager.write_mesh(outdir+"/vtk/mesh-i"+std::to_string(iter)+".vtk");
       vm::write_suku_format(mesh, outdir+"/suku/mesh-i"+std::to_string(iter));
     }
 

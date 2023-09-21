@@ -61,7 +61,8 @@ int main(int argc, char** argv)
   vm::FaceQuality_f       qface = vm::compute_stiffness_based_face_quality;
 
   // initial mesh quality
-  manager.write_mesh(outdir+"init.vtk", qfunc);
+  manager.compute_vertex_qualities(qfunc);
+  manager.write_mesh(outdir+"init.vtk");
   auto& mesh = manager.get_mesh();
   write_element_qualities(mesh, outdir+"q-init.dat");
   vm::write_suku_format(mesh, outdir+"init");
@@ -102,7 +103,7 @@ int main(int argc, char** argv)
 	      ++nrelaxed;
 	      if(vis_flag && nrelaxed%10==0)
 		{
-		  manager.write_mesh(outdir+"mesh-i"+std::to_string(iter)+"-"+std::to_string(nrelaxed)+".vtk", qfunc);
+		  manager.write_mesh(outdir+"mesh-i"+std::to_string(iter)+"-"+std::to_string(nrelaxed)+".vtk");
 
 		  // print element qualities
 		  write_element_qualities(mesh, outdir+"q-"+std::to_string(nrelaxed)+".dat");
@@ -112,8 +113,9 @@ int main(int argc, char** argv)
       std::cout << "#vertices relaxed: " << nrelaxed << std::endl << std::endl;
 
       // save output
+      manager.compute_vertex_qualities(qfunc);
       manager.write_mesh(outdir+"mesh-i"+std::to_string(iter)+".OFF");
-      manager.write_mesh(outdir+"mesh-i"+std::to_string(iter)+".vtk", qfunc);
+      manager.write_mesh(outdir+"mesh-i"+std::to_string(iter)+".vtk");
       vm::write_suku_format(mesh, outdir+"mesh-i"+std::to_string(iter));
     }
 

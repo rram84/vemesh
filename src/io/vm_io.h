@@ -33,26 +33,6 @@ namespace vm
   // filename [in] : name of the file
   void write_vtk(const pmp::SurfaceMesh& mesh, const std::string filename);
   
-  // Write a polygonal mesh in vtk file format
-  // mesh [in]     : polygonal mesh
-  // filename [in] : name of the file
-  void write_vtk_with_cell_id(const pmp::SurfaceMesh& mesh, const std::string filename);
-  
-  // Write a polygonal mesh and cell face qualities in vtk file format
-  // mesh  [in]     : polygonal mesh
-  // qfunc [in]     : face quality function
-  // filename [in]  : name of the file
-  template<typename FuncType>
-    void write_vtk_with_cell_data(const pmp::SurfaceMesh& mesh, FuncType func, const std::string filename);
-
-  // Write a polygonal mesh and vertex qualities in vtk file format
-  // mesh  [in]     : polygonal mesh
-  // qfunc [in]     : vertex quality function
-  // filename [in]  : name of the file
-  template<typename FuncType>
-    void write_vtk_with_vertex_data(const pmp::SurfaceMesh& mesh, FuncType func, const std::string filename);
-
-  
   // suku
   
   // Writes a mesh in Sukumar's format
@@ -77,7 +57,3 @@ namespace vm
   void write_tec(const pmp::SurfaceMesh& mesh, const std::string filename);
   
 }
-
-
-// implementation of templated functions
-#include <vm_io_vtk_impl.h>

@@ -30,5 +30,5 @@ int main()
   vm::read_off("random_triangles.OFF", mesh2);
   vm::test::embed_interface(mesh2, phi_eps, lsfunc, {1,2}); 
   vm::write_off(mesh2, "tri-embed.OFF");
-  vm::write_vtk_with_cell_id(mesh2, "tri-embed.vtk");
+  vm::write_vtk(mesh2, "tri-embed.vtk");
 }

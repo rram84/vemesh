@@ -27,6 +27,18 @@ namespace vm
       for(auto f:f_circulator)
 	out << func(mesh, f) << std::endl;
 
+      // append material id as cell data
+      if(mesh.has_face_property("id")==true)
+	{
+	  auto mat_id = mesh.get_face_property<int>("id");
+	  out << std::endl
+	      << "SCALARDS mat_id int" << std::endl
+	      << "LOOKUP_TABLE default" << std::endl;
+	  for(auto f:f_circulator)
+	    out << mat_id[f] << std::endl;
+	}
+
+      // done
       return;
     }
 

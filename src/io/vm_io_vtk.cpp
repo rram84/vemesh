@@ -1,6 +1,8 @@
 // Sriramajayam
 
 #include <vm_io.h>
+#include <filesystem>
+#include <fstream>
 
 namespace vm
 {
@@ -56,31 +58,42 @@ namespace vm
 	out << std::endl;
       }
 
+    out << std::endl << "CELL_DATA " << mesh.n_faces() << std::endl;
+
+    // write cell id if available
+    if(mesh.has_face_property("id")==true)
+      {
+	auto id_property = mesh.get_face_property<int>("id");
+	out << "SCALARS id int" << std::endl
+	    << "LOOKUP_TABLE default" << std::endl;
+	for(auto f:f_circulator)
+	  out << id_property[f] << std::endl;
+      }
+
+    // write cell qualities if available
+    if(mesh.has_face_property("face_quality")==true)
+      {
+	auto quality = mesh.get_face_property<double>("face_quality");
+	out << "SCALARS face_quality double" << std::endl
+	    << "LOOKUP_TABLE default" << std::endl;
+	for(auto f:f_circulator)
+	  out << quality[f] << std::endl;
+      }
+
+    out << std::endl << "POINT_DATA " << mesh.n_vertices() << std::endl;
+
+    // write vertex qualities if available
+    if(mesh.has_vertex_property("vertex_quality")==true)
+      {
+	auto quality = mesh.get_vertex_property<double>("vertex_quality");
+	out << "SCALARS vertex_quality double" << std::endl
+	    << "LOOKUP_TABLE default" << std::endl;
+	for(auto v:v_container)
+	  out << quality[v] << std::endl;
+      }
+    
     // done
     out.close();
   }
       
-
-  // Write a polygonal mesh in vtk file format with domain id
-  // mesh [in]     : polygonal mesh
-  // filename [in] : name of the file
-  void write_vtk_with_cell_id(const pmp::SurfaceMesh& mesh, const std::string filename)
-  {
-    assert(mesh.has_face_property("id")==true);
-    auto id_property = mesh.get_face_property<int>("id");
-    
-    // write the mesh in vtk format
-    write_vtk(mesh, filename);
-    
-    // append face qualities as cell data
-    std::fstream out;
-    out.open(filename, std::ios::app);
-    out << std::endl;
-    out << "CELL_DATA " << mesh.n_faces() << std::endl;
-    out << "SCALARS id int" << std::endl;
-    out << "LOOKUP_TABLE default" << std::endl;
-    auto f_circulator = mesh.faces();
-    for(auto f:f_circulator)
-      out << id_property[f] << std::endl;
-  }
 }

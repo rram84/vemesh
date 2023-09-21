@@ -1,6 +1,8 @@
 // Sriramajayam
 
 #include <vm_io.h>
+#include <filesystem>
+#include <fstream>
 
 namespace vm
 {
