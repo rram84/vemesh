@@ -33,9 +33,6 @@ namespace vm
   // Writes a mesh in Sukumar's format
   void write_suku_format(const pmp::SurfaceMesh& mesh, const std::string filename);
 
-  // Write a mesh in Sukumar's format with element ids
-  void write_suku_format_with_cell_id(const pmp::SurfaceMesh& mesh, const std::string filename);
-
   // GNUPLOT
   // Writes a mesh in .dat format, suitable for plotting with gnuplot
   void write_dat(const pmp::SurfaceMesh &mesh, const std::string filename);  
