@@ -15,7 +15,7 @@ namespace vm
   {
   public:
     //! Constructor
-    Manager(const std::string vtk_file);
+    Manager(const std::string filename);
 
     //! Destructor
     ~Manager() = default;

@@ -6,11 +6,16 @@
 
 namespace vm
 {
-  // Constructor: from a .OFF file
-  Manager::Manager(const std::string vtk_file)
+  // Constructor: from a .vtk or .OFF file
+  Manager::Manager(const std::string filename)
   {
     mesh.clear();
-    read_vtk(vtk_file, mesh);
+    const std::string ext = std::filesystem::path(filename).extension();
+    assert(ext==".vtk" || ext==".off" || ext==".OFF");
+    if(ext==".vtk")
+      read_vtk(filename, mesh);
+    else
+      read_off(filename, mesh);
 
     // sanity checks
     inspect_mesh();
