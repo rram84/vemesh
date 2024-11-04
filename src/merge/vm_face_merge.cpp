@@ -11,6 +11,7 @@ namespace vm
 							      const pmp::Face& face,
 							      FaceQuality_f qfunc)
   {
+    assert(!mesh.is_deleted(face));
     assert(mesh.has_face_property("material_id")==true);
     auto material_id = mesh.get_face_property<int>("material_id");
     const int my_mat_id = material_id[face];
@@ -27,12 +28,13 @@ namespace vm
     double best_quality = -1.;
     auto halfedge_circulator = mesh.halfedges(face);
     for(auto h:halfedge_circulator)
-      if(mesh.valence(mesh.from_vertex(h))>2 && mesh.valence(mesh.to_vertex(h))>2)  // prevent isolated vertices
+      if(!mesh.is_boundary(mesh.edge(h)) &&                                         // no boundary merges
+	 mesh.valence(mesh.from_vertex(h))>2 && mesh.valence(mesh.to_vertex(h))>2)  // prevent isolated vertices
 	{
 	  auto nb_h      = mesh.opposite_halfedge(h);
 	  auto nb_face   = mesh.face(nb_h);
 	  int  nb_mat_id = material_id[nb_face];
-	  
+
 	  if(mesh.is_valid(nb_h) && mesh.is_valid(nb_face) && !mesh.is_deleted(nb_face) && my_mat_id==nb_mat_id)
 	    {
 	      // vertices of the new face created by merging face/nb_face
@@ -102,13 +104,18 @@ namespace vm
     const int nprev_elm = mesh.n_faces();
     auto e = mesh.edge(h0);
     assert(mesh.is_removal_ok(e));
-    mesh.remove_edge(e);
+    bool flag = mesh.remove_edge(e);
+    assert(flag==true);
 
     // #vertices should remain unchanged
     assert(mesh.n_vertices()==nvertices);
 
     // #elements should reduce by 1
     assert(mesh.n_faces()==nprev_elm-1);
+
+    // precisely one of f0 and f1 should be deleted
+    assert(mesh.is_deleted(f0) || mesh.is_deleted(f1));
+    assert(!(mesh.is_deleted(f0) && mesh.is_deleted(f1)));
     
     // done
     return;
