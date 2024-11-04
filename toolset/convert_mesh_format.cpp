@@ -6,7 +6,7 @@
 
 // Options
 // -i Input mesh/meshes. OFF or triangle mesh format (.node,.ele)
-// -o Ouput mesh. OFF, vtk or tec
+// -o Ouput mesh. OFF or vtk
 
 #include <vm_io.h>
 #include <CLI/CLI.hpp>
@@ -25,7 +25,7 @@ int main(int argc, char** argv)
 
   // Output mesh file(s)
   std::string out;
-  app.add_option("-o", out, "output mesh file in .off, .vtk or tec format")->required()->check(!CLI::ExistingFile);
+  app.add_option("-o", out, "output mesh file in .off or .vtk format")->required()->check(!CLI::ExistingFile);
 
   // parse
   CLI11_PARSE(app, argc, argv);
@@ -41,24 +41,24 @@ int main(int argc, char** argv)
     }
   const std::string out_ext = fs::path(out).extension();
   
-  if(nin==1)   // .off or .OFF -> vtk, tec
+  if(nin==1)   // .off or .OFF -> vtk
     {
       assert((in_ext[0]==".off" || in_ext[0]==".OFF") && "Expected .off/.OFF input file extension");
-      assert((out_ext==".vtk" || out_ext==".tec") && "Unexpected output file mesh format, should be vtk or tec");
+      assert(out_ext==".vtk" && "Unexpected output file mesh format, should be vtk");
 
       pmp::SurfaceMesh mesh;
       vm::read_off(in[0], mesh);
       if(out_ext==".vtk")
 	vm::write_vtk(mesh, out);
       else
-	vm::write_tec(mesh, out);
+	assert(false && "Unexpected file format");
     }
-  else       // .node, .ele -> off, vtk or tec
+  else       // .node, .ele -> off, vtk
     {
       assert(((in_ext[0]==".node" && in_ext[1]==".ele") || (in_ext[0]==".ele" && in_ext[1]==".node"))
 	     && "Expected .node,.ele input file extension");
-      assert((out_ext==".off" || out_ext==".OFF" || out_ext==".vtk" || out_ext==".tec") &&
-	     "Unexpected output file mesh format, should be OFF, vtk or tec");
+      assert((out_ext==".off" || out_ext==".OFF" || out_ext==".vtk") &&
+	     "Unexpected output file mesh format, should be OFF or vtk");
 
       pmp::SurfaceMesh mesh;
       if(in_ext[0]==".node")
@@ -71,7 +71,7 @@ int main(int argc, char** argv)
       else if(out_ext==".vtk")
 	vm::write_vtk(mesh, out);
       else
-	vm::write_tec(mesh, out);
+	assert(false && "Unexpected scenario");
     }
   
   // done
