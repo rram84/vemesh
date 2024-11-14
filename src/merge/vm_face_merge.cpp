@@ -7,9 +7,9 @@
 namespace vm
 {
   // identify the face along which to merger a given face
-  std::pair<bool, pmp::Halfedge> find_halfedge_for_face_merge(const pmp::SurfaceMesh& mesh,
-							      const pmp::Face& face,
-							      FaceQuality_f qfunc)
+  std::tuple<bool, double, pmp::Halfedge> find_halfedge_for_face_merge(const pmp::SurfaceMesh& mesh,
+								       const pmp::Face& face,
+								       FaceQuality_f qfunc)
   {
     assert(!mesh.is_deleted(face));
     assert(mesh.has_face_property("material_id")==true);
@@ -71,9 +71,9 @@ namespace vm
 
     // there should be at least one candidate
     if(best_quality>0. && mesh.is_valid(best_h))
-      return {true, best_h};
+      return {true, best_quality, best_h};
     else
-      return {false, best_h};
+      return {false, best_quality, best_h};
   }
   
   

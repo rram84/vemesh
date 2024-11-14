@@ -36,7 +36,7 @@ namespace vm
     
     // merge a face with one of the neighbors
     // returns whether the face was merged or not, and the final quality
-    std::pair<bool, pmp::Face> merge_face(const pmp::Face& f, FaceQuality_f qfunc);
+    std::pair<bool, pmp::Face> merge_face(const pmp::Face& f, FaceQuality_f qfunc, const double qimprove_factor);
 
     // merge faces
     // returns the number of merged faces

@@ -8,14 +8,15 @@
 namespace vm
 {
   // merge poor quality elements with neighbors
-  std::pair<bool, pmp::Face> Manager::merge_face(const pmp::Face& face, FaceQuality_f qfunc)
+  std::pair<bool, pmp::Face> Manager::merge_face(const pmp::Face& face, FaceQuality_f qfunc, const double qimprove_factor)
   {
     assert(mesh.is_valid(face) && !mesh.is_deleted(face));
     
     // merge along best possible neighbor
     auto result = find_halfedge_for_face_merge(mesh, face, qfunc);
-    const auto& success       = result.first;
-    const auto& best_halfedge = result.second;
+    const auto& success       = std::get<0>(result);
+    const auto& best_quality  = std::get<1>(result);
+    const auto& best_halfedge = std::get<2>(result);
     std::pair<bool, pmp::Face> ret_data{false, face};
     if(success==true)
       {
@@ -85,7 +86,7 @@ namespace vm
 	  }
 	  
 	// this face occupies the correct position in the queue
-	auto result = this->merge_face(f, qface);
+	auto result = this->merge_face(f, qface, qimprove_factor);
 	auto success = result.first;
 	if(success==true) {
 	  ++nmerged;
