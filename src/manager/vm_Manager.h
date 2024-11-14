@@ -36,12 +36,11 @@ namespace vm
     
     // merge a face with one of the neighbors
     // returns whether the face was merged or not, and the final quality
-    std::pair<bool, pmp::Face> merge_face(const pmp::Face& f, FaceQuality_f qfunc, const double qimprove_factor);
+    std::pair<bool, pmp::Face> merge_face(const pmp::Face& f, FaceQuality_f qface, MeshFaceQuality_f qfunc, const double qimprove_factor);
 
     // merge faces
     // returns the number of merged faces
-    int merge_faces(MeshFaceQuality_f qfunc, FaceQuality_f qface, const double qthreshold,
-		    const double improve_factor, MergeCallback_f callback=nullptr);
+    int merge_faces(MeshFaceQuality_f qfunc, FaceQuality_f qface, const double qthreshold, const double improve_factor, MergeCallback_f callback=nullptr);
 
     // moves a vertex to a more favorable position
     std::pair<bool,double> move_vertex(const pmp::Vertex& vertex, const int num_poly_samples,
