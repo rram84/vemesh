@@ -19,12 +19,12 @@
 // output directory management
 void manage_output_directory(const std::string outdir);
 
-// alias
-using FQ_pair_t = std::pair<pmp::Face, double>;
-
-// Custom comparator of face/quality pairs
-bool Compare(const FQ_pair_t& A, const FQ_pair_t& B)
-{ return A.second>B.second; }
+// callback for saving files
+void MergeCallback(const std::string outdir, const int iter,
+		   const int merge_num, const pmp::SurfaceMesh &mesh, vm::Manager &manager) {
+  manager.write_mesh(outdir+"mesh-i"+std::to_string(iter)+"-"+std::to_string(merge_num)+".vtk");
+  vm::write_suku_format(mesh, outdir+"/suku/mesh-i"+std::to_string(iter)+"-"+std::to_string(merge_num));
+}
 
 int main(int argc, char** argv)
 {
@@ -67,70 +67,22 @@ int main(int argc, char** argv)
   vm::write_suku_format(mesh, outdir+"/suku/init");
       
   // iterations
-  for(int iter=0; iter<num_iters; ++iter)
-    {
-      // priority queue of faces to be merged during this iteration
-      std::priority_queue<FQ_pair_t, std::vector<FQ_pair_t>, decltype(&Compare)> face_queue(Compare);
-      auto f_container = mesh.faces();
-      for(auto f:f_container)
-	{
-	  double qval = qfunc(mesh, f);
-	  if(qval<qmin)
-	    face_queue.push({f, qval});
-	}
+  for(int iter=0; iter<num_iters; ++iter) {
 
-      std::cout << "Iteration " << iter+1 << std::endl
-		<< "#faces marked for merge: " << face_queue.size() << std::endl;
-      
-      // # of faces merged during this iteration
-      int nmerged = 0;
+    // callback
+    auto callback = std::bind(MergeCallback, outdir, iter,
+			      std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 
-      // traverse the queue
-      while(!face_queue.empty())
-	{
-	  // pop the first member in the queue
-	  auto fq = face_queue.top();
-	  const auto& f = fq.first;
-	  face_queue.pop();
+    // merge faces
+    manager.merge_faces(qfunc, qface, qmin, 1.1, callback);
 
-	  // do nothing if:
-	  // (i)  this face was erased during a merge
-	  // (ii) the quality of this face, which could have changed due to a merge, is > qEPS
-	  if(mesh.is_deleted(f)==true)
-	    continue;
-	  
-	  // current quality
-	  const double curr_q = qfunc(mesh, f);
-	  if(curr_q>qmin)
-	    continue;
-	  
-	  // reposition this face in the queue if its quality has changed
-	  if(std::abs(curr_q-fq.second)>qeps)
-	    {
-	      face_queue.push({fq.first,curr_q});
-	      continue;
-	    }
-	  
-	  // this face occupies the correct position in the queue
-	  auto result = manager.merge_face(f, qface);
-	  auto success = result.first;
-	  if(success==true)
-	    {
-	      std::cout << "Merged " << f.idx() << " with " << result.second.idx() << std::endl;
-	      ++nmerged;
-	      if(vis_flag)
-		manager.write_mesh(outdir+"mesh-i"+std::to_string(iter)+"-"+std::to_string(nmerged)+".vtk");
-	    }
-	}
-      std::cout << "#faces merged: " << nmerged << std::endl << std::endl;
-
-      // save output
-      manager.compute_face_qualities(qfunc);
-      manager.write_mesh(outdir+"/off/mesh-i"+std::to_string(iter)+".OFF");
-      manager.write_mesh(outdir+"/vtk/mesh-i"+std::to_string(iter)+".vtk");
-      vm::write_suku_format(mesh, outdir+"/suku/mesh-i"+std::to_string(iter));
-    }
-
+    // save output
+    manager.compute_face_qualities(qfunc);
+    manager.write_mesh(outdir+"/off/mesh-i"+std::to_string(iter)+".OFF");
+    manager.write_mesh(outdir+"/vtk/mesh-i"+std::to_string(iter)+".vtk");
+    vm::write_suku_format(mesh, outdir+"/suku/mesh-i"+std::to_string(iter));
+  }
+  
   // done
 }
 
@@ -139,17 +91,19 @@ int main(int argc, char** argv)
 // output directory management
 void manage_output_directory(const std::string outdir)
 {
+  namespace fs = std::filesystem;
+  
   // create the output directory if it does not exist, erase mesh files
-  if(std::filesystem::exists(outdir))
+  if(fs::exists(outdir))
     {
       std::cout << "Output directory " << outdir << " exists. Erasing mesh files " << std::endl;
-      auto it_dir = std::filesystem::directory_iterator(outdir);
+      auto it_dir = fs::directory_iterator(outdir);
       for(auto& it:it_dir)
 	{
 	  const std::string ext = it.path().extension();
 	  if(ext==".dat" || ext==".off" || ext==".OFF" || ext==".vtk")
 	    {
-	      auto flag = std::filesystem::remove(it.path());
+	      auto flag = fs::remove(it.path());
 	      assert(flag==true && "Could not erase file in output directory");
 	    }
 	}
@@ -157,13 +111,13 @@ void manage_output_directory(const std::string outdir)
   else
     {
       std::cout << "Creating output directory \"" << outdir << "\"" << std::endl;
-      auto flag  = std::filesystem::create_directory(outdir);
+      auto flag  = fs::create_directory(outdir);
       assert(flag==true && "Could not create output directory");
-      flag = std::filesystem::create_directory(outdir+"/vtk");
+      flag = fs::create_directory(outdir+"/vtk");
       assert(flag==true && "Could not create output directory");
-      flag = std::filesystem::create_directory(outdir+"/off");
+      flag = fs::create_directory(outdir+"/off");
       assert(flag==true && "Could not create output directory");
-      flag = std::filesystem::create_directory(outdir+"/suku");
+      flag = fs::create_directory(outdir+"/suku");
       assert(flag==true && "Could not create output directory");
     }
 
