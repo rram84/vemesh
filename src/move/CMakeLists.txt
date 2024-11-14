@@ -1,16 +1,15 @@
 # Sriramajayam
 
 add_library(vm_move STATIC
-		 vm_vertex_move.cpp)		    
+		 vm_vertex_move.cpp
+		 vm_vertex_sampling.cpp)		    
 
 # include headers in the current directory
 target_include_directories(vm_move PUBLIC
 					$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
 
 # link
-target_link_libraries(vm_move PUBLIC
-			      vm_quality
-			      vm_vert_sampling)
+target_link_libraries(vm_move PUBLIC vm_quality vm_vertex_ring)
 
 # Add required flags
 target_compile_features(vm_move PUBLIC ${VM_COMPILE_FEATURES})

@@ -35,7 +35,6 @@ install(TARGETS
   vm_merge
   vm_move
   vm_quality
-  vm_vert_sampling
   vm_stiffness
   vm_vertex_ring
   vm_visibility

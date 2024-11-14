@@ -1,6 +1,6 @@
 // Sriramajayam
 
-#include <vm_vertex_sampling.h>
+#include <vm_vertex_move.h>
 #include <vm_vertex_ring.h>
 #include <boost/geometry/geometry.hpp>
 #include <random>
