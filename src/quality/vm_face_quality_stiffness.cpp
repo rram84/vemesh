@@ -33,7 +33,7 @@ namespace vm
     assert(eigarray[1]>eigarray[0]);
 
     // return the second eigenvalue
-    return eigarray[1];
+    return eigarray[1]/eigarray[nvals-1];
   }
   
 }
