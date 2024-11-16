@@ -2,16 +2,13 @@
 
 cmake_minimum_required(VERSION 3.12)
 
-project(toolset
-  DESCRIPTION "helpful tools with command line options")
+project(app DESCRIPTION "Application for running vemesh")
 
 file(GLOB MESH_FILES "${CMAKE_SOURCE_DIR}/src/manager/test/*.OFF")
 file(COPY ${MESH_FILES} DESTINATION ${CMAKE_BINARY_DIR}/src/manager/test/)
 
 foreach(TARGET
-	    vemesh
-            agglomerator
-	    relaxer)
+	    vemesh)
 
   # add executable
   add_executable(${TARGET} ${TARGET}.cpp)

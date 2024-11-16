@@ -9,7 +9,7 @@
 // -ra vertex relaxation + agglomeration
 
 // Options
-// -i Input mesh file in OFF/vtk format
+// -i Input polygonal mesh file in OFF/vtk format
 // -o output directory, will be cleared if it already exists. will be created otherwise
 // -q lower bound for acceptable element quality
 // -n number of iterations to perform
