@@ -74,7 +74,7 @@ int main(int argc, char** argv)
 			      std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 
     // merge faces
-    manager.merge_faces(qfunc, qface, qmin, 1.2, callback);
+    int nmerged = manager.merge_faces(qfunc, qface, qmin, 1.2, callback);
 
     // save output
     manager.compute_face_qualities(qfunc);

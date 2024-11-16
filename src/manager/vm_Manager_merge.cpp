@@ -39,7 +39,7 @@ namespace vm
   // merge faces
   int Manager::merge_faces(MeshFaceQuality_f qfunc, FaceQuality_f qface,
 			   const double qmin, const double qimprove_factor,
-			   MergeCallback_f callback)
+			   MeshUpdateCallback_f callback)
   {
     assert(qimprove_factor>=1.);
     
@@ -87,7 +87,7 @@ namespace vm
 	    continue;
 	  }
 	  
-	// this face occupies the correct position in the queue
+	// this face is the current priority
 	auto result = this->merge_face(f, qface, qfunc, qimprove_factor);
 	auto success = result.first;
 	if(success==true) {
@@ -95,9 +95,8 @@ namespace vm
 	  if(callback!=nullptr)
 	    callback(nmerged, mesh, *this);
 	}
-	
-
       }
+    
     std::cout << "Merged " << nmerged << " faces" << std::endl;
     return nmerged;
   }

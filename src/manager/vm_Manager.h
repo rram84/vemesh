@@ -12,8 +12,8 @@ namespace vm
 {
 
   class Manager;
-  using MergeCallback_f = std::function<void(const int merge_num, const pmp::SurfaceMesh &mesh, Manager &manager)>;
-    
+  using MeshUpdateCallback_f = std::function<void(const int merge_num, const pmp::SurfaceMesh &mesh, Manager &manager)>;
+
   class Manager
   {
   public:
@@ -40,12 +40,17 @@ namespace vm
 
     // merge faces
     // returns the number of merged faces
-    int merge_faces(MeshFaceQuality_f qfunc, FaceQuality_f qface, const double qthreshold, const double improve_factor, MergeCallback_f callback=nullptr);
+    int merge_faces(MeshFaceQuality_f qfunc, FaceQuality_f qface, const double qthreshold, const double improve_factor, MeshUpdateCallback_f callback=nullptr);
 
     // moves a vertex to a more favorable position
     std::pair<bool,double> move_vertex(const pmp::Vertex& vertex, const int num_poly_samples,
 				       const int num_edge_samples, MeshVertexQuality_f qfunc);
 
+    // moves vertices
+    int move_vertices(MeshVertexQuality_f qfunc, const double qthreshold,
+		      const int num_poly_samples, const int num_edge_samples,
+		      MeshUpdateCallback_f callback=nullptr);
+    
      // compute face qualities in the mesh. saved under face property "quality"
     void compute_face_qualities(MeshFaceQuality_f qfunc);
 

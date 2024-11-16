@@ -2,6 +2,7 @@
 
 #include <vm_Manager.h>
 #include <vm_vertex_move.h>
+#include <queue>
 #include <iostream>
 
 namespace vm
@@ -11,19 +12,15 @@ namespace vm
   {
     // cannot move boundary vertices
     if(mesh.is_boundary(vertex)==true)
-      {
-	return {false, -1.0};
-      }
-
+      return {false, -1.0};
+    
     // identify a feasible new position & move
     const auto result = compute_improved_vertex_position(mesh, vertex, num_poly_samples, num_edge_samples, qfunc);
         
     // no feasible point
     if(std::get<0>(result)==false)
-      {
-	return {false, -1.0};
-      }
-
+      return {false, -1.0};
+    
     // found a feasible point
     const auto& update_pos = std::get<1>(result);
     
@@ -36,41 +33,72 @@ namespace vm
   }
 
 
-  // try to move all vertices to favorable positions. returns the number of moved vertices
-  /*int Manager::move_all_vertices(const int num_samples)
-    {
-    // list of vertex qualities
-    std::list<std::pair<pmp::Vertex, double>> vlist{};
-    auto v_circulator = mesh.vertices();
-    for(auto v:v_circulator)
-    if(mesh.is_boundary(v)==false)
-    {
-    auto lc = compute_distance_based_vertex_quality(mesh, v);
-    vlist.push_back({v,lc.radius});
-    }
-
-    // sort the list of vertices in increasing order of quality
-    vlist.sort( [](const auto& a, const auto& b){ return a.second<b.second; } );
-
-    // attempt to relax vertices in order
-    int nmoved = 0;
-    for(auto& it:vlist)
-    {
-    const auto& vertex = it.first;
-    const auto result  = compute_feasible_vertex_position(mesh, vertex, num_samples);
-    if(std::get<0>(result)==true)
-    {
-    ++nmoved;
-
-    // update coordinates
-    pmp::Point& X = mesh.position(vertex);
-    const auto& Y = std::get<1>(result);
-    X[0] = Y.first;
-    X[1] = Y.second;
-    }
-    }
-    
-    return nmoved;
-    }*/
+  // alias
+  using VQ_pair_t = std::pair<pmp::Vertex, double>;
   
+  // Custom comparator of vertex/quality pairs
+  bool Compare(const VQ_pair_t& A, const VQ_pair_t& B)
+  { return A.second>B.second; }
+  
+  // moves vertices
+  int Manager::move_vertices(MeshVertexQuality_f qfunc, const double qmin,
+			     const int num_poly_samples, const int num_edge_samples,
+			     MeshUpdateCallback_f callback)
+  {
+    // tolerance for comparing qualities
+    const double qeps = qmin/100.;
+    
+    // priority queue of vertices to be relaxed during this iteration
+    std::priority_queue<VQ_pair_t, std::vector<VQ_pair_t>, decltype(&Compare)> vertex_queue(Compare);
+    auto v_container = mesh.vertices();
+    for(auto v:v_container)
+      if(mesh.is_boundary(v)==false)
+	{
+	  double qval = qfunc(mesh, v);
+	  if(qval<qmin)
+	    vertex_queue.push({v, qval});
+	}
+      
+    std::cout << "#vertices marked for relaxation: " << vertex_queue.size() << std::endl;
+
+    // #vertices relaxed during this iteration
+    int nrelaxed = 0;
+
+    // traverse the queue
+    while(!vertex_queue.empty())
+      {
+	// pop the first vertex in the queue
+	auto vq = vertex_queue.top();
+	const auto& v = vq.first;
+	vertex_queue.pop();
+
+	// do nothing if:
+	// the quality at this vertex, which could have changed due to other vertices
+	// moving, is > qmin
+	const double curr_q = qfunc(mesh, v);
+	if(curr_q>qmin)
+	  continue;
+	
+	// reposition this vertex in the queue if its quality has changed
+	if(std::abs(curr_q-vq.second)>qeps)
+	  {
+	    vertex_queue.push({vq.first,curr_q});
+	    continue;
+	  }
+
+	// this vertex is the current priority
+	auto result = this->move_vertex(v, num_poly_samples, num_edge_samples, qfunc);
+	auto success = result.first;
+	if(success==true)
+	  {
+	    ++nrelaxed;
+	    if(callback!=nullptr)
+	      callback(nrelaxed, mesh, *this);
+	  }
+      }
+    
+    std::cout << "#vertices relaxed: " << nrelaxed << std::endl;
+    return nrelaxed;
+  }
+
 }

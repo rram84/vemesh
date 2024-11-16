@@ -53,7 +53,7 @@ int main()
   for(auto f:f_iterator)
     if(!mesh.is_deleted(f) && mesh.is_valid(f))
       if(qfunc(mesh,f)<qeps)
-	auto success = manager.merge_face(f, qface, qimprove_factor);
+	auto success = manager.merge_face(f, qface, qfunc, qimprove_factor);
 
   // print mesh
   manager.write_mesh("merged.OFF");
