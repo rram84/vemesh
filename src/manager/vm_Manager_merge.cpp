@@ -21,7 +21,6 @@ namespace vm
     std::pair<bool, pmp::Face> ret_data{false, face};
     if(success==true && best_quality>qimprove_factor*curr_quality)
       {
-	std::cout << "Merging with ratio: " << best_quality/curr_quality << std::endl;
 	ret_data = {success, mesh.face(mesh.opposite_halfedge(best_halfedge))};
 	vm::merge_face(mesh, best_halfedge);
       }
