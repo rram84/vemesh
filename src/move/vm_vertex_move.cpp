@@ -1,7 +1,6 @@
 // Sriramajayam
 
 #include <vm_vertex_move.h>
-#include <vm_vertex_sampling.h>
 #include <limits>
 #include <set>
 #include <iostream>

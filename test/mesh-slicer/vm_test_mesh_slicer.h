@@ -14,13 +14,17 @@ namespace vm
 
     int adjust_mesh_nodes(pmp::SurfaceMesh& mesh, const double phi_eps, const double pert_eps, LevelSetFunction_t& ls_func);
   
-    void clip_mesh(pmp::SurfaceMesh& mesh, const double phi_eps, LevelSetFunction_t& lsfunc);
+    void clip_mesh(pmp::SurfaceMesh& mesh, const double phi_eps, LevelSetFunction_t& lsfunc,
+		   const int mat_id, const int boundary_id);
 
-    void embed_interface(pmp::SurfaceMesh& mesh, const double phi_eps, LevelSetFunction_t& lsfunc, const std::pair<int,int> domain_id);
+    void embed_interface(pmp::SurfaceMesh& mesh, const double phi_eps, LevelSetFunction_t& lsfunc,
+			 const std::pair<int,int> domain_id, const int interface_id);
 
-    void prep_mesh(pmp::SurfaceMesh& mesh, const double phi_eps, LevelSetFunction_t& lsfunc,
+    void prep_mesh(pmp::SurfaceMesh& mesh, const double phi_eps,
+		   LevelSetFunction_t& lsfunc,
 		   const bool discard_outer_faces,
 		   const std::pair<int,int> domain_id,                        // id for inner domain, outer domain
+		   const int interface_id,                                    // interface id
 		   std::map<pmp::Edge, pmp::Vertex>& cutedgesMap,             // cut edges -> new vertex map
 		   std::map<pmp::Face, std::vector<int>>& cutfacesMap);       // cut faces -> local vertices in phi<0
 		   

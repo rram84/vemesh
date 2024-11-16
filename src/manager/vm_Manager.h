@@ -10,18 +10,18 @@
 
 namespace vm
 {
-  
+
+  class Manager;
+  using MeshUpdateCallback_f = std::function<void(const int merge_num, const pmp::SurfaceMesh &mesh, Manager &manager)>;
+
   class Manager
   {
   public:
     //! Constructor
-    Manager(const std::string off_file);
+    Manager(const std::string filename);
 
-    //! Constructor
-    Manager(const std::string node_file, const std::string ele_file);
-    
     //! Destructor
-    virtual ~Manager();
+    ~Manager() = default;
 
     //! Disable copy and assignment
     Manager(const Manager&) = delete;
@@ -31,15 +31,26 @@ namespace vm
     void inspect_mesh() const;
     
     // access the mesh
-    pmp::SurfaceMesh& get_mesh();
+    inline pmp::SurfaceMesh& get_mesh()
+    { return mesh; }
     
     // merge a face with one of the neighbors
     // returns whether the face was merged or not, and the final quality
-    std::pair<bool, pmp::Face> merge_face(const pmp::Face& f, FaceQuality_f qfunc);
+    std::pair<bool, pmp::Face> merge_face(const pmp::Face& f, FaceQuality_f qface, MeshFaceQuality_f qfunc, const double qimprove_factor);
+
+    // merge faces
+    // returns the number of merged faces
+    int merge_faces(MeshFaceQuality_f qfunc, FaceQuality_f qface, const double qthreshold, const double improve_factor, MeshUpdateCallback_f callback=nullptr);
 
     // moves a vertex to a more favorable position
-    std::pair<bool,double> move_vertex(const pmp::Vertex& vertex, const int num_poly_samples, const int num_edge_samples, MeshVertexQuality_f qfunc);
+    std::pair<bool,double> move_vertex(const pmp::Vertex& vertex, const int num_poly_samples,
+				       const int num_edge_samples, MeshVertexQuality_f qfunc);
 
+    // moves vertices
+    int move_vertices(MeshVertexQuality_f qfunc, const double qthreshold,
+		      const int num_poly_samples, const int num_edge_samples,
+		      MeshUpdateCallback_f callback=nullptr);
+    
      // compute face qualities in the mesh. saved under face property "quality"
     void compute_face_qualities(MeshFaceQuality_f qfunc);
 

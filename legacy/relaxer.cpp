@@ -13,21 +13,20 @@
 #include <vm_io.h>
 #include <vm_vertex_quality.h>
 #include <CLI/CLI.hpp>
-#include <queue>
-#include <utility>
 
 // output directory management
 void manage_output_directory(const std::string outdir);
 
+// callback for saving files
+void RelaxationCallback(const std::string outdir, const int iter,
+			const int nmoved, const pmp::SurfaceMesh &mesh, vm::Manager &manager) {
+  manager.write_mesh(outdir+"vtk/mesh-i"+std::to_string(iter)+"-"+std::to_string(nmoved)+".vtk");
+  vm::write_suku_format(mesh, outdir+"/suku/mesh-i"+std::to_string(iter)+"-"+std::to_string(nmoved));
+}
+
+
 // print element qualities
 void write_element_qualities(const pmp::SurfaceMesh& mesh, const std::string filename);
-
-// alias
-using VQ_pair_t = std::pair<pmp::Vertex, double>;
-
-// Custom comparator of vertex/quality pairs
-bool Compare(const VQ_pair_t& A, const VQ_pair_t& B)
-{ return A.second>B.second; }
 
 int main(int argc, char** argv)
 {
@@ -42,7 +41,7 @@ int main(int argc, char** argv)
   app.add_option("-i", meshfile, "input mesh file in OFF format")->required()->check(CLI::ExistingFile);
   app.add_option("-o", outdir, "output directory. will be cleared if exists")->required();
   app.add_option("-q", qmin, "quality threshold")->required()->check(CLI::PositiveNumber);
-  app.add_option("-n", num_iters, "number of agglomeration iterations")->required()->check(CLI::PositiveNumber);
+  app.add_option("-n", num_iters, "number of relaxation iterations")->required()->check(CLI::PositiveNumber);
   app.add_flag("-v", vis_flag, "detailed mesh output after every perturbation. use for debugging only");
 
   // parse
@@ -70,58 +69,23 @@ int main(int argc, char** argv)
   // relaxation iterations
   for(int iter=0; iter<num_iters; ++iter)
     {
-      // priority queue of vertices to be relaxed during this iteration
-      std::priority_queue<VQ_pair_t, std::vector<VQ_pair_t>, decltype(&Compare)> vertex_queue(Compare);
-      auto v_container = mesh.vertices();
-      for(auto v:v_container)
-	if(mesh.is_boundary(v)==false)
-	  {
-	    double qval = qfunc(mesh, v);
-	    if(qval<qmin)
-	      vertex_queue.push({v, qval});
-	  }
+      // callback
+      auto callback = std::bind(RelaxationCallback, outdir, iter,
+				std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+
+      // relax vertices
+      int nmoved = manager.move_vertices(qfunc, qmin, 50, 5, callback);
       
-      std::cout << "Iteration " << iter+1 << std::endl
-		<<"#vertices marked for relaxation: " << vertex_queue.size() << std::endl;
-
-      // #vertices relaxed during this iteration
-      int nrelaxed = 0;
-
-      // traverse the queue
-      while(!vertex_queue.empty())
-	{
-	  // pop the first vertex in the queue
-	  auto vq = vertex_queue.top();
-	  const auto& v = vq.first;
-	  vertex_queue.pop();
-
-	  auto result = manager.move_vertex(v, 100, 5, qfunc);
-	  auto success = result.first;
-	  if(success==true)
-	    {
-	      std::cout << "relaxing vertex: " << v.idx() << ", quality: " << vq.second <<" -> " << result.second << std::endl;
-	      ++nrelaxed;
-	      if(vis_flag && nrelaxed%10==0)
-		{
-		  manager.write_mesh(outdir+"mesh-i"+std::to_string(iter)+"-"+std::to_string(nrelaxed)+".vtk");
-
-		  // print element qualities
-		  write_element_qualities(mesh, outdir+"q-"+std::to_string(nrelaxed)+".dat");
-		}
-	    }
-	}
-      std::cout << "#vertices relaxed: " << nrelaxed << std::endl << std::endl;
-
       // save output
       manager.compute_vertex_qualities(qfunc);
-      manager.write_mesh(outdir+"mesh-i"+std::to_string(iter)+".OFF");
-      manager.write_mesh(outdir+"mesh-i"+std::to_string(iter)+".vtk");
-      vm::write_suku_format(mesh, outdir+"mesh-i"+std::to_string(iter));
+      manager.write_mesh(outdir+"/off/mesh-i"+std::to_string(iter)+".OFF");
+      manager.write_mesh(outdir+"/vtk/mesh-i"+std::to_string(iter)+".vtk");
+      vm::write_suku_format(mesh, outdir+"/suku/mesh-i"+std::to_string(iter));
     }
-
+  
   // done
 }
-  
+
 
 // output directory management
 void manage_output_directory(const std::string outdir)

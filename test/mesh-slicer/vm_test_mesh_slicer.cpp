@@ -7,7 +7,8 @@ namespace vm
   namespace test
   {
     void prep_mesh(pmp::SurfaceMesh& mesh, const double phi_eps, LevelSetFunction_t& lsfunc,
-		   const bool discard_outer_faces, const std::pair<int,int> domain_id,
+		   const bool discard_outer_faces,
+		   const std::pair<int,int> domain_id, const int interface_num,
 		   std::map<pmp::Edge, pmp::Vertex>& cutedgesMap,
 		   std::map<pmp::Face, std::vector<int>>& cutfacesMap)
     {
@@ -20,9 +21,13 @@ namespace vm
       cutfacesMap.clear();
 
       // domain id
-      assert(mesh.has_face_property("id")==true);
-      auto id_property = mesh.get_face_property<int>("id");
+      assert(mesh.has_face_property("material_id")==true);
+      auto mat_id = mesh.get_face_property<int>("material_id");
 
+      // interface_id
+      assert(mesh.has_vertex_property("interface_id")==true);
+      auto interface_id = mesh.get_vertex_property<int>("interface_id");
+      
       // compute the level set function at the nodes
       auto lsvalues    = mesh.add_vertex_property<double>("level set values");
       auto v_container = mesh.vertices();
@@ -60,7 +65,7 @@ namespace vm
 	  const int n_out_verts = num_verts-n_in_verts;
 
 	  if(n_in_verts==num_verts)              // inside face
-	    id_property[f] = domain_id.first;
+	    mat_id[f] = domain_id.first;
 	  if(n_in_verts>0 && n_out_verts>0) 	 // cut face
 	    cutfacesMap.insert({f, in_verts});
 	  else if(n_in_verts==0)                 // outside face
@@ -68,7 +73,7 @@ namespace vm
 	      if(discard_outer_faces==true)
 		mesh.delete_face(f);
 	      else
-		id_property[f] = domain_id.second;
+		mat_id[f] = domain_id.second;
 	    }
 	}
 
@@ -108,7 +113,12 @@ namespace vm
 		}
 
 	      // new vertex to add along this edge
-	      cutedgesMap.insert({e, mesh.add_vertex(pmp::Point(y[0],y[1],y[2]))});
+	      auto new_vert = mesh.add_vertex(pmp::Point(y[0],y[1],y[2]));
+	      cutedgesMap.insert({e, new_vert});
+
+	      // assign boundary/interface id to the vertex
+	      interface_id[new_vert] = interface_num;
+	      
 	    }
 	}
 
@@ -129,8 +139,8 @@ namespace vm
       assert(n_in_verts==1 || n_in_verts==2);
 
       // domain id
-      assert(mesh.has_face_property("id")==true);
-      auto id_property = mesh.get_face_property<int>("id");
+      assert(mesh.has_face_property("material_id")==true);
+      auto mat_id = mesh.get_face_property<int>("material_id");
       
       // outer vertices
       const std::vector<int> all_verts{0,1,2};
@@ -170,7 +180,7 @@ namespace vm
 	  
 	  // create new inner face
 	  auto f_in = mesh.add_face({my_verts[a0], it->second, jt->second});
-	  id_property[f_in] = domain_id.first;
+	  mat_id[f_in] = domain_id.first;
 
 	  // create new outer face
 	  if(discard_outer==false)
@@ -178,7 +188,7 @@ namespace vm
 	      // no vertex can be deleted 
 	      assert(mesh.n_vertices()==nverts && "Cannot clip boundary triangle with interface");
 	      auto f_out = mesh.add_face({it->second, my_verts[a1], my_verts[a2], jt->second});
-	      id_property[f_out] = domain_id.second;
+	      mat_id[f_out] = domain_id.second;
 	    }
 	}
       else // 2-in, 1-out case
@@ -203,7 +213,7 @@ namespace vm
 	  
 	  // create inner new face
 	  auto f_in = mesh.add_face({it->second, my_verts[a1], my_verts[a2], jt->second});
-	  id_property[f_in] = domain_id.first;
+	  mat_id[f_in] = domain_id.first;
 
 	  // create new outer face
 	  if(discard_outer==false)
@@ -211,7 +221,7 @@ namespace vm
 	      // no vertex can be deleted 
 	      assert(mesh.n_vertices()==nverts && "Cannot clip boundary triangle with interface");
 	      auto f_out = mesh.add_face({my_verts[a0], it->second, jt->second});
-	      id_property[f_out] = domain_id.second;
+	      mat_id[f_out] = domain_id.second;
 	    }
 	}
 
@@ -245,8 +255,8 @@ namespace vm
       const int nverts = mesh.n_vertices();
 
       // domain id
-      assert(mesh.has_face_property("id")==true);
-      auto id_property = mesh.get_face_property<int>("id");
+      assert(mesh.has_face_property("material_id")==true);
+      auto mat_id = mesh.get_face_property<int>("material_id");
       
       // 1-in, 3-out
       if(n_in_verts==1)
@@ -272,7 +282,7 @@ namespace vm
 	
 	  // create new inner face
 	  auto f_in = mesh.add_face({my_verts[a0], it->second, jt->second});
-	  id_property[f_in] = domain_id.first;
+	  mat_id[f_in] = domain_id.first;
 
 	  // create new outer face
 	  if(discard_outer==false)
@@ -280,7 +290,7 @@ namespace vm
 	      // no vertex should be deleted when erasing the face
 	      assert(nverts==mesh.n_vertices() && "Cannot clip boundary quad with interface");
 	      auto f_out = mesh.add_face({it->second, my_verts[a1], my_verts[a2], my_verts[a3], jt->second});
-	      id_property[f_out] = domain_id.second;
+	      mat_id[f_out] = domain_id.second;
 	    }
 	}
       // 3-in, 1-out
@@ -306,7 +316,7 @@ namespace vm
 	
 	  // create new inner face
 	  auto f_in = mesh.add_face({it->second, my_verts[a1], my_verts[a2], my_verts[a3], jt->second});
-	  id_property[f_in] = domain_id.first;
+	  mat_id[f_in] = domain_id.first;
 
 	  // create new outer face
 	  if(discard_outer==false)
@@ -314,7 +324,7 @@ namespace vm
 	      // no vertex should be deleted when erasing the face
 	      assert(nverts-mesh.n_vertices()==0 && "Cannot clip boundary quad with interface");
 	      auto f_out = mesh.add_face({it->second, jt->second, my_verts[a0]});
-	      id_property[f_out] = domain_id.second;
+	      mat_id[f_out] = domain_id.second;
 	    }
 	}
       // 2-in, 2-out, successive
@@ -348,7 +358,7 @@ namespace vm
 	    
 	  // add new inner face
 	  auto f_in = mesh.add_face({it->second, jt->second, my_verts[a0], my_verts[a1]});
-	  id_property[f_in] = domain_id.first;
+	  mat_id[f_in] = domain_id.first;
 
 	  // add new outer face
 	  if(discard_outer==false)
@@ -356,7 +366,7 @@ namespace vm
 	      // no vertex should be deleted when erasing the face
 	      assert(nverts-mesh.n_vertices()==0 && "Cannot clip boundary quad with interface");
 	      auto f_out = mesh.add_face({it->second, my_verts[a2], my_verts[a3], jt->second});
-	      id_property[f_out] = domain_id.second;
+	      mat_id[f_out] = domain_id.second;
 	    }
 	}
       // 2-in, 2-out, not successive
@@ -388,7 +398,7 @@ namespace vm
 
 	  // add new inner face
 	  auto f_in = mesh.add_face({my_verts[a0], it0->second, it1->second, my_verts[a2], it2->second, it3->second});
-	  id_property[f_in] = domain_id.first;
+	  mat_id[f_in] = domain_id.first;
 
 	  // add new outer faces
 	  if(discard_outer==false)
@@ -397,8 +407,8 @@ namespace vm
 	      assert(nverts-mesh.n_vertices()==0 && "Cannot clip boundary quad with interface");
 	      auto f_out1 = mesh.add_face({it0->second, my_verts[a1], it1->second});
 	      auto f_out2 = mesh.add_face({it2->second, my_verts[a3], it3->second});
-	      id_property[f_out1] = domain_id.second;
-	      id_property[f_out2] = domain_id.second;
+	      mat_id[f_out1] = domain_id.second;
+	      mat_id[f_out2] = domain_id.second;
 	    }
 	}
     

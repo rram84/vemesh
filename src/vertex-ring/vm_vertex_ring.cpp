@@ -44,21 +44,6 @@ namespace vm
   }
 
 
-  // inspect if a vertex is connected to a hanging node
-  bool is_vertex_connected_to_hanging_node(const pmp::SurfaceMesh& mesh, const pmp::Vertex& vertex)
-  {
-    // the one-ring of vertices should not have any repetitions
-    const std::vector<pmp::Vertex> vertex_ring = get_vertex_ring(mesh, vertex);
-    const int nRingVerts = static_cast<int>(vertex_ring.size());
-    std::set<int> vertex_set{};
-    for(auto& v:vertex_ring)
-      vertex_set.insert(v.idx());
-
-    // true if there is a repetition, false otherwise
-    return (static_cast<int>(vertex_set.size())!=nRingVerts);
-  }
-
-
   // compute the average edge length emanating from a vertex
   double compute_average_edge_length_at_vertex(const pmp::SurfaceMesh& mesh, const pmp::Vertex& vertex)
   {

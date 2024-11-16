@@ -21,14 +21,15 @@ int main()
 
   // clip
   pmp::SurfaceMesh mesh1;
-  vm::read_off("random_triangles.OFF", mesh1);
-  vm::test::clip_mesh(mesh1, phi_eps, lsfunc); 
-  vm::write_off(mesh1, "tri-clip.OFF"); 
+  vm::read_off("random_triangles.OFF", mesh1); 
+  vm::test::clip_mesh(mesh1, phi_eps, lsfunc, 1, 10);  
+  vm::write_off(mesh1, "tri-clip.OFF");
+  vm::write_vtk(mesh1, "tri-clip.vtk"); 
   
   // embed
   pmp::SurfaceMesh mesh2;
   vm::read_off("random_triangles.OFF", mesh2);
-  vm::test::embed_interface(mesh2, phi_eps, lsfunc, {1,2}); 
+  vm::test::embed_interface(mesh2, phi_eps, lsfunc, {1,2}, 10); 
   vm::write_off(mesh2, "tri-embed.OFF");
   vm::write_vtk(mesh2, "tri-embed.vtk");
 }

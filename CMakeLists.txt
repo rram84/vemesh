@@ -35,7 +35,6 @@ install(TARGETS
   vm_merge
   vm_move
   vm_quality
-  vm_vert_sampling
   vm_stiffness
   vm_vertex_ring
   vm_visibility
@@ -76,7 +75,7 @@ add_subdirectory(src/visibility/test)
 add_subdirectory(src/quality/test)
 add_subdirectory(src/move/test)	
 add_subdirectory(src/stiffness/test)
-add_subdirectory(toolset)
+add_subdirectory(app)
 
 add_subdirectory(test/rect/test)
 add_subdirectory(test/mesh-slicer/test)

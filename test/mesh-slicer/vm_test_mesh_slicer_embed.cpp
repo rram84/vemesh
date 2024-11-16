@@ -7,12 +7,11 @@ namespace vm
   namespace test
   {
     void embed_interface(pmp::SurfaceMesh& mesh, const double phi_eps, LevelSetFunction_t& lsfunc,
-			 const std::pair<int,int> domain_id)
+			 const std::pair<int,int> domain_id, const int interface_num)
     {
-      // domain id
-      if(mesh.has_face_property("id")==false)
-	mesh.add_face_property<int>("id", -1);
-    
+      assert(mesh.has_face_property("material_id")==true);
+      assert(mesh.has_vertex_property("interface_id")==true);
+	
       // cut edges -> new vertex map
       std::map<pmp::Edge, pmp::Vertex> cutedgesMap{};
     
@@ -21,9 +20,7 @@ namespace vm
 
       // don't dicard region phi>0 of the mesh
       const bool discard_outer = false;
-      prep_mesh(mesh, phi_eps, lsfunc,
-		discard_outer, domain_id, 
-		cutedgesMap, cutfacesMap);            
+      prep_mesh(mesh, phi_eps, lsfunc, discard_outer, domain_id, interface_num, cutedgesMap, cutfacesMap);            
 
       // emed triangles and quads
       for(auto& it:cutfacesMap)

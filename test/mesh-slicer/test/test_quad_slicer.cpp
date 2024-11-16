@@ -28,13 +28,14 @@ int main()
   const double phi_eps = 1.e-4;
   
   // clip
-  auto mesh1 = vm::test::create_rect_mesh(left_cnr, hx, nx, hy, ny);
-  vm::test::clip_mesh(mesh1, phi_eps, lsfunc);
+  auto mesh1 = vm::test::create_rect_mesh(left_cnr, hx, nx, hy, ny, 0);
+  vm::test::clip_mesh(mesh1, phi_eps, lsfunc, 1, 10);
   vm::write_off(mesh1, "quad-clip.OFF");
+  vm::write_vtk(mesh1, "quad-clip.vtk");
 
   // embed
-  auto mesh2 = vm::test::create_rect_mesh(left_cnr, hx, nx, hy, ny);
-  vm::test::embed_interface(mesh2, phi_eps, lsfunc, {1,2});
+  auto mesh2 = vm::test::create_rect_mesh(left_cnr, hx, nx, hy, ny, 0);
+  vm::test::embed_interface(mesh2, phi_eps, lsfunc, {1,2}, 10);
   vm::write_off(mesh2, "quad-embed.OFF");
   vm::write_vtk(mesh2, "quad-embed.vtk");
 }
