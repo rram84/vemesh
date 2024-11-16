@@ -33,7 +33,6 @@ void manage_output_directory(const std::string outdir);
 void MeshUpdateCallback(const std::string outdir, const int iter, const std::string descr, const int index,
 			const pmp::SurfaceMesh &mesh, vm::Manager &manager)
 {
-  std::cout << "I am here " << std::endl;
   manager.write_mesh(outdir+"/vtk/mesh-iter-"+std::to_string(iter)+"-"+descr+"-update-"+std::to_string(index)+".vtk");
   vm::write_suku_format(mesh, outdir+"/suku/mesh-iter-"+std::to_string(iter)+"-"+descr+"-update-"+std::to_string(index));
 }
@@ -43,7 +42,7 @@ int main(int argc, char **argv)
 {
   // Command line options
   CLI::App app;
-  app.footer("Usage instructions:  \
+  app.footer("Sample usage: \
              \n=================== \
              \n(i)   agglomerate elements:  ./vemesh -a -i in_mesh.OFF -o out_dir -n 5 -f 1.2 -v \
              \n(ii)  relax vertices:        ./vemesh -r -i in_mesh.OFF -o out_dir -n 5 -s 25  \
@@ -96,6 +95,7 @@ int main(int argc, char **argv)
 
   for(int iter=0; iter<num_iters; ++iter) {
 
+    std::cout << "Iteration " << iter << std::endl;
     // callbacks
     auto callback_a = !(*option_map.at("v")) ? vm::MeshUpdateCallback_f(nullptr) : std::bind(MeshUpdateCallback, outdir, iter, "a", std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
     auto callback_r = !(*option_map.at("v")) ? vm::MeshUpdateCallback_f(nullptr) : std::bind(MeshUpdateCallback, outdir, iter, "r", std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
@@ -137,6 +137,7 @@ int main(int argc, char **argv)
     manager.compute_face_qualities(vm::compute_stiffness_based_mesh_face_quality);
     manager.write_mesh(outdir+"/vtk/mesh-iter-"+std::to_string(iter)+".vtk");
     vm::write_suku_format(mesh, outdir+"/suku/mesh-iter-"+std::to_string(iter));
+    std::cout << std::endl;
   }
 }
   

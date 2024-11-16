@@ -58,15 +58,23 @@ namespace vm
 	  if(qval<qmin)
 	    vertex_queue.push({v, qval});
 	}
-      
-    std::cout << "#vertices marked for relaxation: " << vertex_queue.size() << std::endl;
+    const int qsize = static_cast<int>(vertex_queue.size());
+    std::cout << "#vertices marked for relaxation: " << qsize << std::endl;
 
     // #vertices relaxed during this iteration
     int nrelaxed = 0;
-
+    int prev_percent = 0;
+    
     // traverse the queue
     while(!vertex_queue.empty())
       {
+	int percent_complete = (static_cast<int>(vertex_queue.size())*100)/qsize;
+	if(percent_complete>prev_percent+20)
+	  {
+	    std::cout << "Progress: " << prev_percent+20 << "%" << std::endl;
+	    prev_percent += 20;
+	  }
+	
 	// pop the first vertex in the queue
 	auto vq = vertex_queue.top();
 	const auto& v = vq.first;
@@ -96,7 +104,7 @@ namespace vm
 	      callback(nrelaxed, mesh, *this);
 	  }
       }
-    
+    std::cout << "Progress: 100%" << std::endl;
     std::cout << "#vertices relaxed: " << nrelaxed << std::endl;
     return nrelaxed;
   }

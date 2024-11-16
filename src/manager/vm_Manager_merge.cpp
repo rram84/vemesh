@@ -54,15 +54,23 @@ namespace vm
 	if(qval<qmin)
 	  face_queue.push({f, qval});
       }
-
-    std::cout << "#faces marked for merge: " << face_queue.size() << std::endl;
+    const int qsize = static_cast<int>(face_queue.size());
+    std::cout << "#faces marked for merge: " << qsize << std::endl;
       
     // track #of faces merged during this iteration
     int nmerged = 0;
+    int prev_percent = 0;
 
     // traverse the queue
     while(!face_queue.empty())
       {
+	int percent_complete = (static_cast<int>(face_queue.size())*100)/qsize;
+	if(percent_complete>prev_percent+20)
+	  {
+	    std::cout << "Progress: " << prev_percent+20 << "%" << std::endl;
+	    prev_percent += 20;
+	  }
+
 	// pop the first member in the queue
 	auto fq = face_queue.top();
 	const auto& f = fq.first;
@@ -95,7 +103,7 @@ namespace vm
 	    callback(nmerged, mesh, *this);
 	}
       }
-    
+    std::cout << "Progress: 100%" << std::endl;
     std::cout << "Merged " << nmerged << " faces" << std::endl;
     return nmerged;
   }
