@@ -1,12 +1,7 @@
 // Sriramajayam
 
 // Convert between mesh formats
-// off      -> vtk
-// node,ele -> off, vtk
-
-// Options
-// -i Input mesh/meshes. OFF or triangle mesh format (.node,.ele)
-// -o Ouput mesh. OFF or vtk
+// (vtk, off) -> (off, vtk, node/ele)
 
 #include <vm_io.h>
 #include <CLI/CLI.hpp>
@@ -21,7 +16,7 @@ int main(int argc, char** argv)
 
   // Input mesh file(s)
   std::vector<std::string> in;
-  app.add_option("-i", in, "input mesh files in .off/.OFF or .node,.ele format")->required();
+  app.add_option("-i", in, "input mesh files in .off/.OFF or .vtk format")->required();
 
   // Output mesh file(s)
   std::string out;
