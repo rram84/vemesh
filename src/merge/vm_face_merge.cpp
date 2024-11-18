@@ -59,12 +59,15 @@ namespace vm
 	      verts.pop_back();
 
 	      // quality of the candidate merged face
-	      assert(inspect_face(verts)==true);
-	      double quality = qfunc(verts);
-	      if(quality>best_quality)
+	      //assert(inspect_face(verts)==true);
+	      if(inspect_face(verts)==true)
 		{
-		  best_quality = quality;
-		  best_h       = h;
+		  double quality = qfunc(verts);
+		  if(quality>best_quality)
+		    {
+		      best_quality = quality;
+		      best_h       = h;
+		    }
 		}
 	    }
 	}
