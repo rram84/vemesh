@@ -62,10 +62,10 @@ namespace vm
     assert(mesh.n_faces()==num_faces);
 
     // add default material id
-    mesh.add_face_property<int>("material_id", -1);
+    mesh.add_face_property<int>("material_id", 1);
     
     // add default interface id
-    auto interface_id = mesh.add_vertex_property<int>("interface_id", -1);
+    auto interface_id = mesh.add_vertex_property<int>("interface_id", 1);
     
     // done
     return;
