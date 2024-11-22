@@ -5,6 +5,30 @@
 
 namespace vm
 {
+  void erase_nonmanifold_edges(std::vector<pmp::Vertex>& vec) {
+
+    if (static_cast<int>(vec.size()) < 3) return; // No operation if there are fewer than 3 elements
+
+    // lambdas for circular listing
+    auto circular_previous = [&vec](auto it) { return it == vec.begin() ? vec.end() - 1 : it - 1; };
+    auto circular_next = [&vec](auto it) { return it == vec.end() - 1 ? vec.begin() : it + 1;};
+
+    for (auto it = vec.begin(); it != vec.end(); ) {
+      auto prev = circular_previous(it);
+      auto next = circular_next(it);
+
+      if (*prev == *next) {
+	it = vec.erase(it);
+	it = vec.erase(circular_previous(it)); // Erase the previous element
+	if (it == vec.end()) it = vec.begin(); // Adjust iterator for circularity
+      } else {
+	++it;
+      }
+    }
+  }
+
+
+  
   // compute the vertex ring
   std::vector<pmp::Vertex> get_vertex_ring(const pmp::SurfaceMesh& mesh, const pmp::Vertex& v)
   {
@@ -34,15 +58,18 @@ namespace vm
 	std::rotate(face_vertices.begin(), face_vertices.begin()+v_indx, face_vertices.end());
 	assert(face_vertices.front().idx()==v.idx());
 
-	// append vertices to the ring, exclude 'v' and repetitions
+	// append vertices to the ring, exclude 'v'
 	for(int i=2; i<nVerts; ++i)
 	  vertex_ring.push_back(face_vertices[i]);
-      }
 
+	// remove non-manifold edges
+	erase_nonmanifold_edges(vertex_ring);
+      }
+    
     // done
     return std::move(vertex_ring);
   }
-
+  
 
   // compute the average edge length emanating from a vertex
   double compute_average_edge_length_at_vertex(const pmp::SurfaceMesh& mesh, const pmp::Vertex& vertex)
