@@ -138,6 +138,9 @@ int main(int argc, char **argv)
     manager.write_mesh(outdir+"/vtk/mesh-iter-"+std::to_string(iter)+".vtk");
     vm::write_suku_format(mesh, outdir+"/suku/mesh-iter-"+std::to_string(iter));
     std::cout << std::endl;
+
+    // inspect the mesh
+    manager.inspect_mesh();
   }
 }
   
