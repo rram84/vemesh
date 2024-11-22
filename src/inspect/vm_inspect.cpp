@@ -18,7 +18,7 @@ namespace vm
   bool inspect_face(const pmp::SurfaceMesh& mesh, pmp::Face& face)
   {
     assert(mesh.is_valid(face)==true && mesh.is_deleted(face)==false);
-    
+
     // vertices of this face
     auto vertex_circulator = mesh.vertices(face);
 
@@ -31,15 +31,32 @@ namespace vm
       }
     auto first_vert = poly.outer().begin();
     bg::append(poly.outer(), boost_point_t(bg::get<0>(*first_vert), bg::get<1>(*first_vert)));
-
+    bg::correct(poly);
     // the face should be valid, simple and have a positive area
-    if(!bg::is_valid(poly))
-      return false;
+    std::string message;
+    if(!bg::is_valid(poly, message))
+      {
+	std::cout << "Mesh inspection failed for face " << face.idx() << std::endl
+		  << "face is not valid, with message: " << message << std::endl
+		  << "Polygon: " << boost::geometry::wkt(poly) << std::endl;
+	return false;
+      }
     if(!bg::is_simple(poly))
-      return false;
+      {
+	std::cout << "Mesh inspection failed for face " << face.idx() << std::endl
+		  << "face is not simple " << std::endl
+		  << "Polygon: " << boost::geometry::wkt(poly) << std::endl;
+	return false;
+      }
     if(bg::area(poly)<=0.)
-      return false;
-    
+      {
+	std::cout << "Mesh inspection failed for face " << face.idx() << std::endl
+		  << "face area is negative " << std::endl
+		  << "Polygon: " << boost::geometry::wkt(poly) << std::endl;
+	std::cout << "Not positive " << std::endl;
+	return false;
+      }
+
     // check intersection with neighbors
     auto halfedge_circulator = mesh.halfedges(face);
     for(auto h:halfedge_circulator)
@@ -75,15 +92,19 @@ namespace vm
 
 	// neighbor should be valid & simple
 	if(!bg::is_valid(nb_poly))
-	  return false;
+	  { std::cout << "1. Error here with " << nb_face.idx() << std::endl; return false; }
 	if(!bg::is_simple(nb_poly))
-	  return false;
+	  { std::cout << "2. Error here " << nb_face.idx() << std::endl; return false; }
 
 	// intersection of neighboring faces should be an edge
 	std::vector<boost_polygon_t> intersection{};
 	bg::intersection(poly, nb_poly, intersection);
 	if(intersection.empty()==false)
-	  return false;
+	  {
+	    std::cout << "Mesh inspection failed for face " << face.idx() << std::endl
+		      << "Has intersection with neighboring face" << std::endl;
+	    return false;
+	  }
       }
 
     // done
