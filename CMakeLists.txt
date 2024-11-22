@@ -70,11 +70,12 @@ install(FILES
 
 # Testing
 include(CTest)
-add_subdirectory(src/manager/test)
+add_subdirectory(src/vertex-ring/test)
 add_subdirectory(src/visibility/test)
 add_subdirectory(src/quality/test)
 add_subdirectory(src/move/test)	
 add_subdirectory(src/stiffness/test)
+add_subdirectory(src/manager/test)
 add_subdirectory(app)
 
 add_subdirectory(test/rect/test)
