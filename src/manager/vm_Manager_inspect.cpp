@@ -14,16 +14,19 @@ namespace vm
     assert(mesh.n_edges()>0);
 
     // inspect faces
+    bool flag = true;
     auto face_circulator = mesh.faces();
     for(auto face:face_circulator)
       {
-	bool flag = inspect_face(mesh, face);
-	assert(flag==true);
+	bool f_flag = inspect_face(mesh, face);
+	if(f_flag==false)
+	  flag = false;
       }
 
     assert(mesh.has_face_property("material_id")==true);
     assert(mesh.has_vertex_property("interface_id")==true);
-    
+    assert(flag==true && "Mesh is invalid");
+
     // done
     return;
   }
