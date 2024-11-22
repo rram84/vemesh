@@ -38,7 +38,48 @@ namespace vm
     // done
     return true;
   }
-  
+
+
+  // Additional checks on whether a point is feasible
+  // check that all faces incident at a vertex are simple when its position is perturbed
+  bool is_point_feasible2(const pmp::SurfaceMesh &mesh,
+			  const pmp::Vertex      &vertex,
+			  const boost_point_t    &sample)
+  {
+    // faces incident at v
+    auto face_circulator = mesh.faces(vertex);
+
+    for(auto f:face_circulator)
+      {
+	// this perturbed face
+	boost_polygon_t poly;
+	auto vert_circulator = mesh.vertices(f);
+	for(auto w:vert_circulator)
+	  {
+	    if(w.idx()==vertex.idx())
+	      bg::append(poly.outer(), sample);
+	    else
+	      {
+		const auto& X = mesh.position(w);
+		bg::append(poly.outer(), boost_point_t(X[0], X[1]));
+	      }
+	  }
+
+	// close te polygon
+	auto first_vert = poly.outer().begin();  
+	bg::append(poly.outer(), boost_point_t(bg::get<0>(*first_vert), bg::get<1>(*first_vert)));
+	bg::correct(poly);
+	
+	// is this polygon valid
+	if(!bg::is_valid(poly))
+	  return false;
+	
+	// is this polygon simple
+	if(!bg::is_simple(poly))
+	  return false;
+      }
+    return true;
+  }
     
   
   // random generation of feasible vertex positions
@@ -94,14 +135,13 @@ namespace vm
 	boost_point_t sample(xdis(gen), ydis(gen));
 
 	// is this point feasible
-	if(is_point_feasible(poly, connected_vertices, sample)==true)
+	if(is_point_feasible(poly, connected_vertices, sample)==true && is_point_feasible2(mesh, vertex, sample)==true)
 	  {
 	    feasible_points.push_back({bg::get<0>(sample), bg::get<1>(sample)});
 	    ++num_poly_sample_feasible;
 	  }
       }
-
-
+    
     // sample edges incident edges at the vertex
     int num_edge_sample_feasible = 0;
     std::uniform_real_distribution<> lambda_dis(0.,1.);
@@ -113,13 +153,13 @@ namespace vm
 	  boost_point_t sample(lambda*Xv[0]+(1.-lambda)*Y[0],
 			       lambda*Xv[1]+(1.-lambda)*Y[1]);
 	  
-	  if(is_point_feasible(poly, connected_vertices, sample)==true)
+	  if(is_point_feasible(poly, connected_vertices, sample)==true && is_point_feasible2(mesh, vertex, sample)==true)
 	    {
 	      feasible_points.push_back({bg::get<0>(sample), bg::get<1>(sample)});
 	      ++num_edge_sample_feasible;
 	    }
 	}
-
+    
     // done
     return std::move(feasible_points);
   }
