@@ -15,9 +15,9 @@ namespace vm
   using boost_linestring_t = bgm::linestring<boost_point_t>;
 
   // Query whether a point is feasible
-  bool is_point_feasible(const boost_polygon_t         &poly,
-			 const std::vector<pmp::Point> &connectedVertices,
-			 const boost_point_t           &sample)
+  bool feasibility_test_1(const boost_polygon_t         &poly,
+			  const std::vector<pmp::Point> &connectedVertices,
+			  const boost_point_t           &sample)
   {
     // does this point lie within the polygon
     if(bg::within(sample, poly)==false)
@@ -40,9 +40,9 @@ namespace vm
   }
 
 
-  // Additional checks on whether a point is feasible
+  // Query if a point is feasible
   // check that all faces incident at a vertex are simple when its position is perturbed
-  bool is_point_feasible2(const pmp::SurfaceMesh &mesh,
+  bool feasibility_test_2(const pmp::SurfaceMesh &mesh,
 			  const pmp::Vertex      &vertex,
 			  const boost_point_t    &sample)
   {
@@ -135,7 +135,8 @@ namespace vm
 	boost_point_t sample(xdis(gen), ydis(gen));
 
 	// is this point feasible
-	if(is_point_feasible(poly, connected_vertices, sample)==true && is_point_feasible2(mesh, vertex, sample)==true)
+	if(feasibility_test_1(poly, connected_vertices, sample)==true &&
+	   feasibility_test_2(mesh, vertex, sample)==true)
 	  {
 	    feasible_points.push_back({bg::get<0>(sample), bg::get<1>(sample)});
 	    ++num_poly_sample_feasible;
@@ -153,7 +154,8 @@ namespace vm
 	  boost_point_t sample(lambda*Xv[0]+(1.-lambda)*Y[0],
 			       lambda*Xv[1]+(1.-lambda)*Y[1]);
 	  
-	  if(is_point_feasible(poly, connected_vertices, sample)==true && is_point_feasible2(mesh, vertex, sample)==true)
+	  if(feasibility_test_1(poly, connected_vertices, sample)==true &&
+	     feasibility_test_2(mesh, vertex, sample)==true)
 	    {
 	      feasible_points.push_back({bg::get<0>(sample), bg::get<1>(sample)});
 	      ++num_edge_sample_feasible;
