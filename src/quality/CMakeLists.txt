@@ -4,7 +4,8 @@ add_library(vm_quality STATIC
 		 vm_face_quality_angle.cpp
 		 vm_face_quality_stiffness.cpp
 		 vm_vertex_quality_distance.cpp
-		 vm_vertex_quality_stiffness.cpp)
+		 vm_vertex_quality_stiffness.cpp
+		 vm_vertex_quality_shape.cpp)
 
 # include headers in the current directory
 target_include_directories(vm_quality PUBLIC
