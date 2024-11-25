@@ -70,4 +70,22 @@ namespace vm
     return std::move(vertex_ring);
   }
   
+
+  // compute the average edge length emanating from a vertex
+  double compute_average_edge_length_at_vertex(const pmp::SurfaceMesh& mesh, const pmp::Vertex& vertex)
+  {
+    double hsum   = 0.;
+    int    hcount = 0;
+    
+    auto h_circulator = mesh.halfedges(vertex);
+    const auto& X     = mesh.position(vertex);
+    for(auto h:h_circulator)
+      {
+	const auto& Y = mesh.position(mesh.to_vertex(h));
+	hsum += std::sqrt((X[0]-Y[0])*(X[0]-Y[0])+(X[1]-Y[1])*(X[1]-Y[1]));
+	++hcount;
+      }
+    return hsum/static_cast<double>(hcount);
+  }
+  
 }

@@ -10,7 +10,6 @@ file(COPY ${MESH_FILES} DESTINATION ${CMAKE_BINARY_DIR}/src/manager/test/)
 
 foreach(TARGET
 	agglomeration)
-	#test_Manager
 	#improve_mesh)
 
   # add executable
