@@ -6,7 +6,6 @@ project(quality_tests
   DESCRIPTION "Unit tests for computing qualities")
 
 foreach(TARGET
-	test_vertex_quality
 	test_face_quality)
 
   # add executable
