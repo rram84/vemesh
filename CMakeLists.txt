@@ -28,12 +28,11 @@ include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 
 install(TARGETS
-  vm_inspect
+  vm_utils
   vm_io
   vm_manager
   vm_quality
   vm_stiffness
-  vm_vertex_ring
   vm_test_rect
   vm_test_mesh_slicer
   EXPORT ${PROJECT_NAME}Targets
@@ -66,7 +65,7 @@ install(FILES
 
 # Testing
 include(CTest)
-add_subdirectory(src/vertex-ring/test)
+add_subdirectory(src/utils/test)
 add_subdirectory(src/quality/test)
 add_subdirectory(src/stiffness/test)
 add_subdirectory(src/manager/test)

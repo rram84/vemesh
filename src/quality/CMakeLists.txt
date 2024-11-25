@@ -14,7 +14,7 @@ target_include_directories(vm_quality PUBLIC
 target_link_libraries(vm_quality PUBLIC
 				 pmp Eigen3::Eigen
 				 Boost::boost
-				 vm_vertex_ring
+				 vm_utils
 				 vm_stiffness)
 
 # Add required flags

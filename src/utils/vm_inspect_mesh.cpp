@@ -1,6 +1,6 @@
 // Sriramajayam
 
-#include <vm_inspect.h>
+#include <vm_utils.h>
 #include <cassert>
 
 // boost polygon utilities

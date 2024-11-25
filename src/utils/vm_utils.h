@@ -6,6 +6,9 @@
 
 namespace vm
 {
+  // compute the vertex ring
+  std::vector<pmp::Vertex> get_vertex_ring(const pmp::SurfaceMesh& mesh, const pmp::Vertex& v);
+
   // Run checks on a mesh face
   // mesh [in]           : polygon mesh
   bool inspect_mesh(const pmp::SurfaceMesh& mesh);
@@ -15,4 +18,5 @@ namespace vm
   // inspect correctness of a vertex ring
   bool inspect_vertex_ring(const pmp::SurfaceMesh& mesh,
 			   const pmp::Vertex& vertex);
+
 }

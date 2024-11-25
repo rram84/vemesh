@@ -2,8 +2,8 @@
 
 cmake_minimum_required(VERSION 3.12)
 
-project(vertexring_tests
-  DESCRIPTION "Unit tests for computing visibility in polygons")
+project(utils_tests
+  DESCRIPTION "Unit tests for utilities")
 
 file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/ring.off" DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/)
 
@@ -13,7 +13,7 @@ foreach(TARGET test_vertex_ring)
   add_executable(${TARGET} ${TARGET}.cpp)
 
   # link 
-  target_link_libraries(${TARGET} PUBLIC vm_vertex_ring vm_io)
+  target_link_libraries(${TARGET} PUBLIC vm_utils vm_io)
 
   # choose appropriate flags
   target_compile_features(${TARGET} PUBLIC ${COMPILE_FEATURES})

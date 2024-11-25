@@ -1,7 +1,6 @@
 // Sriramajayam
 
 #include <vm_Manager.h>
-#include <vm_vertex_ring.h>
 #include <boost/geometry/geometry.hpp>
 #include <random>
 #include <queue>

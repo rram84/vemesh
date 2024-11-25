@@ -11,9 +11,9 @@ target_include_directories(vm_manager PUBLIC
 
 # link
 target_link_libraries(vm_manager PUBLIC
+			     vm_utils
 			     vm_io
-			     vm_quality
-			     vm_inspect)
+			     vm_quality)
 
 # Add required flags
 target_compile_features(vm_manager PUBLIC ${VM_COMPILE_FEATURES})
