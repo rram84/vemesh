@@ -89,9 +89,6 @@ namespace vm
 				    const int              num_poly_samples,        // max number of random positions to generate
 				    const int              num_edge_samples)        // number of samples to generate per edge  
   {
-    // output
-    std::vector<std::pair<double,double>> feasible_points{};
-    
     // boost polygon of the environment around the vertex
     boost_polygon_t poly;
     auto vertex_ring = get_vertex_ring(mesh, vertex);
@@ -123,45 +120,60 @@ namespace vm
     std::random_device rd; 
     std::mt19937 gen(rd());
 
-    // uniform sampling over the x edge of the bounding box
+    // all samples
+    std::vector<boost_point_t> samples{};
+
+    // sample the bounding box
     std::uniform_real_distribution<> xdis(bg::get<0>(min_corner), bg::get<0>(max_corner));
     std::uniform_real_distribution<> ydis(bg::get<1>(min_corner), bg::get<1>(max_corner));
-    
-    // sample the bounding box
-    int num_poly_sample_feasible = 0;
     for(int iter=0; iter<num_poly_samples; ++iter)
-      {
-	// sample point in the bounding box
-	boost_point_t sample(xdis(gen), ydis(gen));
+      samples.push_back(boost_point_t(xdis(gen), ydis(gen)));
 
-	// is this point feasible
-	if(feasibility_test_1(poly, connected_vertices, sample)==true &&
-	   feasibility_test_2(mesh, vertex, sample)==true)
-	  {
-	    feasible_points.push_back({bg::get<0>(sample), bg::get<1>(sample)});
-	    ++num_poly_sample_feasible;
-	  }
-      }
-    
-    // sample edges incident edges at the vertex
-    int num_edge_sample_feasible = 0;
+    // convex combinations of connected vertices
     std::uniform_real_distribution<> lambda_dis(0.,1.);
-    const pmp::Point& Xv = mesh.position(vertex);
-    for(auto& Y:connected_vertices)
-      for(int iter=0; iter<num_edge_samples; ++iter)
-	{
-	  const double lambda = lambda_dis(gen);
-	  boost_point_t sample(lambda*Xv[0]+(1.-lambda)*Y[0],
-			       lambda*Xv[1]+(1.-lambda)*Y[1]);
-	  
-	  if(feasibility_test_1(poly, connected_vertices, sample)==true &&
-	     feasibility_test_2(mesh, vertex, sample)==true)
-	    {
-	      feasible_points.push_back({bg::get<0>(sample), bg::get<1>(sample)});
-	      ++num_edge_sample_feasible;
-	    }
-	}
-    
+    const int nconn = static_cast<int>(connected_vertices.size());
+    std::vector<double> wts(nconn);
+    double wsum;
+    double pt[2];
+    for(int iter=0; iter<num_edge_samples; ++iter) {
+
+      // weights
+      for(int i=0; i<nconn; ++i) {
+	wts[i] = lambda_dis(gen);
+	wsum += wts[i];
+      }
+
+      // normalize
+      for(int i=0; i<nconn; ++i)
+	wts[i] /= wsum;
+
+      // sample point
+      pt[0] = pt[1] = 0.;
+      for(int i=0; i<nconn; ++i) {
+	pt[0] += wts[i]*connected_vertices[i][0];
+	pt[1] += wts[i]*connected_vertices[i][1];
+      }
+      samples.push_back(boost_point_t(pt[0], pt[1]));
+    }
+      
+    // sample incident edges
+    // const pmp::Point& Xv = mesh.position(vertex);
+    //   for(auto& Y:connected_vertices)
+    //   for(int iter=0; iter<num_edge_samples; ++iter)
+    //   {
+    //   const double lambda = lambda_dis(gen);
+    //   samples.push_back(boost_point_t(lambda*Xv[0]+(1.-lambda)*Y[0],
+    //   lambda*Xv[1]+(1.-lambda)*Y[1]));
+    //   }
+
+    // output = subset of feasible samples
+    std::vector<std::pair<double,double>> feasible_points{};
+    for(auto& sample:samples)
+      if(feasibility_test_1(poly, connected_vertices, sample)==true &&
+	 feasibility_test_2(mesh, vertex, sample)==true) {
+	feasible_points.push_back({bg::get<0>(sample), bg::get<1>(sample)});
+      }
+
     // done
     return std::move(feasible_points);
   }
