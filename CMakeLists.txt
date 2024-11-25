@@ -31,7 +31,6 @@ install(TARGETS
   vm_inspect
   vm_io
   vm_manager
-  vm_move
   vm_quality
   vm_stiffness
   vm_vertex_ring
@@ -69,7 +68,6 @@ install(FILES
 include(CTest)
 add_subdirectory(src/vertex-ring/test)
 add_subdirectory(src/quality/test)
-add_subdirectory(src/move/test)	
 add_subdirectory(src/stiffness/test)
 add_subdirectory(src/manager/test)
 add_subdirectory(app)

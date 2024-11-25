@@ -13,7 +13,6 @@ target_include_directories(vm_manager PUBLIC
 target_link_libraries(vm_manager PUBLIC
 			     vm_io
 			     vm_quality
-			     vm_move
 			     vm_inspect)
 
 # Add required flags

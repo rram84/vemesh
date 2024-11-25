@@ -7,6 +7,7 @@
 #include <vm_vertex_quality.h>
 #include <vm_inspect.h>
 #include <string>
+#include <tuple>
 #include <map>
 
 namespace vm
@@ -72,7 +73,18 @@ namespace vm
     // Agglomerate faces along prescribed edge
     static void merge_face(pmp::SurfaceMesh& mesh, const pmp::Halfedge& halfedge);
 
-    
+    // identify a feasible point to move a vertex
+    static std::tuple<bool, pmp::Point, double> compute_improved_vertex_position(pmp::SurfaceMesh          &mesh,
+										 const pmp::Vertex         &vertex,
+										 const int                 num_poly_samples,
+										 const int                 num_edge_samples,
+										 const MeshVertexQuality_f qfunc);
+    // random generation of feasible vertex positions
+    static std::vector<std::pair<double,double>>
+      compute_feasible_vertex_positions(const pmp::SurfaceMesh& mesh,
+					const pmp::Vertex&      vertex,
+					const int               num_poly_samples,        // max number of random positions to generate
+					const int               num_edge_samples);       // number of samples to generate per edge  
     pmp::SurfaceMesh mesh;
   };
 }
