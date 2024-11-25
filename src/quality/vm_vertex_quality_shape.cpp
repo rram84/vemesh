@@ -1,6 +1,7 @@
 // Sriramajayam
 
-#include <vm_vertex_quality.h>
+#include <vm_quality.h>
+#include <vm_utils.h>
 #include <cmath>
 
 namespace vm {

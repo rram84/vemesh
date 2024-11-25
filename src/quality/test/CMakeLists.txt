@@ -6,7 +6,9 @@ project(quality_tests
   DESCRIPTION "Unit tests for computing qualities")
 
 foreach(TARGET
-	test_face_quality)
+	test_face_quality
+	test_stiffness
+        test_sutton)
 
   # add executable
   add_executable(${TARGET} ${TARGET}.cpp)

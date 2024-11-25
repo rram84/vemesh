@@ -11,15 +11,14 @@
 // Options
 // -i Input polygonal mesh file in OFF/vtk format
 // -o output directory, will be cleared if it already exists. will be created otherwise
-// -q lower bound for acceptable element quality
+// -q bound for acceptable element quality
 // -n number of iterations to perform
 // -s number of vertex samples in case of vertex relaxations
 // -f quality improvement factor in case of agglomeration
 // -v optional argument to print meshes after successive merges (within each iteration)
 
 #include <vm_Manager.h>
-#include <vm_face_quality.h>
-#include <vm_vertex_quality.h>
+#include <vm_quality.h>
 #include <vm_io.h>
 #include <CLI/CLI.hpp>
 

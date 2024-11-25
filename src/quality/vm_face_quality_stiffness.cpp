@@ -1,8 +1,8 @@
 // Sriramajayam
 
-#include <vm_face_quality.h>
-#include <vm_polygon_stiffness.h>
+#include <vm_quality.h>
 #include <iostream>
+
 namespace vm
 {
   // measure quality of a face as the smallest nonzero eigenvalue of the vem stiffness matrix

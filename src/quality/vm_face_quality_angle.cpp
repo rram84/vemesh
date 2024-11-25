@@ -1,6 +1,6 @@
 // Sriramajayam
 
-#include <vm_face_quality.h>
+#include <vm_quality.h>
 #include <cmath>
 #include <cassert>
 

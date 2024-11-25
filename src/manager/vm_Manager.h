@@ -3,8 +3,6 @@
 #pragma once
 
 #include <pmp/SurfaceMesh.h>
-#include <vm_face_quality.h>
-#include <vm_vertex_quality.h>
 #include <vm_utils.h>
 #include <string>
 #include <tuple>

@@ -32,7 +32,6 @@ install(TARGETS
   vm_io
   vm_manager
   vm_quality
-  vm_stiffness
   vm_test_rect
   vm_test_mesh_slicer
   EXPORT ${PROJECT_NAME}Targets
@@ -67,7 +66,6 @@ install(FILES
 include(CTest)
 add_subdirectory(src/utils/test)
 add_subdirectory(src/quality/test)
-add_subdirectory(src/stiffness/test)
 add_subdirectory(src/manager/test)
 add_subdirectory(app)
 
