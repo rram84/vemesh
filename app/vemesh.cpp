@@ -109,7 +109,7 @@ int main(int argc, char **argv)
     // relaxation only
     else if(*option_map.at("r"))
       manager.move_vertices(vm::compute_shape_based_vertex_quality,
-			    qthresh, num_samples, std::sqrt(num_samples), callback_r);
+			    1.-qthresh, num_samples, std::sqrt(num_samples), callback_r);
     
     // agglomeration->relaxation
     else if(*option_map.at("ar")) {
@@ -119,14 +119,14 @@ int main(int argc, char **argv)
 			  qthresh, qfactor, callback_a);
       // relax
       manager.move_vertices(vm::compute_shape_based_vertex_quality,
-			    qthresh, num_samples, std::sqrt(num_samples), callback_r);
+			    1.-qthresh, num_samples, std::sqrt(num_samples), callback_r);
     }
 
     // relaxation->agglomeration
     else if(*option_map.at("ra")) {
       // relax
       manager.move_vertices(vm::compute_shape_based_vertex_quality,
-			    qthresh, num_samples, std::sqrt(num_samples), callback_r);
+			    1.-qthresh, num_samples, std::sqrt(num_samples), callback_r);
       // agglomerate
       manager.merge_faces(vm::compute_stiffness_based_mesh_face_quality,
 			  vm::compute_stiffness_based_face_quality,

@@ -21,7 +21,11 @@ namespace vm {
     // area
     double area = bg::area(poly);
     double perim = bg::perimeter(poly);
-    return perim*perim/(4.*std::atan(1.)*area);
+
+    // normalizing factor for this polygon
+    const double n = static_cast<double>(mesh.valence(face));
+    const double factor = 4.*n*std::tan(M_PI/n);
+    return factor*area/(perim*perim);
   }
 
   
