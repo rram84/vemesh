@@ -31,7 +31,6 @@ install(TARGETS
   vm_inspect
   vm_io
   vm_manager
-  vm_merge
   vm_move
   vm_quality
   vm_stiffness

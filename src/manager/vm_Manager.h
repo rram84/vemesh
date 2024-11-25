@@ -11,7 +11,6 @@
 
 namespace vm
 {
-
   class Manager;
   using MeshUpdateCallback_f = std::function<void(const int merge_num, const pmp::SurfaceMesh &mesh, Manager &manager)>;
 
@@ -67,6 +66,13 @@ namespace vm
        
     
   private:
+    // identify the face along which to merger a given face
+    static std::tuple<bool, double, pmp::Halfedge> find_halfedge_for_face_merge(const pmp::SurfaceMesh& mesh, const pmp::Face& face, FaceQuality_f qfunc);
+    
+    // Agglomerate faces along prescribed edge
+    static void merge_face(pmp::SurfaceMesh& mesh, const pmp::Halfedge& halfedge);
+
+    
     pmp::SurfaceMesh mesh;
   };
 }
