@@ -1,20 +1,12 @@
 // Sriramajayam
 
 #include <vm_Manager.h>
-#include <boost/geometry/geometry.hpp>
 #include <random>
 #include <queue>
 #include <iostream>
 
 namespace vm
 {
-  namespace bg             = boost::geometry;
-  namespace bgm            = boost::geometry::model;
-  using boost_point_t      = bgm::point<double, 2, bg::cs::cartesian>;
-  using boost_polygon_t    = bgm::polygon<boost_point_t, false>;
-  using boost_box_t        = bgm::box<boost_point_t>;
-  using boost_linestring_t = bgm::linestring<boost_point_t>;
-  
   // moves a vertex
   std::pair<bool, double> Manager::move_vertex(const pmp::Vertex& vertex, const int num_poly_samples, const int num_edge_samples, MeshVertexQuality_f qfunc)
   {

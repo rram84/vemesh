@@ -3,6 +3,7 @@
 #pragma once
 
 #include <pmp/SurfaceMesh.h>
+#include <vm_utils.h>
 #include <utility>
 #include <list>
 

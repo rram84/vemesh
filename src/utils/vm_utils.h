@@ -4,8 +4,22 @@
 
 #include <pmp/SurfaceMesh.h>
 
+// boost polygon utilities
+#include <boost/geometry/geometry.hpp>
+#include <boost/geometry/geometries/polygon.hpp>
+
 namespace vm
 {
+  // boost aliases
+  namespace bg  = boost::geometry;
+  namespace bgm = bg::model;
+  using boost_point_t          = bgm::point<double, 2, bg::cs::cartesian>;
+  using boost_polygon_t        = bgm::polygon<boost_point_t, false>;
+  using boost_multi_polygon_t  = bgm::multi_polygon<boost_polygon_t>;
+  using boost_box_t        = bgm::box<boost_point_t>;
+  using boost_linestring_t = bgm::linestring<boost_point_t>;
+
+  
   // compute the vertex ring
   std::vector<pmp::Vertex> get_vertex_ring(const pmp::SurfaceMesh& mesh, const pmp::Vertex& v);
 
@@ -18,5 +32,4 @@ namespace vm
   // inspect correctness of a vertex ring
   bool inspect_vertex_ring(const pmp::SurfaceMesh& mesh,
 			   const pmp::Vertex& vertex);
-
 }

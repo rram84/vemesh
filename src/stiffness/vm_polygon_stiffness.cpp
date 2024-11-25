@@ -1,18 +1,10 @@
 // Sriramajayam
 
 #include <vm_polygon_stiffness.h>
-
-// boost polygon utilities
-#include <boost/geometry/geometry.hpp>
+#include <vm_utils.h>
 
 namespace vm
 {
-  // boost aliases
-  namespace bg  = boost::geometry;
-  namespace bgm = bg::model;
-  using boost_point_t         = bgm::point<double, 2, bg::cs::cartesian>;
-  using boost_polygon_t       = bgm::polygon<boost_point_t, false>;
-
   // distance between farthest vertices
   double compute_polygon_dia(const std::vector<pmp::Point>& coords);
 

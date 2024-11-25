@@ -12,8 +12,6 @@ target_include_directories(vm_quality PUBLIC
 
 # link
 target_link_libraries(vm_quality PUBLIC
-				 pmp Eigen3::Eigen
-				 Boost::boost
 				 vm_utils
 				 vm_stiffness)
 

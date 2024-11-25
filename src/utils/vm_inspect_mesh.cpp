@@ -3,18 +3,9 @@
 #include <vm_utils.h>
 #include <cassert>
 
-// boost polygon utilities
-#include <boost/geometry/geometry.hpp>
-#include <boost/geometry/geometries/polygon.hpp>
 
 namespace vm
 {
-  // boost aliases
-  namespace bg  = boost::geometry;
-  namespace bgm = bg::model;
-  using boost_point_t    = bgm::point<double, 2, bg::cs::cartesian>;
-  using boost_polygon_t  = bgm::polygon<boost_point_t, false>;
-  using boost_multi_polygon_t  = bgm::multi_polygon<boost_polygon_t>;
 
   bool inspect_mesh(const pmp::SurfaceMesh &mesh)
   {

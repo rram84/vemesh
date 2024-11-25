@@ -7,7 +7,7 @@ target_include_directories(vm_stiffness PUBLIC
 					$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
 
 # link
-target_link_libraries(vm_stiffness PUBLIC pmp Eigen3::Eigen Boost::boost)
+target_link_libraries(vm_stiffness PUBLIC vm_utils)
 
 
 # Add required flags

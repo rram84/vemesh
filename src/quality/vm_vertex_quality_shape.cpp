@@ -3,18 +3,8 @@
 #include <vm_vertex_quality.h>
 #include <cmath>
 
-// boost polygon utilities
-#include <boost/geometry/geometry.hpp>
-#include <boost/geometry/geometries/polygon.hpp>
-
 namespace vm {
   
-  // boost aliases
-  namespace bg             = boost::geometry;
-  namespace bgm            = bg::model;
-  using boost_point_t      = bgm::point<double, 2, bg::cs::cartesian>;
-  using boost_polygon_t    = bgm::polygon<boost_point_t>;
-
   // measure the quality of a face as the ratio of the area/perimeter^2
   double compute_shape_based_face_quality(const pmp::SurfaceMesh& mesh, const pmp::Face& face) {
 
