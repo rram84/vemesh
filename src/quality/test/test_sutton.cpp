@@ -1,6 +1,6 @@
 // Sriramajayam
 
-#include <vm_polygon_stiffness.h>
+#include <vm_quality.h>
 #include <iostream>
 
 int main()

@@ -2,7 +2,7 @@
 
 #include <vm_Manager.h>
 #include <vm_io.h>
-#include <vm_face_quality.h>
+#include <vm_quality.h>
 #include <set>
 
 // compare pairs of (id, quality)
@@ -29,8 +29,10 @@ int main()
   vm::write_suku_format(mesh, "ls-0p2859");
 
   // mesh quality metric
-  vm::MeshFaceQuality_f qfunc = vm::compute_stiffness_based_mesh_face_quality;
-  vm::FaceQuality_f     qface = vm::compute_stiffness_based_face_quality;
+  vm::MeshFaceQuality_f qfunc = [](const pmp::SurfaceMesh& mesh, const pmp::Face& face) {
+    return vm::FaceQuality::stiffness(mesh, face); };
+  vm::FaceQuality_f qface = [](const std::vector<pmp::Point>& coords) {
+    return vm::FaceQuality::stiffness(coords); };
 
   // compute face qualities
   std::set<std::pair<int,double>, decltype(cmp)> q_pre(cmp);
