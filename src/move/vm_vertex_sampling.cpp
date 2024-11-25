@@ -10,7 +10,7 @@ namespace vm
   namespace bg             = boost::geometry;
   namespace bgm            = boost::geometry::model;
   using boost_point_t      = bgm::point<double, 2, bg::cs::cartesian>;
-  using boost_polygon_t    = bgm::polygon<boost_point_t>;
+  using boost_polygon_t    = bgm::polygon<boost_point_t, false>;
   using boost_box_t        = bgm::box<boost_point_t>;
   using boost_linestring_t = bgm::linestring<boost_point_t>;
 
@@ -66,9 +66,8 @@ namespace vm
 	  }
 
 	// close te polygon
-	auto first_vert = poly.outer().begin();  
-	bg::append(poly.outer(), boost_point_t(bg::get<0>(*first_vert), bg::get<1>(*first_vert)));
-	bg::correct(poly);
+	auto first_vertex = *poly.outer().begin();  
+	bg::append(poly.outer(), first_vertex);
 	
 	// is this polygon valid
 	if(!bg::is_valid(poly))
