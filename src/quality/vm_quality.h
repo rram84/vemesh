@@ -11,8 +11,8 @@ namespace vm
 {
   struct FaceQuality {
     // measure quality of a face as the smallest nonzero eigenvalue of the vem stiffness matrix
-    static double stiffness(const pmp::SurfaceMesh& mesh, const pmp::Face& face);
-    static double stiffness(const std::vector<pmp::Point>& coords);
+    static double face_stiffness(const pmp::SurfaceMesh& mesh, const pmp::Face& face);
+    static double polygon_stiffness(const std::vector<pmp::Point>& coords);
     
     // measure quality of a face  as the ratio of the area to the perimeter^2
     static double shape(const pmp::SurfaceMesh& mesh, const pmp::Face& face);

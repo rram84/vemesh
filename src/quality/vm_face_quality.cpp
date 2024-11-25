@@ -82,7 +82,7 @@ namespace vm {
   
   
   // measure quality of a face as the smallest nonzero eigenvalue of the vem stiffness matrix
-  double FaceQuality::stiffness(const pmp::SurfaceMesh& mesh, const pmp::Face& face)
+  double FaceQuality::face_stiffness(const pmp::SurfaceMesh& mesh, const pmp::Face& face)
   {
     // vertex coordinates
     std::vector<pmp::Point> coords{};
@@ -90,11 +90,11 @@ namespace vm {
     for(auto v:v_circulator)
       coords.push_back(mesh.position(v));
 
-    return FaceQuality::stiffness(coords);
+    return FaceQuality::polygon_stiffness(coords);
   }
 
 
-  double FaceQuality::stiffness(const std::vector<pmp::Point>& coords)
+  double FaceQuality::polygon_stiffness(const std::vector<pmp::Point>& coords)
   {
     // stiffness matrix
     auto Kmat = compute_polygon_stiffness_matrix(coords, 1.0);

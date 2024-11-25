@@ -87,11 +87,13 @@ int main(int argc, char **argv)
   vm::Manager manager(meshfile);
 
   // initial mesh quality
-  manager.compute_face_qualities(vm::compute_stiffness_based_mesh_face_quality);
+  manager.compute_face_qualities(vm::FaceQuality::face_stiffness);
   manager.write_mesh(outdir+"/vtk/init.vtk");
   auto& mesh = manager.get_mesh();
   vm::write_suku_format(mesh, outdir+"/suku/init");
 
+  // face qualities
+  
   for(int iter=0; iter<num_iters; ++iter) {
 
     std::cout << "Iteration " << iter << std::endl;
@@ -101,39 +103,36 @@ int main(int argc, char **argv)
     
     // agglomeration only
     if(*option_map.at("a"))
-      manager.merge_faces(vm::compute_stiffness_based_mesh_face_quality,
-			  vm::compute_stiffness_based_face_quality,
+      manager.merge_faces(vm::FaceQuality::face_stiffness, vm::FaceQuality::polygon_stiffness,
 			  qthresh, qfactor, callback_a);
 
     // relaxation only
     else if(*option_map.at("r"))
-      manager.move_vertices(vm::compute_shape_based_vertex_quality,
+      manager.move_vertices(vm::VertexQuality::shape,
 			    1.-qthresh, num_samples, std::sqrt(num_samples), callback_r);
     
     // agglomeration->relaxation
     else if(*option_map.at("ar")) {
       // agglomerate
-      manager.merge_faces(vm::compute_stiffness_based_mesh_face_quality,
-			  vm::compute_stiffness_based_face_quality,
+      manager.merge_faces(vm::FaceQuality::face_stiffness, vm::FaceQuality::polygon_stiffness,
 			  qthresh, qfactor, callback_a);
       // relax
-      manager.move_vertices(vm::compute_shape_based_vertex_quality,
+      manager.move_vertices(vm::VertexQuality::shape,
 			    1.-qthresh, num_samples, std::sqrt(num_samples), callback_r);
     }
 
     // relaxation->agglomeration
     else if(*option_map.at("ra")) {
       // relax
-      manager.move_vertices(vm::compute_shape_based_vertex_quality,
+      manager.move_vertices(vm::VertexQuality::shape,
 			    1.-qthresh, num_samples, std::sqrt(num_samples), callback_r);
       // agglomerate
-      manager.merge_faces(vm::compute_stiffness_based_mesh_face_quality,
-			  vm::compute_stiffness_based_face_quality,
+      manager.merge_faces(vm::FaceQuality::face_stiffness, vm::FaceQuality::polygon_stiffness,
 			  qthresh, qfactor, callback_a);
     }
     
     // save output at the end of this iteration
-    manager.compute_face_qualities(vm::compute_stiffness_based_mesh_face_quality);
+    manager.compute_face_qualities(vm::FaceQuality::face_stiffness);
     manager.write_mesh(outdir+"/vtk/mesh-iter-"+std::to_string(iter)+".vtk");
     vm::write_suku_format(mesh, outdir+"/suku/mesh-iter-"+std::to_string(iter));
     std::cout << std::endl;

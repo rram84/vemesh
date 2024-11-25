@@ -29,11 +29,9 @@ int main()
   vm::write_suku_format(mesh, "ls-0p2859");
 
   // mesh quality metric
-  vm::MeshFaceQuality_f qfunc = [](const pmp::SurfaceMesh& mesh, const pmp::Face& face) {
-    return vm::FaceQuality::stiffness(mesh, face); };
-  vm::FaceQuality_f qface = [](const std::vector<pmp::Point>& coords) {
-    return vm::FaceQuality::stiffness(coords); };
-
+  vm::MeshFaceQuality_f qfunc = vm::FaceQuality::face_stiffness;
+  vm::FaceQuality_f qface = vm::FaceQuality::polygon_stiffness;
+  
   // compute face qualities
   std::set<std::pair<int,double>, decltype(cmp)> q_pre(cmp);
   auto f_iterator = mesh.faces();

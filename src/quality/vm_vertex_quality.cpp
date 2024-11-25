@@ -53,7 +53,7 @@ namespace vm {
     auto f_circulator = mesh.faces(vert);
     for(auto f:f_circulator)
       {
-  	double min_eigval = FaceQuality::stiffness(mesh, f);
+  	double min_eigval = FaceQuality::face_stiffness(mesh, f);
 	if(min_eigval<quality)
 	  quality = min_eigval;
       }
