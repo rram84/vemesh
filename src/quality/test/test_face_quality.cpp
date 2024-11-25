@@ -16,7 +16,7 @@ int main()
   auto tri = mesh.add_face(vertices);
 
   // compute face quality
-  double quality = vm::FaceQuality::stiffness(mesh, tri);
+  double quality = vm::MeshFaceQuality_f(mesh, tri, vm::FaceQuality::stiffness);
   std::cout << std::endl << "Triangle quality: " << quality << std::endl;
   
 }

@@ -38,7 +38,7 @@ namespace vm
 
   
   // visualize mesh along with face qualities
-  void Manager::compute_face_qualities(MeshFaceQuality_f qfunc)
+  void Manager::compute_face_qualities(FaceQuality_f qfunc)
   {
     // "face_quality" property
     if(mesh.has_face_property("face_quality")==false)
@@ -52,7 +52,7 @@ namespace vm
     double q;
     for(auto f:f_circulator)
       {
-	q = qfunc(mesh, f);
+	q = MeshFaceQuality_f(mesh, f, qfunc);
 	quality[f] = q;
       }
 

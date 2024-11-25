@@ -2,7 +2,8 @@
 
 add_library(vm_utils STATIC
 		 vm_vertex_ring.cpp
-		 vm_inspect_mesh.cpp)
+		 vm_inspect_mesh.cpp
+		 vm_meshface_quality.cpp)
 
 # include headers in the current directory
 target_include_directories(vm_utils PUBLIC

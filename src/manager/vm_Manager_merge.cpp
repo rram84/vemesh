@@ -8,7 +8,7 @@
 namespace vm
 {
   // merge poor quality elements with neighbors
-  std::pair<bool, pmp::Face> Manager::merge_face(const pmp::Face& face, FaceQuality_f qface, MeshFaceQuality_f qfunc, const double qimprove_factor)
+  std::pair<bool, pmp::Face> Manager::merge_face(const pmp::Face& face, FaceQuality_f qface, const double qimprove_factor)
   {
     assert(mesh.is_valid(face) && !mesh.is_deleted(face));
     
@@ -17,7 +17,7 @@ namespace vm
     const auto& success       = std::get<0>(result);
     const auto& best_quality  = std::get<1>(result);
     const auto& best_halfedge = std::get<2>(result);
-    const double curr_quality = qfunc(mesh, face);
+    const double curr_quality = MeshFaceQuality_f(mesh, face, qface);
     std::pair<bool, pmp::Face> ret_data{false, face};
     if(success==true && best_quality>qimprove_factor*curr_quality)
       {
@@ -37,7 +37,7 @@ namespace vm
   { return A.second>B.second; }
   
   // merge faces
-  int Manager::merge_faces(MeshFaceQuality_f qfunc, FaceQuality_f qface,
+  int Manager::merge_faces(FaceQuality_f qface,
 			   const double qmin, const double qimprove_factor,
 			   MeshUpdateCallback_f callback)
   {
@@ -51,7 +51,7 @@ namespace vm
     auto f_container = mesh.faces();
     for(auto f:f_container)
       {
-	double qval = qfunc(mesh, f);
+	double qval = MeshFaceQuality_f(mesh, f, qface);
 	if(qval<qmin)
 	  face_queue.push({f, qval});
       }
@@ -84,7 +84,7 @@ namespace vm
 	  continue;
 	  
 	// current quality
-	const double curr_q = qfunc(mesh, f);
+	const double curr_q = MeshFaceQuality_f(mesh, f, qface);
 	if(curr_q>qmin)
 	  continue;
 	  
@@ -96,7 +96,7 @@ namespace vm
 	  }
 	  
 	// this face is the current priority
-	auto result = this->merge_face(f, qface, qfunc, qimprove_factor);
+	auto result = this->merge_face(f, qface, qimprove_factor);
 	auto success = result.first;
 	if(success==true) {
 	  ++nmerged;

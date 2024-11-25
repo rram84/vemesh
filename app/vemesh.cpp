@@ -87,7 +87,7 @@ int main(int argc, char **argv)
   vm::Manager manager(meshfile);
 
   // initial mesh quality
-  manager.compute_face_qualities(vm::FaceQuality::face_stiffness);
+  manager.compute_face_qualities(vm::FaceQuality::stiffness);
   manager.write_mesh(outdir+"/vtk/init.vtk");
   auto& mesh = manager.get_mesh();
   vm::write_suku_format(mesh, outdir+"/suku/init");
@@ -103,36 +103,31 @@ int main(int argc, char **argv)
     
     // agglomeration only
     if(*option_map.at("a"))
-      manager.merge_faces(vm::FaceQuality::face_stiffness, vm::FaceQuality::polygon_stiffness,
-			  qthresh, qfactor, callback_a);
+      manager.merge_faces(vm::FaceQuality::stiffness, qthresh, qfactor, callback_a);
 
     // relaxation only
     else if(*option_map.at("r"))
-      manager.move_vertices(vm::VertexQuality::shape,
-			    1.-qthresh, num_samples, std::sqrt(num_samples), callback_r);
+      manager.move_vertices(vm::VertexQuality::shape, 1.-qthresh, num_samples, std::sqrt(num_samples), callback_r);
+      //manager.move_vertices(vm::VertexQuality::angle, 60., num_samples, std::sqrt(num_samples), callback_r);
     
     // agglomeration->relaxation
     else if(*option_map.at("ar")) {
       // agglomerate
-      manager.merge_faces(vm::FaceQuality::face_stiffness, vm::FaceQuality::polygon_stiffness,
-			  qthresh, qfactor, callback_a);
+      manager.merge_faces(vm::FaceQuality::stiffness, qthresh, qfactor, callback_a);
       // relax
-      manager.move_vertices(vm::VertexQuality::shape,
-			    1.-qthresh, num_samples, std::sqrt(num_samples), callback_r);
+      manager.move_vertices(vm::VertexQuality::shape, 1.-qthresh, num_samples, std::sqrt(num_samples), callback_r);
     }
 
     // relaxation->agglomeration
     else if(*option_map.at("ra")) {
       // relax
-      manager.move_vertices(vm::VertexQuality::shape,
-			    1.-qthresh, num_samples, std::sqrt(num_samples), callback_r);
+      manager.move_vertices(vm::VertexQuality::shape, 1.-qthresh, num_samples, std::sqrt(num_samples), callback_r);
       // agglomerate
-      manager.merge_faces(vm::FaceQuality::face_stiffness, vm::FaceQuality::polygon_stiffness,
-			  qthresh, qfactor, callback_a);
+      manager.merge_faces(vm::FaceQuality::stiffness, qthresh, qfactor, callback_a);
     }
     
     // save output at the end of this iteration
-    manager.compute_face_qualities(vm::FaceQuality::face_stiffness);
+    manager.compute_face_qualities(vm::FaceQuality::stiffness);
     manager.write_mesh(outdir+"/vtk/mesh-iter-"+std::to_string(iter)+".vtk");
     vm::write_suku_format(mesh, outdir+"/suku/mesh-iter-"+std::to_string(iter));
     std::cout << std::endl;
@@ -180,6 +175,13 @@ std::map<std::string, CLI::Option*> validate_CLI_options(CLI::App& app) {
   // relaxation
   if(op_string=="r" || op_string=="ar" || op_string=="ra")
     op->needs(option_map["s"]);
+
+  // excludes
+  if(op_string=="a")
+    op->excludes(option_map["s"]);
+
+  if(op_string=="r")
+    op->excludes(option_map["f"]);
 
   return option_map;
 }
