@@ -5,6 +5,7 @@
 #include <pmp/SurfaceMesh.h>
 #include <vm_face_quality.h>
 #include <vm_vertex_quality.h>
+#include <vm_inspect.h>
 #include <string>
 #include <map>
 
@@ -28,7 +29,11 @@ namespace vm
     Manager operator=(const Manager&) = delete;
 
     // inspect validity of the mesh
-    void inspect_mesh() const;
+    inline void inspect_mesh() const {
+      assert(mesh.has_face_property("material_id")==true);
+      assert(mesh.has_vertex_property("interface_id")==true);
+      bool flag = vm::inspect_mesh(mesh); assert(flag && "Mesh is invalid");
+    }
     
     // access the mesh
     inline pmp::SurfaceMesh& get_mesh()
