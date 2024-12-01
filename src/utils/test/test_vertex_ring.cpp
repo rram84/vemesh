@@ -1,6 +1,6 @@
 // Sriramajayam
 
-#include <vm_vertex_ring.h>
+#include <vm_utils.h>
 #include <vm_io.h>
 
 int main()
