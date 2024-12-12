@@ -8,13 +8,15 @@ file(GLOB MESH_FILES "${CMAKE_SOURCE_DIR}/src/manager/test/*.OFF")
 file(COPY ${MESH_FILES} DESTINATION ${CMAKE_BINARY_DIR}/src/manager/test/)
 
 foreach(TARGET
-	    vemesh)
+	    vemesh
+	    gen_square_mesh
+	    clip_mesh)
 
   # add executable
   add_executable(${TARGET} ${TARGET}.cpp)
 
   # link 
-  target_link_libraries(${TARGET} PUBLIC vm_manager CLI11::CLI11)
+  target_link_libraries(${TARGET} PUBLIC vm_manager vm_test_rect vm_test_mesh_slicer CLI11::CLI11)
 
   # choose appropriate flags
   target_compile_features(${TARGET} PUBLIC ${COMPILE_FEATURES})
