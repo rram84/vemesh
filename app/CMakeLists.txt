@@ -10,7 +10,8 @@ file(COPY ${MESH_FILES} DESTINATION ${CMAKE_BINARY_DIR}/src/manager/test/)
 foreach(TARGET
 	    vemesh
 	    gen_square_mesh
-	    clip_mesh)
+	    clip_mesh
+	    annulus_mesh)
 
   # add executable
   add_executable(${TARGET} ${TARGET}.cpp)
