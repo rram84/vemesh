@@ -73,7 +73,7 @@ namespace vm
       }
 
     // material ids of cells
-    auto material_ids = mesh.add_face_property<int>("material_id", -1);
+    auto material_ids = mesh.add_face_property<int>("material_id", 1);
     flag = position_cursor_after_word(file, "material_id");
     if(flag==true)
       {
@@ -86,7 +86,7 @@ namespace vm
       }
     
     // vertices on interfaces
-    auto interface_id = mesh.add_vertex_property<int>("interface_id", -1);
+    auto interface_id = mesh.add_vertex_property<int>("interface_id", 1);
     file.seekg(0, std::ios::beg);
     flag = position_cursor_after_word(file, "interface_id");
     if(flag==true)
