@@ -82,10 +82,10 @@ int main(int argc, char **argv)
 
   // output directory
   manage_output_directory(outdir);
-  
+
   // Manager
   vm::Manager manager(meshfile);
-
+  
   // initial mesh quality
   manager.compute_face_qualities(vm::FaceQuality::stiffness);
   manager.write_mesh(outdir+"/vtk/init.vtk");
@@ -107,21 +107,20 @@ int main(int argc, char **argv)
 
     // relaxation only
     else if(*option_map.at("r"))
-      manager.move_vertices(vm::VertexQuality::shape, 1.-qthresh, num_samples, std::sqrt(num_samples), callback_r);
-      //manager.move_vertices(vm::VertexQuality::angle, 60., num_samples, std::sqrt(num_samples), callback_r);
+      manager.move_vertices(vm::VertexQuality::shape, 1.-qthresh, num_samples, std::sqrt(num_samples), {1}, callback_r); // relax vertex with interface_id = 1
     
     // agglomeration->relaxation
     else if(*option_map.at("ar")) {
       // agglomerate
       manager.merge_faces(vm::FaceQuality::stiffness, qthresh, qfactor, callback_a);
       // relax
-      manager.move_vertices(vm::VertexQuality::shape, 1.-qthresh, num_samples, std::sqrt(num_samples), callback_r);
+      manager.move_vertices(vm::VertexQuality::shape, 1.-qthresh, num_samples, std::sqrt(num_samples), {1}, callback_r);
     }
 
     // relaxation->agglomeration
     else if(*option_map.at("ra")) {
       // relax
-      manager.move_vertices(vm::VertexQuality::shape, 1.-qthresh, num_samples, std::sqrt(num_samples), callback_r);
+      manager.move_vertices(vm::VertexQuality::shape, 1.-qthresh, num_samples, std::sqrt(num_samples), {1}, callback_r);
       // agglomerate
       manager.merge_faces(vm::FaceQuality::stiffness, qthresh, qfactor, callback_a);
     }

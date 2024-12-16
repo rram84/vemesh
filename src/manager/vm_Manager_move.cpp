@@ -43,6 +43,7 @@ namespace vm
   // moves vertices
   int Manager::move_vertices(MeshVertexQuality_f qfunc, const double qmin,
 			     const int num_poly_samples, const int num_edge_samples,
+			     const std::set<int> interface_ids,
 			     MeshUpdateCallback_f callback)
   {
     // tolerance for comparing qualities
@@ -51,8 +52,9 @@ namespace vm
     // priority queue of vertices to be relaxed during this iteration
     std::priority_queue<VQ_pair_t, std::vector<VQ_pair_t>, decltype(&Compare)> vertex_queue(Compare);
     auto v_container = mesh.vertices();
+    auto v_interface_ids = mesh.get_vertex_property<int>("interface_id");
     for(auto v:v_container)
-      if(mesh.is_boundary(v)==false)
+      if(mesh.is_boundary(v)==false && interface_ids.find(v_interface_ids[v])!=interface_ids.end())
 	{
 	  double qval = qfunc(mesh, v);
 	  if(qval<qmin)

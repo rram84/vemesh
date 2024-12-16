@@ -52,6 +52,7 @@ namespace vm
     // moves vertices
     int move_vertices(MeshVertexQuality_f qfunc, const double qthreshold,
 		      const int num_poly_samples, const int num_edge_samples,
+		      const std::set<int> interface_ids,
 		      MeshUpdateCallback_f callback=nullptr);
     
      // compute face qualities in the mesh. saved under face property "quality"
