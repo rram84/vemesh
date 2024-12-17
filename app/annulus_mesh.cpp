@@ -42,35 +42,34 @@ int main(int argc, char** argv) {
     vm::read_vtk(in_meshfile, mesh);
 
   // scale the input mesh to size sqrt(5)
-  /*const double factor = std::sqrt(5.)/2;
+  const double factor = std::sqrt(5.)/2;
     auto& coords = mesh.positions();
     for(auto& X:coords)
     for(int k=0; k<3; ++k)
     X[k] *= factor;
-    vm::inspect_mesh(mesh);*/
+    vm::inspect_mesh(mesh);
     
   // scale the input mesh to size sqrt(5)
-  const double factor = std::sqrt(5.);
+  /*const double factor = std::sqrt(5.);
   auto& coords = mesh.positions();
   for(auto& X:coords) {
     X[0] -= 0.5;
     X[1] -= 1.0;
     X[0] *= factor;
     X[1] *= factor;
-  }
+    }*/
   
   // create the signed distance functions
   vm::test::LevelSetFunction_t out_sdfunc = std::bind(circ_signed_distance, std::placeholders::_1, 1.0, 1.0);
   vm::test::LevelSetFunction_t in_sdfunc = std::bind(circ_signed_distance, std::placeholders::_1, 0.4, -1.0);
 
   // adjust node positions away from the zero level sets
-  const double sdtol = 1.e-8;
+  const double sdtol = 1.e-6;
   vm::test::adjust_mesh_nodes(mesh, sdtol, 1.1*sdtol, out_sdfunc);
   vm::test::adjust_mesh_nodes(mesh, sdtol, 1.1*sdtol, in_sdfunc);
   
   // clip with the outer boundary
   vm::test::clip_mesh(mesh, sdtol, out_sdfunc, 1, 3); // shifting tolerance, material id, boundary node id
-  vm::write_vtk(mesh, out_meshfile);
   vm::inspect_mesh(mesh); 
   
   // embed the inner boundary
