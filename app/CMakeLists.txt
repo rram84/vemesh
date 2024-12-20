@@ -11,7 +11,9 @@ foreach(TARGET
 	    vemesh
 	    gen_square_mesh
 	    clip_mesh
-	    annulus_mesh)
+	    annulus_mesh
+	    random_mesh
+	    multicircle_mesh)
 
   # add executable
   add_executable(${TARGET} ${TARGET}.cpp)

@@ -43,16 +43,15 @@ int main(int argc, char** argv) {
 
   // scale the input mesh to size sqrt(5)
   const double factor = std::sqrt(5.)/2;
-    auto& coords = mesh.positions();
-    for(auto& X:coords)
+  auto& coords = mesh.positions();
+  for(auto& X:coords)
     for(int k=0; k<3; ++k)
-    X[k] *= factor;
-    vm::inspect_mesh(mesh);
+      X[k] *= factor;
     
   // scale the input mesh to size sqrt(5)
   /*const double factor = std::sqrt(5.);
-  auto& coords = mesh.positions();
-  for(auto& X:coords) {
+    auto& coords = mesh.positions();
+    for(auto& X:coords) {
     X[0] -= 0.5;
     X[1] -= 1.0;
     X[0] *= factor;
@@ -73,7 +72,7 @@ int main(int argc, char** argv) {
   vm::inspect_mesh(mesh); 
   
   // embed the inner boundary
-  vm::test::embed_interface(mesh, sdtol, in_sdfunc, {2,1}, 2); // shifting tolerance, {mat1, mat2}, interface node id
+  vm::test::clip_mesh(mesh, sdtol, in_sdfunc, 1, 2); // shifting tolerance, {mat1, mat2}, interface node id
   vm::inspect_mesh(mesh);
   
   // save
