@@ -34,7 +34,6 @@ int main() {
   vm::test::LevelSetFunction_t sdfunc = std::bind(circ_signed_distance, std::placeholders::_1, 0.4, 1.0);
 
   // identify mesh nodes near the circular interface
-
   std::vector<pmp::Vertex> proximal_vertices{};
   auto v_container = mesh.vertices();
   for(auto v:v_container)
@@ -51,9 +50,6 @@ int main() {
   std::mt19937 generator(rd()); 
   std::uniform_real_distribution<double> distribution(-0.15*hval, 0.15*hval);
 
-  // Generate a random double
-  double random_double = distribution(generator);
-    
   for(int iter=750; iter<1000; ++iter) {
     std::cout << "Realization: " << iter << std::endl;
 

@@ -13,7 +13,8 @@ foreach(TARGET
 	    clip_mesh
 	    annulus_mesh
 	    random_mesh
-	    multicircle_mesh)
+	    multicircle_mesh
+	    embed_polygon_mesh)
 
   # add executable
   add_executable(${TARGET} ${TARGET}.cpp)
