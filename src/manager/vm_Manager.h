@@ -43,6 +43,11 @@ namespace vm
 
     // merge faces
     // returns the number of merged faces
+    int merge_faces(const std::set<pmp::Face>& subset, 
+		    FaceQuality_f qface, const double qthreshold, const double improve_factor, MeshUpdateCallback_f callback=nullptr);
+    
+    // merge faces
+    // returns the number of merged faces
     int merge_faces(FaceQuality_f qface, const double qthreshold, const double improve_factor, MeshUpdateCallback_f callback=nullptr);
 
     // moves a vertex to a more favorable position
@@ -63,8 +68,7 @@ namespace vm
     
     // visualize
     void write_mesh(const std::string filename);
-       
-    
+
   private:
     // identify the face along which to merger a given face
     static std::tuple<bool, double, pmp::Halfedge> find_halfedge_for_face_merge(const pmp::SurfaceMesh& mesh, const pmp::Face& face, FaceQuality_f qfunc);

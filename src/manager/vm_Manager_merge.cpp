@@ -28,6 +28,18 @@ namespace vm
     return ret_data;
   }
 
+   // merge faces
+  int Manager::merge_faces(FaceQuality_f qface,
+			   const double qmin, const double qimprove_factor,
+			   MeshUpdateCallback_f callback) {
+
+    std::set<pmp::Face> faceset{};
+    auto f_container = mesh.faces();
+    for(auto f:f_container)
+      faceset.insert(f);
+
+    return merge_faces(faceset, qface, qmin, qimprove_factor, callback);
+  }
   
   // face-quality pairs
   using FQ_pair_t = std::pair<pmp::Face, double>;
@@ -36,8 +48,11 @@ namespace vm
   bool Compare(const FQ_pair_t& A, const FQ_pair_t& B)
   { return A.second>B.second; }
   
+  
   // merge faces
-  int Manager::merge_faces(FaceQuality_f qface,
+  // returns the number of merged faces
+  int Manager::merge_faces(const std::set<pmp::Face>& subset, 
+			   FaceQuality_f qface,
 			   const double qmin, const double qimprove_factor,
 			   MeshUpdateCallback_f callback)
   {
@@ -48,8 +63,7 @@ namespace vm
 
     // priority queue of faces to be merged during this iteration
     std::priority_queue<FQ_pair_t, std::vector<FQ_pair_t>, decltype(&Compare)> face_queue(Compare);
-    auto f_container = mesh.faces();
-    for(auto f:f_container)
+    for(auto f:subset)
       {
 	double qval = MeshFaceQuality_f(mesh, f, qface);
 	if(qval<qmin)
@@ -108,8 +122,9 @@ namespace vm
     std::cout << "Merged " << nmerged << " faces" << std::endl;
     return nmerged;
   }
+  
 
-
+  
   
   
   // identify the face along which to merger a given face
