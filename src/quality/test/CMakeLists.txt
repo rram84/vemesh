@@ -8,7 +8,9 @@ project(quality_tests
 foreach(TARGET
 	test_face_quality
 	test_stiffness
-        test_sutton)
+        test_sutton
+	test_sigma
+	eg1)
 
   # add executable
   add_executable(${TARGET} ${TARGET}.cpp)
