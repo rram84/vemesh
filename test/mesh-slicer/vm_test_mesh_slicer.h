@@ -18,7 +18,7 @@ namespace vm
     void embed_interface(pmp::SurfaceMesh& mesh, const double phi_eps, LevelSetFunction_t& lsfunc,
 			 const std::pair<int,int> domain_id, const int interface_id);
 	
-    int adjust_mesh_nodes(pmp::SurfaceMesh& mesh, const double phi_eps, const double pert_eps, LevelSetFunction_t& ls_func);
+    bool adjust_mesh_nodes(pmp::SurfaceMesh& mesh, const double phi_eps, const double pert_eps, LevelSetFunction_t& ls_func);
   
 
     void prep_mesh(pmp::SurfaceMesh& mesh, const double phi_eps,

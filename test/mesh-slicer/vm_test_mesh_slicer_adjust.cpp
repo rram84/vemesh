@@ -3,17 +3,22 @@
 #include <vm_test_mesh_slicer.h>
 #include <cassert>
 #include <map>
+#include <random>
 
 namespace vm
 {
   namespace test
   {
-    int adjust_mesh_nodes(pmp::SurfaceMesh& mesh, const double phi_eps, const double pert_eps, LevelSetFunction_t& ls_func)
+    bool adjust_mesh_nodes(pmp::SurfaceMesh& mesh, const double phi_eps, const double pert_eps, LevelSetFunction_t& ls_func)
     {
       assert(phi_eps>0. && pert_eps>0.);
       auto v_container = mesh.vertices();
       double sd;
       int nadjusted = 0;
+
+      std::mt19937 gen;
+      std::uniform_real_distribution<double> distr(-1.,1.);
+
       for(auto v:v_container)
 	{
 	  pmp::Point& X = mesh.position(v);
@@ -27,14 +32,24 @@ namespace vm
 	      int iter = 0.;
 	      while(true)
 		{
-		  assert(iter<10 && "Exceeded 10 perturbations to adjust nodal position");
-		
+		  //assert(iter<10 && "Exceeded 10 perturbations to adjust nodal position");
+		  if(iter>=10)
+		    {
+		      std::cout << "EXCEEDED 10 iterations, aborting" << std::endl;
+		      return false;
+		    }
+
+		  double dir[] = {distr(gen), distr(gen)};
+		  double norm = std::sqrt(dir[0]*dir[0]+dir[1]*dir[1]);
+		  Y[0] += pert_eps*dir[0]/norm;
+		  Y[1] += pert_eps*dir[1]/norm;
+		  /*
 		  // adjust the node position along the coordinate axes
 		  if(iter%2==0)
 		    Y[0] += pert_eps;
 		  else
 		    Y[1] += pert_eps;
-
+		  */
 		  // recompute the level set function
 		  sd = ls_func(Y);
 		  if(std::abs(sd)>phi_eps)
@@ -51,7 +66,7 @@ namespace vm
 	      ++nadjusted;
 	    }
 	}
-      return nadjusted;
+      return true; // nadjusted;
     }
   }
 }
