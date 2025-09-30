@@ -6,6 +6,7 @@
 #include <vm_Manager.h>
 #include <vm_quality.h>
 #include <filesystem>
+#include <fstream>
 #include <cmath>
 #include <random>
 
@@ -15,7 +16,25 @@ double circ_signed_distance(const double* X, const double rad, const double sign
 }
 
 int main() {
-
+  {
+    vm::Manager manager("17333/embed-a-667.vtk");
+    manager.compute_face_qualities(vm::FaceQuality::stiffness);
+    auto mesh= manager.get_mesh();
+    auto fqualities = mesh.get_face_property<double>("face_quality");
+    auto faces = mesh.faces();
+    std::vector<double> qvals{};
+    for(auto f:faces)
+      qvals.push_back(fqualities[f]);
+    std::sort(qvals.begin(), qvals.end());
+    const int N = static_cast<int>(qvals.size());
+    std::fstream file;
+    file.open("post-17333.dat", std::ios::out);
+    for(int i=0; i<N; ++i)
+      file << i+1 << " " << qvals[i] << std::endl;
+    file.close();
+    exit(1);
+  }
+  
   std::string in_meshfile = "Rect.4.off";
   const double hval= 0.15/8.;
   
