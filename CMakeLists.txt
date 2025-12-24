@@ -4,24 +4,42 @@ cmake_minimum_required(VERSION 3.12)
 
 project(vemesh
   VERSION 1.0
-  DESCRIPTION "Universal Meshes in 2D"
+  DESCRIPTION "VEMesh in 2D"
   LANGUAGES CXX)
  
 # Set runtime path (for Linux)
 set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}/lib")
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
+# Build options
+option(BUILD_DOCS "Build documentation" OFF)
+option(BUILD_TESTS "Run unit tests" ON)
+
 # Dependencies
 find_package(pmp REQUIRED)
 find_package(eigen3 REQUIRED)
-find_package(CLI11 REQUIRED)
 find_package(Boost REQUIRED)
+if(BUILD_DOCS)
+	find_package(Doxygen REQUIRED)
+endif()
 
+# Compile features
 list(APPEND VM_COMPILE_FEATURES cxx_std_17)
 
 # Compile code in src and test
 add_subdirectory(src)
 add_subdirectory(test)
+
+# Testing
+if(${BUILD_TEST})
+	include(CTest)
+	add_subdirectory(test)
+	add_subdirectory(src/utils/test)
+	add_subdirectory(src/quality/test)
+	add_subdirectory(src/manager/test)
+	add_subdirectory(test/rect/test)
+	add_subdirectory(test/mesh-slicer/test)
+endif()
 
 # Install
 include(GNUInstallDirs)
@@ -62,18 +80,9 @@ install(FILES
   "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
   DESTINATION "${PROJECT_NAME}/${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}")
 
-# Testing
-include(CTest)
-add_subdirectory(src/utils/test)
-add_subdirectory(src/quality/test)
-add_subdirectory(src/manager/test)
-add_subdirectory(app)
+set(CPACK_RESOURCE_FILE_LICENSE "${PROJECT_SOURCE_DIR}/LICENSE.txt")
 
-add_subdirectory(test/rect/test)
-add_subdirectory(test/mesh-slicer/test)
-
-#add_subdirectory(cmame-paper/)
-#add_subdirectory(ppt/)
-
-
+if(BUILD_DOCS)
+	add_subdirectory(docs)
+endif()
 

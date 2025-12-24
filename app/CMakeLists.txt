@@ -2,6 +2,8 @@
 
 cmake_minimum_required(VERSION 3.12)
 
+find_package(CLI11 REQUIRED)
+
 project(app DESCRIPTION "Application for running vemesh")
 
 file(GLOB MESH_FILES "${CMAKE_SOURCE_DIR}/src/manager/test/*.OFF")
@@ -15,8 +17,8 @@ foreach(TARGET
 	    random_mesh
 	    multicircle_mesh
 	    embed_polygon_mesh
-	    threshold
-	    moving_mesh)
+	    threshold)
+#	    moving_mesh)
 
   # add executable
   add_executable(${TARGET} ${TARGET}.cpp)

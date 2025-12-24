@@ -1,5 +1,10 @@
 // Sriramajayam
 
+/** \file vm_Manager_merge.cpp
+ * \brief Implementation of element agglomeration functionalities in class vm::Manager
+ * \author Ramsharan Rangarajan
+ */
+
 #include <vm_Manager.h>
 #include <list>
 #include <queue>

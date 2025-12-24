@@ -1,5 +1,10 @@
 // Sriramajayam
 
+/** \file vm_Manager_move.cpp
+ * \brief Implementation of vertex relaxation functionalities in class vm::Manager
+ * \author Ramsharan Rangarajan
+ */
+
 #include <vm_Manager.h>
 #include <random>
 #include <queue>

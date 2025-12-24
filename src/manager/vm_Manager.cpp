@@ -1,5 +1,10 @@
 // Sriramajayam
 
+/** \file vm_Manager.cpp
+ * \brief Implementation of class vm::Manager
+ * \author Ramsharan Rangarajan
+ */
+
 #include <vm_Manager.h>
 #include <vm_io.h>
 #include <filesystem>
@@ -17,6 +22,15 @@ namespace vm
     else
       read_off(filename, mesh);
 
+    // sanity checks
+    inspect_mesh();
+  }
+
+
+  // Constructor
+  Manager::Manager(const pmp::SurfaceMesh& in_mesh)
+    :mesh(in_mesh)
+  {
     // sanity checks
     inspect_mesh();
   }
