@@ -19,12 +19,6 @@ namespace vm
   using boost_multi_polygon_t  = bgm::multi_polygon<boost_polygon_t>;
   using boost_box_t        = bgm::box<boost_point_t>;
   using boost_linestring_t = bgm::linestring<boost_point_t>;
-
-  using MeshVertexQuality_f = std::function<double(const pmp::SurfaceMesh&, const pmp::Vertex&)>;
-
-  using FaceQuality_f = std::function<double(const std::vector<pmp::Point>&)>;
-
-  double MeshFaceQuality_f(const pmp::SurfaceMesh&, const pmp::Face&, const FaceQuality_f&);
   
   // compute the vertex ring
   std::vector<pmp::Vertex> get_vertex_ring(const pmp::SurfaceMesh& mesh, const pmp::Vertex& v);

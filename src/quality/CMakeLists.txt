@@ -1,8 +1,8 @@
 # Sriramajayam
 
 add_library(vm_quality STATIC
-		 vm_face_quality.cpp
-		 vm_vertex_quality.cpp
+		 vm_quality_evaluator.cpp
+		 vm_face_qualities.cpp
 		 vm_vem_stiffness.cpp)
 
 # include headers in the current directory
@@ -18,5 +18,6 @@ target_compile_features(vm_quality PUBLIC ${VM_COMPILE_FEATURES})
 
 # install headers
 install(FILES
-	vm_quality.h
+	vm_quality_evaluator.h
+	vm_face_qualities.h
   	DESTINATION ${PROJECT_NAME}/include)
