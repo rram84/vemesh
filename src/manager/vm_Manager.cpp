@@ -11,46 +11,15 @@
 
 namespace vm
 {
-  // Constructor: from a .vtk or .OFF file
-  Manager::Manager(const std::string filename)
-  {
-    mesh.clear();
-    const std::string ext = std::filesystem::path(filename).extension();
-    assert(ext==".vtk" || ext==".off" || ext==".OFF");
-    if(ext==".vtk")
-      read_vtk(filename, mesh);
-    else
-      read_off(filename, mesh);
-
-    // sanity checks
-    inspect_mesh();
-  }
-
-
   // Constructor
   Manager::Manager(const pmp::SurfaceMesh& in_mesh)
     :mesh(in_mesh)
   {
     // sanity checks
-    inspect_mesh();
-  }
-  
-  // visualize
-  void Manager::write_mesh(const std::string filename) 
-  {
-    // distinguish file formats
-    const std::string extension = std::filesystem::path(filename).extension();
-    if(extension==".off" || extension==".OFF")
-      write_off(mesh, filename);
-    else if(extension==".dat")
-      write_dat(mesh, filename);
-    else if(extension==".vtk")
-      write_vtk(mesh, filename);
-    
-    return;
+    assert(mesh.has_face_property("material_id")==true);
+    assert(mesh.has_vertex_property("interface_id")==true);
   }
 
-  
   // visualize mesh along with face qualities
   void Manager::compute_face_qualities(FaceQuality_f qfunc)
   {

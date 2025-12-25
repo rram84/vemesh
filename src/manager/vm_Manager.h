@@ -8,7 +8,7 @@
 #pragma once
 
 #include <pmp/SurfaceMesh.h>
-#include <vm_utils.h>
+#include <vm_quality_evaluator.h>
 #include <string>
 #include <tuple>
 #include <map>
@@ -16,7 +16,7 @@
 namespace vm
 {
   class Manager;
-  using MeshUpdateCallback_f = std::function<void(const int merge_num, const pmp::SurfaceMesh &mesh, Manager &manager)>;
+  using ProgressCallback = std::function<bool(const int merge_num, const pmp::SurfaceMesh &mesh, Manager &manager)>;
 
   /** \brief Class implementing the main functionality of the library.
    *
@@ -89,11 +89,6 @@ namespace vm
   class Manager
   {
   public:
-    //! \brief Constructor, with mesh initialization from a vtk or off file
-    //! Runs checks on the mesh after initialization
-    //! \param[in] Input file with mesh, assumed to be of type .vtk or .off
-    Manager(const std::string filename);
-
     //! \brief Constructor, with mesh copied from a given instance
     //! Assumes that the mesh has the vertex property `interface_id` and face property `domain_id` defined
     //! The `vertex_quality` and `face_quality` properties are optional. If provided, they are copied.
@@ -107,21 +102,9 @@ namespace vm
     Manager(const Manager&) = delete;
     Manager operator=(const Manager&) = delete;
 
-    //! \brief Inspects the validatity of a mesh 
-    //!
-    //! Runs the following checks:
-    //! - face property `material_id` must exist
-    //! - vertex property `interface_id` must exist
-    //! - integrity checks using the function vm::inspect_mesh
-    inline void inspect_mesh() const {
-      assert(mesh.has_face_property("material_id")==true);
-      assert(mesh.has_vertex_property("interface_id")==true);
-      bool flag = vm::inspect_mesh(mesh); assert(flag && "Mesh is invalid");
-    }
-    
     //! \brief Immutable access to the mesh
     //! \return Const reference to the mesh
-    inline pmp::SurfaceMesh& get_mesh()
+    inline const pmp::SurfaceMesh& get_mesh() const
     { return mesh; }
     
     //! \brief Agglomerate a face with a feasible neighbor
@@ -132,7 +115,7 @@ namespace vm
     //! \return A pair `result` such that:
     //! - `result->first`: true if the face was agglomerated, and false otherwise
     //! - `result->second`: the new agglomerated face if `result->first=true`, and equal to `f` otherwise
-    std::pair<bool, pmp::Face> merge_face(const pmp::Face& f, FaceQuality_f qface, const double qthreshold, const double qimprove_factor);
+    std::pair<bool, pmp::Face> merge_face(const pmp::Face& f, const QualityEvaluator& QE, const double qthreshold, const double qimprove_factor);
 
     //! \brief Agglomerate a given set of faces
     //! \param[in] subset Subset of faces in the mesh to attempt agglomerating
@@ -140,8 +123,8 @@ namespace vm
     //! \param[in] qthreshold Acceptable positive lower bound for quality
     //! \param[in] improve_factor Lower bound for factor of improvement in face quality, assumed to be greater than of equal to 1.
     //! \return Number of merged faces
-    int merge_faces(const std::set<pmp::Face>& subset, 
-		    FaceQuality_f qface, const double qthreshold, const double improve_factor, MeshUpdateCallback_f callback=nullptr);
+    int merge_faces(const std::set<pmp::Face>& subset, const QualityEvaluator& QE,
+		    const double qthreshold, const double improve_factor, const ProgressCallback &callback=nullptr);
 
     //! \brief Agglomerate faces in a mesh
     //! Attempts merging all faces satisfying \f$Q(f)\leq \epsilon\f$ for the given quality threshold \f$\epsilon\f$.
@@ -149,30 +132,27 @@ namespace vm
     //! \param[in] qthreshold Acceptable positive lower bound for quality
     //! \param[in] improve_factor Lower bound for factor of improvement in face quality, assumed to be greater than of equal to 1.
     //! \return Number of merged faces									
-    int merge_faces(FaceQuality_f qface, const double qthreshold, const double improve_factor, MeshUpdateCallback_f callback=nullptr);
+    int merge_faces(const QualityEvaluator& QE, const double qthreshold, const double improve_factor, const ProgressCallback &callback=nullptr);
 
     // moves a vertex to a more favorable position
     std::pair<bool,double> move_vertex(const pmp::Vertex& vertex, const int num_poly_samples,
-				       const int num_edge_samples, MeshVertexQuality_f qfunc);
+				       const int num_edge_samples, const QualityEvaluator& QE);
 
     // moves vertices
-    int move_vertices(MeshVertexQuality_f qfunc, const double qthreshold,
+    int move_vertices(const QualityEvaluator& QE, const double qthreshold,
 		      const int num_poly_samples, const int num_edge_samples,
 		      const std::set<int> interface_ids,
-		      MeshUpdateCallback_f callback=nullptr);
+		      const ProgressCallback &callback=nullptr);
     
      // compute face qualities in the mesh. saved under face property "quality"
-    void compute_face_qualities(FaceQuality_f qfunc);
+    void compute_face_qualities(const QualityEvaluator& QE);
 
     // compute vertex qualities in the mesh. saved under vertex property "quality"
-    void compute_vertex_qualities(MeshVertexQuality_f qfunc);
+    void compute_vertex_qualities(const QualityEvaluator& QE);
     
-    // visualize
-    void write_mesh(const std::string filename);
-
   private:
     // identify the face along which to merger a given face
-    static std::tuple<bool, double, pmp::Halfedge> find_halfedge_for_face_merge(const pmp::SurfaceMesh& mesh, const pmp::Face& face, FaceQuality_f qfunc);
+    static std::tuple<bool, double, pmp::Halfedge> find_halfedge_for_face_merge(const pmp::SurfaceMesh& mesh, const pmp::Face& face, const QualityEvaluator& QE);
     
     // Agglomerate faces along prescribed edge
     static void merge_face(pmp::SurfaceMesh& mesh, const pmp::Halfedge& halfedge);
@@ -182,7 +162,7 @@ namespace vm
 										 const pmp::Vertex         &vertex,
 										 const int                 num_poly_samples,
 										 const int                 num_edge_samples,
-										 const MeshVertexQuality_f qfunc);
+										 const QualityEvaluator& QE);
     // random generation of feasible vertex positions
     static std::vector<std::pair<double,double>>
       compute_feasible_vertex_positions(const pmp::SurfaceMesh& mesh,
