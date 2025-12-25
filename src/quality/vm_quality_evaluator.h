@@ -7,7 +7,7 @@
 
 namespace vm
 {
-  using FaceQualityFn = double(*)(const std::vector<pmp::Point>&)>;
+  using FaceQualityFn = double(*)(const std::vector<pmp::Point>&);
 
   class QualityEvaluator {
 

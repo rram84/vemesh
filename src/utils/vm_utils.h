@@ -19,13 +19,10 @@ namespace vm
   using boost_multi_polygon_t  = bgm::multi_polygon<boost_polygon_t>;
   using boost_box_t        = bgm::box<boost_point_t>;
   using boost_linestring_t = bgm::linestring<boost_point_t>;
-  
+
+  // create a boost polygon from a set of vertices
+  boost_polygon_t make_polygon(const std::vector<pmp::Point>& coords);
+
   // compute the vertex ring
   std::vector<pmp::Vertex> get_vertex_ring(const pmp::SurfaceMesh& mesh, const pmp::Vertex& v);
-
-  // Run checks on a mesh face
-  // mesh [in]           : polygon mesh
-  bool inspect_mesh(const pmp::SurfaceMesh& mesh);
-
-  bool inspect_face(const std::vector<pmp::Point>& coords);
 }

@@ -67,7 +67,7 @@ namespace vm
       }
     
     // done
-    return std::move(vertex_ring);
+    return vertex_ring;
   }
   
 }

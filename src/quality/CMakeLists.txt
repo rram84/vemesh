@@ -7,8 +7,9 @@ add_library(vm_quality STATIC
 
 # include headers in the current directory
 target_include_directories(vm_quality PUBLIC
-					$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
-
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+  $<INSTALL_INTERFACE:include>)
+  
 # link
 target_link_libraries(vm_quality PUBLIC
 				 vm_utils)
