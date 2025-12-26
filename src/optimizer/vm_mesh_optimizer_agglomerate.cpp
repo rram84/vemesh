@@ -6,46 +6,53 @@
  */
 
 #include <vm_mesh_optimizer.h>
+#include <vm_mesh_inspection.h>
 #include <list>
 #include <queue>
 #include <iostream>
 
 namespace vm
 {
-  // merge poor quality elements with neighbors
-  std::pair<bool, pmp::Face> MeshOptimizer::merge_face(const pmp::Face& face, FaceQuality_f qface, const double qimprove_factor)
+  // -----------  overload 1 ------ //
+  
+  // attemp to agglomerate a face with a neighbor
+  std::tuple<bool, double, pmp::Face>
+  MeshOptimizer::agglomerate(const pmp::Face& face,
+			     const QualityEvaluator &QE,
+			     double qmin,
+			     double qfactor)
   {
     assert(mesh.is_valid(face) && !mesh.is_deleted(face));
+
+    // current quality
+    const double curr_quality = QE(face, mesh);
     
-    // merge along best possible neighbor
-    auto result = find_halfedge_for_face_merge(mesh, face, qface);
-    const auto& success       = std::get<0>(result);
-    const auto& best_quality  = std::get<1>(result);
-    const auto& best_halfedge = std::get<2>(result);
-    const double curr_quality = MeshFaceQuality_f(mesh, face, qface);
-    std::pair<bool, pmp::Face> ret_data{false, face};
-    if(success==true && best_quality>qimprove_factor*curr_quality)
+    // return data
+    std::tuple<bool, double, pmp::Face> ret_data{false, curr_quality, face};
+
+    // is quality already acceptable
+    if(curr_quality>qmin)
+      return ret_data;
+
+    // no. merge along best possible neighbor
+    auto result = find_halfedge_for_face_merge(face, QE);
+    const auto& success       = std::get<bool>(result);
+    const auto& best_quality  = std::get<double>(result);
+    const auto& best_halfedge = std::get<pmp::Halfedge>(result);
+    if(success==true &&
+       best_quality>qmin &&
+       best_quality>qfactor*curr_quality)
       {
-	ret_data = {success, mesh.face(mesh.opposite_halfedge(best_halfedge))};
-	merge_face(mesh, best_halfedge);
+	ret_data = {success, best_quality, mesh.face(mesh.opposite_halfedge(best_halfedge))};
+	merge_neighbors(best_halfedge);
       }
 
     return ret_data;
   }
 
-   // merge faces
-  int MeshOptimizer::merge_faces(FaceQuality_f qface,
-			   const double qmin, const double qimprove_factor,
-			   MeshUpdateCallback_f callback) {
 
-    std::set<pmp::Face> faceset{};
-    auto f_container = mesh.faces();
-    for(auto f:f_container)
-      faceset.insert(f);
+  // -----------  overload 2 ------ //
 
-    return merge_faces(faceset, qface, qmin, qimprove_factor, callback);
-  }
-  
   // face-quality pairs
   using FQ_pair_t = std::pair<pmp::Face, double>;
   
@@ -53,15 +60,14 @@ namespace vm
   bool Compare(const FQ_pair_t& A, const FQ_pair_t& B)
   { return A.second>B.second; }
   
-  
-  // merge faces
-  // returns the number of merged faces
-  int MeshOptimizer::merge_faces(const std::set<pmp::Face>& subset, 
-			   FaceQuality_f qface,
-			   const double qmin, const double qimprove_factor,
-			   MeshUpdateCallback_f callback)
+  // agglomerate faces in a subset
+  int MeshOptimizer::agglomerate(const std::set<pmp::Face>& subset,
+				 const QualityEvaluator& QE,
+				 double qmin,
+				 double qfactor,
+				 const ProgressCallback &callback)
   {
-    assert(qimprove_factor>=1.);
+    assert(qfactor>=1.);
     
     // tolerance for comparing qualities
     const double qeps = qmin/100.;
@@ -70,27 +76,18 @@ namespace vm
     std::priority_queue<FQ_pair_t, std::vector<FQ_pair_t>, decltype(&Compare)> face_queue(Compare);
     for(auto f:subset)
       {
-	double qval = MeshFaceQuality_f(mesh, f, qface);
+	double qval = QE(f, mesh);
 	if(qval<qmin)
 	  face_queue.push({f, qval});
       }
     const int qsize = static_cast<int>(face_queue.size());
-    std::cout << "#faces marked for merge: " << qsize << std::endl;
       
-    // track #of faces merged during this iteration
+    // track #of faces merged during execution
     int nmerged = 0;
-    int prev_percent = 0;
 
     // traverse the queue
     while(!face_queue.empty())
       {
-	int percent_complete = (static_cast<int>(face_queue.size())*100)/qsize;
-	if(percent_complete>prev_percent+20)
-	  {
-	    std::cout << "Progress: " << prev_percent+20 << "%" << std::endl;
-	    prev_percent += 20;
-	  }
-
 	// pop the first member in the queue
 	auto fq = face_queue.top();
 	const auto& f = fq.first;
@@ -98,12 +95,12 @@ namespace vm
 
 	// do nothing if:
 	// (i)  this face was erased during a merge
-	// (ii) the quality of this face, which could have changed due to a merge, is > qEPS
+	// (ii) the quality of this face, which could have changed due to a merge, is > qmin
 	if(mesh.is_deleted(f)==true)
 	  continue;
 	  
 	// current quality
-	const double curr_q = MeshFaceQuality_f(mesh, f, qface);
+	const double curr_q = QE(f, mesh);
 	if(curr_q>qmin)
 	  continue;
 	  
@@ -115,38 +112,64 @@ namespace vm
 	  }
 	  
 	// this face is the current priority
-	auto result = this->merge_face(f, qface, qimprove_factor);
-	auto success = result.first;
+	auto result = this->agglomerate(f, QE, qmin, qfactor);
+	auto success = std::get<bool>(result);
 	if(success==true) {
 	  ++nmerged;
 	  if(callback!=nullptr)
-	    callback(nmerged, mesh, *this);
+	    {
+	      ProgressInfo info{.idx=static_cast<int>(std::get<pmp::Face>(result).idx()),
+		  .num_target=qsize,
+		  .num_completed=nmerged,
+		  .quality=std::get<double>(result)};
+	      
+	      bool flag = callback(info, mesh, *this);
+
+	      // terminate agglomeration?
+	      if(flag==false)
+		return nmerged;
+	    }
 	}
       }
-    std::cout << "Progress: 100%" << std::endl;
-    std::cout << "Merged " << nmerged << " faces" << std::endl;
+    
     return nmerged;
   }
-  
 
+
+  // ----- overload 3 ----- //
+  
+  // merge faces
+  int MeshOptimizer::agglomerate(const QualityEvaluator &QE,
+				 double qmin,
+				 double qfactor,
+				 const ProgressCallback &callback)
+  {
+    std::set<pmp::Face> faceset{};
+    auto f_container = mesh.faces();
+    for(auto f:f_container)
+      faceset.insert(f);
+
+    return agglomerate(faceset, QE, qmin, qfactor, callback);
+  }
   
   
+  // ----- optimal agglomerable neighbor ----- //
   
   // identify the face along which to merger a given face
-  std::tuple<bool, double, pmp::Halfedge> MeshOptimizer::find_halfedge_for_face_merge(const pmp::SurfaceMesh& mesh,
-										const pmp::Face& face,
-										FaceQuality_f qfunc)
+  std::tuple<bool, double, pmp::Halfedge>
+  MeshOptimizer::find_halfedge_for_face_merge(const pmp::Face& face,
+					      const QualityEvaluator &QE) const
   {
     assert(!mesh.is_deleted(face));
-    assert(mesh.has_face_property("material_id")==true);
-    auto material_id = mesh.get_face_property<int>("material_id");
-    const int my_mat_id = material_id[face];
+    assert(mesh.has_face_property("domain_id")==true);
+    auto domain_id = mesh.get_face_property<int>("domain_id");
+    const int my_domain_id = domain_id[face];
     
     // face needs to be merged with a neighbor
     // pick the neighbor so that the resulting face has the best quality among all possibilities
     // cannot merge along boundary faces
     // cannot merge along faces that would result in an isolated vertex
-    // can merge with a face having the same "material_id"
+    // can merge with a face having the same "domain_id"
 
     
     // evaluate halfedge merged -> resulting face quality
@@ -155,13 +178,17 @@ namespace vm
     auto halfedge_circulator = mesh.halfedges(face);
     for(auto h:halfedge_circulator)
       if(!mesh.is_boundary(mesh.edge(h)) &&                                         // no boundary merges
-	 mesh.valence(mesh.from_vertex(h))>2 && mesh.valence(mesh.to_vertex(h))>2)  // prevent isolated vertices
+	 mesh.valence(mesh.from_vertex(h))>2 &&
+	 mesh.valence(mesh.to_vertex(h))>2)  // prevent isolated vertices
 	{
-	  auto nb_h      = mesh.opposite_halfedge(h);
-	  auto nb_face   = mesh.face(nb_h);
-	  int  nb_mat_id = material_id[nb_face];
+	  auto nb_h         = mesh.opposite_halfedge(h);
+	  auto nb_face      = mesh.face(nb_h);
+	  int  nb_domain_id = domain_id[nb_face];
 
-	  if(mesh.is_valid(nb_h) && mesh.is_valid(nb_face) && !mesh.is_deleted(nb_face) && my_mat_id==nb_mat_id)
+	  if(mesh.is_valid(nb_h)       &&
+	     mesh.is_valid(nb_face)    &&
+	     !mesh.is_deleted(nb_face) &&
+	     my_domain_id==nb_domain_id  )
 	    {
 	      // vertices of the new face created by merging face/nb_face
 	      std::vector<pmp::Point> verts{};
@@ -188,7 +215,7 @@ namespace vm
 	      //assert(inspect_face(verts)==true);
 	      if(inspect_face(verts)==true)
 		{
-		  double quality = qfunc(verts);
+		  double quality = QE(verts);
 		  if(quality>best_quality)
 		    {
 		      best_quality = quality;
@@ -205,12 +232,13 @@ namespace vm
       return {false, best_quality, best_h};
   }
   
-  
+
+  // ---- execute merging across a halfedge
   // Agglomerate poor quality elements
-  void MeshOptimizer::merge_face(pmp::SurfaceMesh& mesh, const pmp::Halfedge& h0)
+  void MeshOptimizer::merge_neighbors(const pmp::Halfedge& h0)
   {
     // sanity checks
-    assert(mesh.has_face_property("material_id")==true);
+    assert(mesh.has_face_property("domain_id")==true);
     assert(mesh.is_valid(h0) && !mesh.is_deleted(h0) && !mesh.is_boundary(h0));
 
     // face of h0
@@ -225,9 +253,9 @@ namespace vm
     auto f1 = mesh.face(h1);
     assert(mesh.is_valid(f1) && !mesh.is_deleted(f1));
 
-    // check on material id
-    auto material_id = mesh.get_face_property<int>("material_id");
-    assert(material_id[f0]==material_id[f1]);
+    // check on domain id
+    auto domain_id = mesh.get_face_property<int>("domain_id");
+    assert(domain_id[f0]==domain_id[f1]);
     
     const int nvertices = mesh.n_vertices();
     const int nprev_elm = mesh.n_faces();

@@ -21,9 +21,10 @@ namespace vm
   //! \brief Struct encapsulating the progress of mesh improvement iterations
   //! The members are context specific- referring either to agglomeration or vertex relaxation iterations.
   struct ProgressInfo {
-    int idx;           //!< Index of last agglomerated face, or last relaxed vertex
-    int num_completed; //!< Cumulative number of faces agglomerated thus far, or vertices relaxed thus far
-    int min_quality;   //!< Revised quality of the agglomerated face or relaxed vertex
+    int    idx;           //!< Index of agglomerated face, or relaxed vertex
+    int    num_target;    //!< Number of faces/vertices considered for improvement
+    int    num_completed; //!< Cumulative number of faces agglomerated thus far, or vertices relaxed thus far
+    double quality;       //!< Revised quality of the agglomerated face or relaxed vertex
   };
 
   /**
@@ -161,20 +162,23 @@ namespace vm
     { return mesh; }
     
     //! \brief Agglomerate a face with a feasible neighbor
-    //! \param[in] f The face
+    //! \param[in] f The face to agglomerate. Considered only if its current quality is lower than qepsilon
     //! \param[in] QE Reference to an instance of QualityEvaluator, used to evaluate face qualities
-    //! \param[in] qepsilon Acceptable positive lower bound for quality
+    //! \param[in] qepsilon Acceptable positive lower bound for quality 
     //! \param[in] qfactor Lower bound for factor of improvement in face quality, assumed to be greater than of equal to 1.
-    //! \return A pair `result` such that:
+    //! \return A triplet `result` such that:
     //! - `result->first`: true if the face was agglomerated, and false otherwise
-    //! - `result->second`: the new agglomerated face if `result->first=true`, and equal to `f` otherwise
-    std::pair<bool, pmp::Face> agglomerate(const pmp::Face& f, const QualityEvaluator& QE, double qepsilon, double qfactor);
+    //! - `result->second`: quality of the agglomerated face in case of success, of the existing face otherwise
+    //! - `result->second`: the new agglomerated face in case of success, and `f' otherwise
+    std::tuple<bool, double, pmp::Face> agglomerate(const pmp::Face& f, const QualityEvaluator& QE, double qepsilon, double qfactor);
 
     //! \brief Agglomerate a given set of faces
-    //! \param[in] subset Subset of faces in the mesh to attempt agglomerating
+    //! \param[in] subset Given subset of faces in the mesh.
+    //!                   Among these, faces with qualities lower than qepsilon are considered for agglomeration
     //! \param[in] QE Reference to an instance of QualityEvaluator, used to evaluate face qualities
-    //! \param[in] qepsilon Acceptable positive lower bound for quality
-    //! \param[in] qfactor Lower bound for factor of improvement in face quality, assumed to be greater than of equal to 1.
+    //! \param[in] qepsilon Acceptable positive lower bound for quality of an agglomerated face
+    //! \param[in] qfactor Lower bound for factor of improvement in face quality,
+    //!                    assumed to be greater than of equal to 1.
     //! \param[in] callback Callback function invoked after each successful agglomeration attempt
     //! \return Number of aglomerated faces. Can help decide if another iteration of agglomeration is warranted
     int agglomerate(const std::set<pmp::Face>& subset, const QualityEvaluator& QE, double qepsilon, double qfactor, const ProgressCallback &callback=nullptr);
@@ -186,7 +190,7 @@ namespace vm
     //! \param[in] qfactor Lower bound for factor of improvement in face quality, assumed to be greater than of equal to 1.
     //! \param[in] callback Callback function invoked after each successful agglomeration attempt
     //! \return Number of agglomerated faces.  Can help decide if another iteration of agglomeration is warranted
-    int agglomerate(const QualityEvaluator& QE, double qthreshold, double improve_factor, const ProgressCallback &callback=nullptr);
+    int agglomerate(const QualityEvaluator& QE, double qepsilon, double qfactor, const ProgressCallback &callback=nullptr);
 
     //! \brief Relaxes a vertex to a more favorable position
     //! \param[in] vertex Vertex to consider relaxing
@@ -246,7 +250,8 @@ namespace vm
     //! \brief Helper method to identify the optimal agglomerable neighbor for merging a given face
     //! \param[in] face Face to consider
     //! \param[in] QE QualityEvaluator instance used to compute face qualities
-    std::tuple<bool, double, pmp::Halfedge> find_halfedge_for_face_merge(const pmp::Face& face, const QualityEvaluator& QE) const;
+    std::tuple<bool, double, pmp::Halfedge> find_halfedge_for_face_merge(const pmp::Face& face,
+									 const QualityEvaluator& QE) const;
     
     //! \brief Helper method to execute a merge faces incident at a given halfedge
     //! \param[in] halfedge Halfedge at which to merge faces
@@ -261,11 +266,12 @@ namespace vm
       compute_feasible_vertex_positions(const pmp::Vertex& vertex, const int num_bbox_samples, const int num_edge_samples); 
     
     // identify a feasible point to move a vertex
-    static std::tuple<bool, pmp::Point, double> compute_improved_vertex_position(pmp::SurfaceMesh          &mesh,
-										 const pmp::Vertex         &vertex,
-										 const int                 num_poly_samples,
-										 const int                 num_edge_samples,
-										 const QualityEvaluator& QE);
+    static std::tuple<bool, pmp::Point, double>
+      compute_improved_vertex_position(pmp::SurfaceMesh       &mesh,
+				       const pmp::Vertex      &vertex,
+				       const int              num_poly_samples,
+				       const int              num_edge_samples,
+				       const QualityEvaluator& QE);
     pmp::SurfaceMesh mesh;
   };
 }
