@@ -11,6 +11,7 @@
 #include <vm_quality_evaluator.h>
 #include <string>
 #include <tuple>
+#include <set>
 #include <map>
 
 namespace vm

@@ -16,28 +16,24 @@ namespace vm
     :mesh(in_mesh)
   {
     // sanity checks
-    assert(mesh.has_face_property("material_id")==true);
+    assert(mesh.has_face_property("domain_id")==true);
     assert(mesh.has_vertex_property("interface_id")==true);
   }
 
   // visualize mesh along with face qualities
-  void MeshOptimizer::compute_face_qualities(FaceQuality_f qfunc)
+  void MeshOptimizer::evaluate_face_qualities(const QualityEvaluator& QE, std::string property_tag)
   {
-    // "face_quality" property
-    if(mesh.has_face_property("face_quality")==false)
+    // face quality property
+    if(mesh.has_face_property(property_tag)==false)
       {
-	mesh.add_face_property<double>("face_quality");
+	mesh.add_face_property<double>(property_tag);
       }
 
-    // (re)compute
-    auto quality = mesh.get_face_property<double>("face_quality");
+    // compute
+    auto quality = mesh.get_face_property<double>(property_tag);
     auto f_circulator = mesh.faces();
-    double q;
     for(auto f:f_circulator)
-      {
-	q = MeshFaceQuality_f(mesh, f, qfunc);
-	quality[f] = q;
-      }
+      quality[f]= QE(f, mesh);
 
     // done
     return;
@@ -45,22 +41,37 @@ namespace vm
   
   
   // visualize mesh along with vertex qualities
-  void MeshOptimizer::compute_vertex_qualities(MeshVertexQuality_f qfunc)
+  void MeshOptimizer::evaluate_vertex_qualities(std::string face_quality_tag,
+						std::string vertex_quality_tag)
   {
-    // "vertex_quality" property
-    if(mesh.has_vertex_property("vertex_quality")==false)
+    // must have face quality tag
+    assert(mesh.has_face_property(face_quality_tag)==true);
+    
+    // add vertex quality tag
+    if(mesh.has_vertex_property(vertex_quality_tag)==false)
       {
-	mesh.add_vertex_property<double>("vertex_quality");
+	mesh.add_vertex_property<double>(vertex_quality_tag);
       }
 
-    // (re)compute
-    auto quality = mesh.get_vertex_property<double>("vertex_quality");
+    // access face and vertex qualities
+    auto face_qualities = mesh.get_face_property<double>(face_quality_tag);
+    auto vertex_qualities = mesh.get_vertex_property<double>(vertex_quality_tag);
+    
+    // compute vertex qualities
     auto v_circulator = mesh.vertices();
     double q;
     for(auto v:v_circulator)
       {
-	q = qfunc(mesh, v);
-	quality[v] = q;
+	double &min_q = vertex_qualities[v];
+	
+	// faces incident at this vertex
+	auto f_circulator = mesh.faces(v);
+	for(auto f:f_circulator)
+	  {
+	    q = face_qualities[f];
+	    if(q < min_q)
+	      min_q = q;
+	  }
       }
 
     // done
