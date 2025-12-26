@@ -1,18 +1,18 @@
 // Sriramajayam
 
-/** \file vm_Manager.cpp
- * \brief Implementation of class vm::Manager
+/** \file vm_mesh_optimizer.cpp
+ * \brief Implementation of class vm::MeshOptimzier
  * \author Ramsharan Rangarajan
  */
 
-#include <vm_Manager.h>
+#include <vm_mesh_optimizer.h>
 #include <vm_io.h>
 #include <filesystem>
 
 namespace vm
 {
   // Constructor
-  Manager::Manager(const pmp::SurfaceMesh& in_mesh)
+  MeshOptimizer::MeshOptimizer(const pmp::SurfaceMesh& in_mesh)
     :mesh(in_mesh)
   {
     // sanity checks
@@ -21,7 +21,7 @@ namespace vm
   }
 
   // visualize mesh along with face qualities
-  void Manager::compute_face_qualities(FaceQuality_f qfunc)
+  void MeshOptimizer::compute_face_qualities(FaceQuality_f qfunc)
   {
     // "face_quality" property
     if(mesh.has_face_property("face_quality")==false)
@@ -45,7 +45,7 @@ namespace vm
   
   
   // visualize mesh along with vertex qualities
-  void Manager::compute_vertex_qualities(MeshVertexQuality_f qfunc)
+  void MeshOptimizer::compute_vertex_qualities(MeshVertexQuality_f qfunc)
   {
     // "vertex_quality" property
     if(mesh.has_vertex_property("vertex_quality")==false)

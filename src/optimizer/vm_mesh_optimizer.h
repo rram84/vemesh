@@ -1,7 +1,7 @@
 // Sriramajayam
 
-/** \file vm_Manager.h
- * \brief Defines main class vm::Manager that performs face agglomeration and vertex relaxation operations
+/** \file vm_mesh_optimzer.h
+ * \brief Defines main class vm::MeshOptimizer that performs face agglomeration and vertex relaxation operations
  * \author Ramsharan Rangarajan
  */
 
@@ -15,8 +15,43 @@
 
 namespace vm
 {
-  class Manager;
-  using ProgressCallback = std::function<bool(const int merge_num, const pmp::SurfaceMesh &mesh, Manager &manager)>;
+  class MeshOptimizer;
+
+  //! \brief Struct encapsulating the progress of mesh improvement iterations
+  //! The members are context specific- referring either to agglomeration or vertex relaxation iterations.
+  struct ProgressInfo {
+    int idx;           //!< Index of last agglomerated face, or last relaxed vertex
+    int num_completed; //!< Cumulative number of faces agglomerated thus far, or vertices relaxed thus far
+    int min_quality;   //!< Revised quality of the agglomerated face or relaxed vertex
+  };
+
+  /**
+   * \brief Progress callback invoked during mesh optimization.
+   *
+   * The callback is called 
+   * - after a face is agglomerated, or
+   * - a vertex is erlaxed.
+   *
+   * It allows the user to inspect the current state of the mesh, record
+   * intermediate results (e.g., saving the mesh to file), or terminate the mesh optimization early.
+   *
+   * \param info       Struct containing information about the last executed mesh optimization operation
+   * \param mesh       Read-only reference to the current mesh state.
+   * \param optimizer  Reference to the optimizer performing the operation
+   *
+   * \return
+   * - `true`  to continue the operation
+   * - `false` to abort the operation immediately
+   * 
+   * \note The returned boolean only terminates further optimization; it does not revert a completed operation.
+   *
+   * \note
+   * The callback cannot be used to modify the mesh or call mutating member functions of `MeshOptimizer`. 
+   *
+   * \note
+   * The callback is called after each face/vertex optimization operation. It should therefore be lightweight.
+   */
+  using ProgressCallback = std::function<bool(const ProgressInfo& info, const pmp::SurfaceMesh &mesh, const MeshOptimizer &optimizer)>;
 
   /** \brief Class implementing the main functionality of the library.
    *
@@ -30,12 +65,12 @@ namespace vm
    * | Property  | Attribute | Data type | Purpose |
    * |-----------|-----------|-----------|----------|
    * |`vertex_quality` | Vertex property | double | Vertex quality, evaluated with a user-specified metric |
-   * | `face_quality` | Face property | double | Face quality, evaluated with a user-specified metric |
-   * | `interface_id` | Vertex property | int | Identifier of interface on which a vertex lies; -1 for vertices not lying on an interface |
-   * | `domain_id` | Face property | int | Identifier of domain to which a face belongs |
+   * | `face_quality`  | Face property   | double | Face quality, evaluated with a user-specified metric |
+   * | `interface_id`  | Vertex property | int    | Identifier of interface on which a vertex lies; -1 for vertices not lying on an interface |
+   * | `domain_id`     | Face property   | int    | Identifier of domain to which a face belongs |
    *
    * The class provides immutable external access to the mesh. \n
-   * The assignment of domain and interface identifiers to faces and vertices is required at construction
+   * The assignment of domain and interface identifiers to faces and vertices is assumed at construction
    * 
    * ---
    *
@@ -51,10 +86,16 @@ namespace vm
    * Faces of better quality are compromised to improve the qualities of poorer faces.
    *
    * The class provides three overloaded methods for element agglomeration:
-   * - `merge_face()` attempts to agglomerate a specified face. It provides the most granular control.
-   * - `merge_faces(S,...)` attempts agglomerating faces in a specified subset of faces `S`, starting from the poorest one first.
-   * - `merge_faces()` performs a mesh-wide search to tag faces with quality below the specified threshold \f$\epsilon\f$, before attempting to agglomerate these.
+   * - \ref agglomerate(const pmp::Face&, const QualityEvaluator&, double, double): attempts to agglomerate a specified face. It provides the most granular control.
+   * - \ref agglomerate(const std::set<pmp::Face>&, const QualityEvaluator& QE, double, double, const ProgressCallback &):
+   * attempts agglomerating faces in a specified subset of faces, starting from the poorest one first.
+   * - \ref  agglomerate(const QualityEvaluator&, double, double, const ProgressCallback &):
+   * first determines the subset of faces to be considered for agglomeration by performing a mesh-wide search to tag faces with quality below the specified threshold \f$\epsilon\f$.
+   * Then, attempts aggomerating them, starting from the poorest one first.
    *
+   * In general, an attempt to agglomerate a face may not be successful. This may be because there isn't an agglomerable neighbor, or 
+   * the aglomerated face's quality is not sufficiently better. 
+   * 
    * ---
    *
    * **Vertex relaxation**: \n
@@ -73,7 +114,7 @@ namespace vm
    * The class provides three overloaded methods for vertex relaxation:
    * - `move_vertex` attempts to relocate a specified vertex to a new location
    * - `move_vertices(S,\ldots)` attempts to relocate vertices in a specified set `S`, starting from the vertex with the poorest quality.  
-   * - `move_vertices` performs a mesh-wide search to tag vertices with quality below a specified threshold \f$\epsilonf\f$, and subsequently attempts to relax them
+   * - `move_vertices` performs a mesh-wide search to tag vertices with quality below a specified threshold \f$\epsilon\f$, and subsequently attempts to relax them
    * 
    * ---
    *
@@ -86,21 +127,21 @@ namespace vm
    * 
    * ---
    */
-  class Manager
+  class MeshOptimizer
   {
   public:
     //! \brief Constructor, with mesh copied from a given instance
     //! Assumes that the mesh has the vertex property `interface_id` and face property `domain_id` defined
     //! The `vertex_quality` and `face_quality` properties are optional. If provided, they are copied.
     //! \param[in] in_mesh Input mesh, copied
-    Manager(const pmp::SurfaceMesh& in_mesh);
+    MeshOptimizer(const pmp::SurfaceMesh& in_mesh);
     
     //! \brief Destructor
-    ~Manager() = default;
+    ~MeshOptimizer() = default;
 
     //! Disable copy and assignment
-    Manager(const Manager&) = delete;
-    Manager operator=(const Manager&) = delete;
+    MeshOptimizer(const MeshOptimizer&) = delete;
+    MeshOptimizer& operator=(const MeshOptimizer&) = delete;
 
     //! \brief Immutable access to the mesh
     //! \return Const reference to the mesh
@@ -115,7 +156,7 @@ namespace vm
     //! \return A pair `result` such that:
     //! - `result->first`: true if the face was agglomerated, and false otherwise
     //! - `result->second`: the new agglomerated face if `result->first=true`, and equal to `f` otherwise
-    std::pair<bool, pmp::Face> merge_face(const pmp::Face& f, const QualityEvaluator& QE, const double qthreshold, const double qimprove_factor);
+    std::pair<bool, pmp::Face> agglomerate(const pmp::Face& f, const QualityEvaluator& QE, double qthreshold, double qimprove_factor);
 
     //! \brief Agglomerate a given set of faces
     //! \param[in] subset Subset of faces in the mesh to attempt agglomerating
@@ -123,32 +164,31 @@ namespace vm
     //! \param[in] qthreshold Acceptable positive lower bound for quality
     //! \param[in] improve_factor Lower bound for factor of improvement in face quality, assumed to be greater than of equal to 1.
     //! \return Number of merged faces
-    int merge_faces(const std::set<pmp::Face>& subset, const QualityEvaluator& QE,
-		    const double qthreshold, const double improve_factor, const ProgressCallback &callback=nullptr);
+    int agglomerate(const std::set<pmp::Face>& subset, const QualityEvaluator& QE, double qthreshold, double improve_factor, const ProgressCallback &callback=nullptr);
 
     //! \brief Agglomerate faces in a mesh
     //! Attempts merging all faces satisfying \f$Q(f)\leq \epsilon\f$ for the given quality threshold \f$\epsilon\f$.
     //! \param[in] qface Face quality metric to use
     //! \param[in] qthreshold Acceptable positive lower bound for quality
     //! \param[in] improve_factor Lower bound for factor of improvement in face quality, assumed to be greater than of equal to 1.
-    //! \return Number of merged faces									
-    int merge_faces(const QualityEvaluator& QE, const double qthreshold, const double improve_factor, const ProgressCallback &callback=nullptr);
+    //! \return Number of merged faces
+    int agglomerate(const QualityEvaluator& QE, double qthreshold, double improve_factor, const ProgressCallback &callback=nullptr);
 
     // moves a vertex to a more favorable position
-    std::pair<bool,double> move_vertex(const pmp::Vertex& vertex, const int num_poly_samples,
-				       const int num_edge_samples, const QualityEvaluator& QE);
+    std::pair<bool,double> relax(const pmp::Vertex& vertex, const int num_poly_samples,
+				 const int num_edge_samples, const QualityEvaluator& QE);
 
     // moves vertices
-    int move_vertices(const QualityEvaluator& QE, const double qthreshold,
-		      const int num_poly_samples, const int num_edge_samples,
-		      const std::set<int> interface_ids,
-		      const ProgressCallback &callback=nullptr);
+    int relax(const QualityEvaluator& QE, const double qthreshold,
+	      const int num_poly_samples, const int num_edge_samples,
+	      const std::set<int> interface_ids,
+	      const ProgressCallback &callback=nullptr);
     
-     // compute face qualities in the mesh. saved under face property "quality"
-    void compute_face_qualities(const QualityEvaluator& QE);
+    // compute face qualities in the mesh. saved under face property "quality"
+    void evaluate_face_qualities(const QualityEvaluator& QE);
 
     // compute vertex qualities in the mesh. saved under vertex property "quality"
-    void compute_vertex_qualities(const QualityEvaluator& QE);
+    void evaluate_vertex_qualities(const QualityEvaluator& QE);
     
   private:
     // identify the face along which to merger a given face

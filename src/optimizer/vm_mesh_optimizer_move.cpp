@@ -1,11 +1,11 @@
 // Sriramajayam
 
-/** \file vm_Manager_move.cpp
- * \brief Implementation of vertex relaxation functionalities in class vm::Manager
+/** \file vm_mesh_optimizer_move.cpp
+ * \brief Implementation of vertex relaxation functionalities in class vm::MeshOptimizer
  * \author Ramsharan Rangarajan
  */
 
-#include <vm_Manager.h>
+#include <vm_mesh_optimizer.h>
 #include <random>
 #include <queue>
 #include <iostream>
@@ -13,7 +13,7 @@
 namespace vm
 {
   // moves a vertex
-  std::pair<bool, double> Manager::move_vertex(const pmp::Vertex& vertex, const int num_poly_samples, const int num_edge_samples, MeshVertexQuality_f qfunc)
+  std::pair<bool, double> MeshOptimizer::move_vertex(const pmp::Vertex& vertex, const int num_poly_samples, const int num_edge_samples, MeshVertexQuality_f qfunc)
   {
     // cannot move boundary vertices
     if(mesh.is_boundary(vertex)==true)
@@ -46,7 +46,7 @@ namespace vm
   { return A.second>B.second; }
   
   // moves vertices
-  int Manager::move_vertices(MeshVertexQuality_f qfunc, const double qmin,
+  int MeshOptimizer::move_vertices(MeshVertexQuality_f qfunc, const double qmin,
 			     const int num_poly_samples, const int num_edge_samples,
 			     const std::set<int> interface_ids,
 			     MeshUpdateCallback_f callback)
@@ -118,7 +118,7 @@ namespace vm
 
 
   // identify a feasible point to move a vertex
-  std::tuple<bool, pmp::Point, double> Manager::compute_improved_vertex_position(pmp::SurfaceMesh          &mesh,
+  std::tuple<bool, pmp::Point, double> MeshOptimizer::compute_improved_vertex_position(pmp::SurfaceMesh          &mesh,
 										 const pmp::Vertex         &vertex,
 										 const int                 num_poly_samples,
 										 const int                 num_edge_samples,
@@ -235,7 +235,7 @@ namespace vm
   
   // random generation of feasible vertex positions
   std::vector<std::pair<double,double>>
-  Manager::compute_feasible_vertex_positions(const pmp::SurfaceMesh &mesh,
+  MeshOptimizer::compute_feasible_vertex_positions(const pmp::SurfaceMesh &mesh,
 					     const pmp::Vertex      &vertex,
 					     const int              num_poly_samples,        // max number of random positions to generate
 					     const int              num_edge_samples)        // number of samples to generate per edge  

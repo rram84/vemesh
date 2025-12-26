@@ -36,7 +36,7 @@ if(${BUILD_TEST})
 	add_subdirectory(test)
 	add_subdirectory(src/utils/test)
 	add_subdirectory(src/quality/test)
-	add_subdirectory(src/manager/test)
+	add_subdirectory(src/optimizer/test)
 	add_subdirectory(test/rect/test)
 	add_subdirectory(test/mesh-slicer/test)
 endif()
@@ -48,7 +48,7 @@ include(CMakePackageConfigHelpers)
 install(TARGETS
   vm_utils
   vm_io
-  vm_manager
+  vm_optimizer
   vm_quality
   vm_test_rect
   vm_test_mesh_slicer

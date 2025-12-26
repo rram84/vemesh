@@ -1,11 +1,11 @@
 // Sriramajayam
 
-/** \file vm_Manager_merge.cpp
- * \brief Implementation of element agglomeration functionalities in class vm::Manager
+/** \file vm_mesh_optimizer_merge.cpp
+ * \brief Implementation of element agglomeration functionalities in class vm::MeshOptimizer
  * \author Ramsharan Rangarajan
  */
 
-#include <vm_Manager.h>
+#include <vm_mesh_optimizer.h>
 #include <list>
 #include <queue>
 #include <iostream>
@@ -13,7 +13,7 @@
 namespace vm
 {
   // merge poor quality elements with neighbors
-  std::pair<bool, pmp::Face> Manager::merge_face(const pmp::Face& face, FaceQuality_f qface, const double qimprove_factor)
+  std::pair<bool, pmp::Face> MeshOptimizer::merge_face(const pmp::Face& face, FaceQuality_f qface, const double qimprove_factor)
   {
     assert(mesh.is_valid(face) && !mesh.is_deleted(face));
     
@@ -34,7 +34,7 @@ namespace vm
   }
 
    // merge faces
-  int Manager::merge_faces(FaceQuality_f qface,
+  int MeshOptimizer::merge_faces(FaceQuality_f qface,
 			   const double qmin, const double qimprove_factor,
 			   MeshUpdateCallback_f callback) {
 
@@ -56,7 +56,7 @@ namespace vm
   
   // merge faces
   // returns the number of merged faces
-  int Manager::merge_faces(const std::set<pmp::Face>& subset, 
+  int MeshOptimizer::merge_faces(const std::set<pmp::Face>& subset, 
 			   FaceQuality_f qface,
 			   const double qmin, const double qimprove_factor,
 			   MeshUpdateCallback_f callback)
@@ -133,7 +133,7 @@ namespace vm
   
   
   // identify the face along which to merger a given face
-  std::tuple<bool, double, pmp::Halfedge> Manager::find_halfedge_for_face_merge(const pmp::SurfaceMesh& mesh,
+  std::tuple<bool, double, pmp::Halfedge> MeshOptimizer::find_halfedge_for_face_merge(const pmp::SurfaceMesh& mesh,
 										const pmp::Face& face,
 										FaceQuality_f qfunc)
   {
@@ -207,7 +207,7 @@ namespace vm
   
   
   // Agglomerate poor quality elements
-  void Manager::merge_face(pmp::SurfaceMesh& mesh, const pmp::Halfedge& h0)
+  void MeshOptimizer::merge_face(pmp::SurfaceMesh& mesh, const pmp::Halfedge& h0)
   {
     // sanity checks
     assert(mesh.has_face_property("material_id")==true);
