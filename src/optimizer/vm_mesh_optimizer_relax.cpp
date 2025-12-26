@@ -6,82 +6,95 @@
  */
 
 #include <vm_mesh_optimizer.h>
+#include <vm_utils.h>
 #include <random>
 #include <queue>
 #include <iostream>
 
 namespace vm
 {
-  // moves a vertex
-  std::pair<bool, double> MeshOptimizer::move_vertex(const pmp::Vertex& vertex, const int num_poly_samples, const int num_edge_samples, MeshVertexQuality_f qfunc)
+  // ------- overload 1 --------- //
+  
+  // relax a vertex
+  std::pair<bool, double>
+  MeshOptimizer::relax(const pmp::Vertex& vertex,
+		       const QualityEvaluator &QE,
+		       double qmin,
+		       int num_samples)
   {
+    const double curr_quality = QE(vertex, mesh);
+
+    // needs improvement?
+    if(curr_quality>qmin)
+      return {false, curr_quality};
+    
     // cannot move boundary vertices
     if(mesh.is_boundary(vertex)==true)
-      return {false, -1.0};
+      return {false, curr_quality};
+
+    // cannot move vertices on intefaces
+    auto v_interface_ids = mesh.get_vertex_property<int>("interface_id");
+    if(v_interface_ids[vertex]!=-1)
+      return {false, curr_quality};
     
     // identify a feasible new position & move
-    const auto result = compute_improved_vertex_position(mesh, vertex, num_poly_samples, num_edge_samples, qfunc);
+    const auto result = compute_improved_vertex_position(vertex, num_samples, 1, QE);
         
     // no feasible point
-    if(std::get<0>(result)==false)
-      return {false, -1.0};
+    if(std::get<bool>(result)==false)
+      return {false, curr_quality};
     
-    // found a feasible point
-    const auto& update_pos = std::get<1>(result);
-    
-    // move
-    pmp::Point& X = mesh.position(vertex);
-    X = update_pos;
-    
-    // done
-    return {true, std::get<2>(result)};
+    // found a feasible point.
+
+    // is the quality improved sufficiently
+    if(std::get<double>(result)>qmin)
+      {
+	mesh.position(vertex) = std::get<pmp::Point>(result);
+	return {true, std::get<double>(result)};
+      }
+    else
+      return {false, curr_quality};
   }
 
 
+  // ------- overload 2 --------- //
   // alias
   using VQ_pair_t = std::pair<pmp::Vertex, double>;
   
   // Custom comparator of vertex/quality pairs
   bool Compare(const VQ_pair_t& A, const VQ_pair_t& B)
   { return A.second>B.second; }
-  
-  // moves vertices
-  int MeshOptimizer::move_vertices(MeshVertexQuality_f qfunc, const double qmin,
-			     const int num_poly_samples, const int num_edge_samples,
-			     const std::set<int> interface_ids,
-			     MeshUpdateCallback_f callback)
+
+  int MeshOptimizer::relax(const std::set<pmp::Vertex>& subset,
+			   const QualityEvaluator& QE,
+			   double qmin,
+			   int num_samples,
+			   const ProgressCallback &callback)
   {
     // tolerance for comparing qualities
     const double qeps = qmin/100.;
+
+    // interface ids of vertices
+    auto v_interface_ids = mesh.get_vertex_property<int>("interface_id");
     
     // priority queue of vertices to be relaxed during this iteration
     std::priority_queue<VQ_pair_t, std::vector<VQ_pair_t>, decltype(&Compare)> vertex_queue(Compare);
-    auto v_container = mesh.vertices();
-    auto v_interface_ids = mesh.get_vertex_property<int>("interface_id");
-    for(auto v:v_container)
-      if(mesh.is_boundary(v)==false && interface_ids.find(v_interface_ids[v])!=interface_ids.end())
+    for(auto& v:subset)
+      if(mesh.is_boundary(v)==false &&
+	 v_interface_ids[v]==-1)
 	{
-	  double qval = qfunc(mesh, v);
+	  double qval = QE(v, mesh);
 	  if(qval<qmin)
 	    vertex_queue.push({v, qval});
 	}
     const int qsize = static_cast<int>(vertex_queue.size());
-    std::cout << "#vertices marked for relaxation: " << qsize << std::endl;
 
     // #vertices relaxed during this iteration
     int nrelaxed = 0;
-    int prev_percent = 0;
-    
+
     // traverse the queue
     while(!vertex_queue.empty())
       {
-	int percent_complete = (static_cast<int>(vertex_queue.size())*100)/qsize;
-	if(percent_complete>prev_percent+20)
-	  {
-	    std::cout << "Progress: " << prev_percent+20 << "%" << std::endl;
-	    prev_percent += 20;
-	  }
-	
 	// pop the first vertex in the queue
 	auto vq = vertex_queue.top();
 	const auto& v = vq.first;
@@ -90,7 +103,7 @@ namespace vm
 	// do nothing if:
 	// the quality at this vertex, which could have changed due to other vertices
 	// moving, is > qmin
-	const double curr_q = qfunc(mesh, v);
+	const double curr_q = QE(v, mesh);
 	if(curr_q>qmin)
 	  continue;
 	
@@ -102,27 +115,55 @@ namespace vm
 	  }
 
 	// this vertex is the current priority
-	auto result = this->move_vertex(v, num_poly_samples, num_edge_samples, qfunc);
+	auto result = this->relax(v, QE, qmin, num_samples);
 	auto success = result.first;
 	if(success==true)
 	  {
 	    ++nrelaxed;
 	    if(callback!=nullptr)
-	      callback(nrelaxed, mesh, *this);
+	      {
+		bool flag = callback(
+				     {static_cast<int>(v.idx()),
+					 qsize, nrelaxed,
+					 std::get<double>(result)},
+				     mesh, *this);
+
+		// continue with relaxation
+		if(flag==false)
+		  return nrelaxed;
+	      }
 	  }
       }
-    std::cout << "Progress: 100%" << std::endl;
-    std::cout << "#vertices relaxed: " << nrelaxed << std::endl;
+
     return nrelaxed;
   }
 
 
+  // --------- overload 3 ---------- //
+  
+  int MeshOptimizer::relax(const QualityEvaluator &QE,
+			   double qmin,
+			   int num_samples,
+			   const ProgressCallback &callback)
+  {
+    // all vertices
+    auto v_container = mesh.vertices();
+    std::set<pmp::Vertex> vertex_set{};
+    for(auto v:v_container)
+      vertex_set.insert(v);
+
+    // agglomerate
+    return relax(vertex_set, QE, qmin, num_samples, callback);
+  }
+  
+  // ------ optimal relocation point calculation -------- //
+  
   // identify a feasible point to move a vertex
-  std::tuple<bool, pmp::Point, double> MeshOptimizer::compute_improved_vertex_position(pmp::SurfaceMesh          &mesh,
-										 const pmp::Vertex         &vertex,
-										 const int                 num_poly_samples,
-										 const int                 num_edge_samples,
-										 const MeshVertexQuality_f qfunc)
+  std::tuple<bool, pmp::Point, double>
+  MeshOptimizer::compute_improved_vertex_position(const pmp::Vertex     &vertex,
+						  const int             num_poly_samples,
+						  const int             num_edge_samples,
+						  const QualityEvaluator &QE)  
   {
     assert(mesh.is_valid(vertex)==true);
     assert(mesh.is_boundary(vertex)==false);
@@ -131,11 +172,12 @@ namespace vm
     const pmp::Point given_vertex_pos = mesh.position(vertex);
 
     // get feasible sample points inside the visibility polygon
-    const std::vector<std::pair<double,double>> feasible_samples = compute_feasible_vertex_positions(mesh, vertex, num_poly_samples, num_edge_samples);
+    const std::vector<std::pair<double,double>> feasible_samples =
+      compute_feasible_vertex_positions(vertex, num_poly_samples, num_edge_samples);
     
     // use the current vertex quality as the datum
     std::pair<double,double> curr_best_pos = {given_vertex_pos[0], given_vertex_pos[1]};
-    double curr_best_quality = qfunc(mesh, vertex);
+    double curr_best_quality = QE(vertex, mesh);
     
     // examine vertex qualities at the sample points
     pmp::Point& running_vert_pos = mesh.position(vertex);
@@ -147,14 +189,14 @@ namespace vm
 	running_vert_pos[1] = sample.second;
 	
 	// evaluate the resulting vertex quality
-	double sample_quality = qfunc(mesh, vertex);
+	double sample_quality = QE(vertex, mesh);
 	
 	// Does sample_quality dominate curr_best_quality
 	if(sample_quality>curr_best_quality)
 	  {
 	    curr_best_quality = sample_quality;
-	    curr_best_pos               = sample;
-	    success                     = true;
+	    curr_best_pos     = sample;
+	    success           = true;
 	  }
       }
     
@@ -166,6 +208,9 @@ namespace vm
   }
 
 
+
+  // ------ feasible relocation point generation -------- //
+  
   // Query whether a point is feasible
   bool feasibility_test_1(const boost_polygon_t         &poly,
 			  const std::vector<pmp::Point> &connectedVertices,
@@ -235,10 +280,9 @@ namespace vm
   
   // random generation of feasible vertex positions
   std::vector<std::pair<double,double>>
-  MeshOptimizer::compute_feasible_vertex_positions(const pmp::SurfaceMesh &mesh,
-					     const pmp::Vertex      &vertex,
-					     const int              num_poly_samples,        // max number of random positions to generate
-					     const int              num_edge_samples)        // number of samples to generate per edge  
+  MeshOptimizer::compute_feasible_vertex_positions(const pmp::Vertex &vertex,
+						   const int         num_poly_samples,        
+						   const int         num_edge_samples) const        
   {
     // boost polygon of the environment around the vertex
     boost_polygon_t poly;
@@ -308,15 +352,19 @@ namespace vm
     }
       
     // sample incident edges
-    // const pmp::Point& Xv = mesh.position(vertex);
-    //   for(auto& Y:connected_vertices)
-    //   for(int iter=0; iter<num_edge_samples; ++iter)
-    //   {
-    //   const double lambda = lambda_dis(gen);
-    //   samples.push_back(boost_point_t(lambda*Xv[0]+(1.-lambda)*Y[0],
-    //   lambda*Xv[1]+(1.-lambda)*Y[1]));
-    //   }
-
+    const double dlambda = 1./static_cast<double>(num_edge_samples+1);
+    const pmp::Point& Xv = mesh.position(vertex);
+    for(auto& Y:connected_vertices)
+      {
+	double lambda = dlambda;
+	for(int iter=0; iter<num_edge_samples; ++iter)
+	{
+	  samples.push_back(boost_point_t(lambda*Xv[0]+(1.-lambda)*Y[0],
+					  lambda*Xv[1]+(1.-lambda)*Y[1]));
+	  lambda += dlambda;
+	}
+      }
+    
     // output = subset of feasible samples
     std::vector<std::pair<double,double>> feasible_points{};
     for(auto& sample:samples)

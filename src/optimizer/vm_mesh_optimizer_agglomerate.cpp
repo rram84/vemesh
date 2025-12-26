@@ -118,13 +118,11 @@ namespace vm
 	  ++nmerged;
 	  if(callback!=nullptr)
 	    {
-	      ProgressInfo info{.idx=static_cast<int>(std::get<pmp::Face>(result).idx()),
-		  .num_target=qsize,
-		  .num_completed=nmerged,
-		  .quality=std::get<double>(result)};
+	      bool flag = callback(
+				   {static_cast<int>(std::get<pmp::Face>(result).idx()),
+				       qsize, nmerged, std::get<double>(result)},
+				   mesh, *this);
 	      
-	      bool flag = callback(info, mesh, *this);
-
 	      // terminate agglomeration?
 	      if(flag==false)
 		return nmerged;
