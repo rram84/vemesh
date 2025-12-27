@@ -1,6 +1,6 @@
 // Sriramajayam
 
-/** \file vm_mesh_optimizer_move.cpp
+/** \file vm_mesh_optimizer_relax.cpp
  * \brief Implementation of vertex relaxation functionalities in class vm::MeshOptimizer
  * \author Ramsharan Rangarajan
  */
@@ -9,7 +9,6 @@
 #include <vm_utils.h>
 #include <random>
 #include <queue>
-#include <iostream>
 
 namespace vm
 {
@@ -22,6 +21,8 @@ namespace vm
 		       double qmin,
 		       int num_samples)
   {
+    assert(qmin>0.);
+    
     const double curr_quality = QE(vertex, mesh);
 
     // needs improvement?
@@ -38,7 +39,7 @@ namespace vm
       return {false, curr_quality};
     
     // identify a feasible new position & move
-    const auto result = compute_improved_vertex_position(vertex, num_samples, 1, QE);
+    const auto result = compute_improved_vertex_position(vertex, num_samples, QE);
         
     // no feasible point
     if(std::get<bool>(result)==false)
@@ -62,7 +63,7 @@ namespace vm
   using VQ_pair_t = std::pair<pmp::Vertex, double>;
   
   // Custom comparator of vertex/quality pairs
-  bool Compare(const VQ_pair_t& A, const VQ_pair_t& B)
+  bool PoorerVertexFirst(const VQ_pair_t& A, const VQ_pair_t& B)
   { return A.second>B.second; }
 
   int MeshOptimizer::relax(const std::set<pmp::Vertex>& subset,
@@ -71,6 +72,8 @@ namespace vm
 			   int num_samples,
 			   const ProgressCallback &callback)
   {
+    assert(qmin>0. && num_samples>=1);
+    
     // tolerance for comparing qualities
     const double qeps = qmin/100.;
 
@@ -78,7 +81,7 @@ namespace vm
     auto v_interface_ids = mesh.get_vertex_property<int>("interface_id");
     
     // priority queue of vertices to be relaxed during this iteration
-    std::priority_queue<VQ_pair_t, std::vector<VQ_pair_t>, decltype(&Compare)> vertex_queue(Compare);
+    std::priority_queue<VQ_pair_t, std::vector<VQ_pair_t>, decltype(&PoorerVertexFirst)> vertex_queue(PoorerVertexFirst);
     for(auto& v:subset)
       if(mesh.is_boundary(v)==false &&
 	 v_interface_ids[v]==-1)
@@ -101,8 +104,8 @@ namespace vm
 	vertex_queue.pop();
 
 	// do nothing if:
-	// the quality at this vertex, which could have changed due to other vertices
-	// moving, is > qmin
+	// vertex may have improved due to neighboring relaxations
+	// the quality at this vertex, which could have changed due to other vertices moving, is > qmin
 	const double curr_q = QE(v, mesh);
 	if(curr_q>qmin)
 	  continue;
@@ -146,6 +149,8 @@ namespace vm
 			   int num_samples,
 			   const ProgressCallback &callback)
   {
+    assert(qmin>0. && num_samples>=1);
+    
     // all vertices
     auto v_container = mesh.vertices();
     std::set<pmp::Vertex> vertex_set{};
@@ -161,8 +166,7 @@ namespace vm
   // identify a feasible point to move a vertex
   std::tuple<bool, pmp::Point, double>
   MeshOptimizer::compute_improved_vertex_position(const pmp::Vertex     &vertex,
-						  const int             num_poly_samples,
-						  const int             num_edge_samples,
+						  const int             num_samples,
 						  const QualityEvaluator &QE)  
   {
     assert(mesh.is_valid(vertex)==true);
@@ -173,7 +177,7 @@ namespace vm
 
     // get feasible sample points inside the visibility polygon
     const std::vector<std::pair<double,double>> feasible_samples =
-      compute_feasible_vertex_positions(vertex, num_poly_samples, num_edge_samples);
+      compute_feasible_vertex_positions(vertex, num_samples);
     
     // use the current vertex quality as the datum
     std::pair<double,double> curr_best_pos = {given_vertex_pos[0], given_vertex_pos[1]};
@@ -281,8 +285,7 @@ namespace vm
   // random generation of feasible vertex positions
   std::vector<std::pair<double,double>>
   MeshOptimizer::compute_feasible_vertex_positions(const pmp::Vertex &vertex,
-						   const int         num_poly_samples,        
-						   const int         num_edge_samples) const        
+						   const int num_samples) const
   {
     // boost polygon of the environment around the vertex
     boost_polygon_t poly;
@@ -317,22 +320,24 @@ namespace vm
 
     // all samples
     std::vector<boost_point_t> samples{};
+    samples.reserve(2*num_samples);
 
     // sample the bounding box
     std::uniform_real_distribution<> xdis(bg::get<0>(min_corner), bg::get<0>(max_corner));
     std::uniform_real_distribution<> ydis(bg::get<1>(min_corner), bg::get<1>(max_corner));
-    for(int iter=0; iter<num_poly_samples; ++iter)
+    for(int iter=0; iter<num_samples; ++iter)
       samples.push_back(boost_point_t(xdis(gen), ydis(gen)));
 
-    // convex combinations of connected vertices
+    // convex combinations of connected vertices not including "vertex" itself
     std::uniform_real_distribution<> lambda_dis(0.,1.);
     const int nconn = static_cast<int>(connected_vertices.size());
     std::vector<double> wts(nconn);
     double wsum;
     double pt[2];
-    for(int iter=0; iter<num_edge_samples; ++iter) {
+    for(int iter=0; iter<num_samples; ++iter) {
 
       // weights
+      wsum = 0.;
       for(int i=0; i<nconn; ++i) {
 	wts[i] = lambda_dis(gen);
 	wsum += wts[i];
@@ -351,19 +356,19 @@ namespace vm
       samples.push_back(boost_point_t(pt[0], pt[1]));
     }
       
-    // sample incident edges
-    const double dlambda = 1./static_cast<double>(num_edge_samples+1);
-    const pmp::Point& Xv = mesh.position(vertex);
-    for(auto& Y:connected_vertices)
-      {
-	double lambda = dlambda;
-	for(int iter=0; iter<num_edge_samples; ++iter)
-	{
-	  samples.push_back(boost_point_t(lambda*Xv[0]+(1.-lambda)*Y[0],
-					  lambda*Xv[1]+(1.-lambda)*Y[1]));
-	  lambda += dlambda;
-	}
-      }
+    // // sample incident edges
+    // const double dlambda = 1./static_cast<double>(num_edge_samples+1);
+    // const pmp::Point& Xv = mesh.position(vertex);
+    // for(auto& Y:connected_vertices)
+    //   {
+    // 	double lambda = dlambda;
+    // 	for(int iter=0; iter<num_edge_samples; ++iter)
+    // 	{
+    // 	  samples.push_back(boost_point_t(lambda*Xv[0]+(1.-lambda)*Y[0],
+    // 					  lambda*Xv[1]+(1.-lambda)*Y[1]));
+    // 	  lambda += dlambda;
+    // 	}
+    //   }
     
     // output = subset of feasible samples
     std::vector<std::pair<double,double>> feasible_points{};
@@ -374,7 +379,7 @@ namespace vm
       }
 
     // done
-    return std::move(feasible_points);
+    return feasible_points;
   }
 
 }

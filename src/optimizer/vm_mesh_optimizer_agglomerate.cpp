@@ -1,6 +1,6 @@
 // Sriramajayam
 
-/** \file vm_mesh_optimizer_merge.cpp
+/** \file vm_mesh_optimizer_agglomerate.cpp
  * \brief Implementation of element agglomeration functionalities in class vm::MeshOptimizer
  * \author Ramsharan Rangarajan
  */
@@ -15,13 +15,14 @@ namespace vm
 {
   // -----------  overload 1 ------ //
   
-  // attemp to agglomerate a face with a neighbor
+  // attempt to agglomerate a face with a neighbor
   std::tuple<bool, double, pmp::Face>
   MeshOptimizer::agglomerate(const pmp::Face& face,
 			     const QualityEvaluator &QE,
 			     double qmin,
 			     double qfactor)
   {
+    assert(qmin>0. && qfactor>1.);
     assert(mesh.is_valid(face) && !mesh.is_deleted(face));
 
     // current quality
@@ -43,8 +44,9 @@ namespace vm
        best_quality>qmin &&
        best_quality>qfactor*curr_quality)
       {
-	ret_data = {success, best_quality, mesh.face(mesh.opposite_halfedge(best_halfedge))};
-	merge_neighbors(best_halfedge);
+	//ret_data = {success, best_quality, mesh.face(mesh.opposite_halfedge(best_halfedge))};
+	auto agg_face = merge_neighbors(best_halfedge);
+	ret_data = {success, best_quality, agg_face};
       }
 
     return ret_data;
@@ -57,7 +59,7 @@ namespace vm
   using FQ_pair_t = std::pair<pmp::Face, double>;
   
   // Custom comparator of face/quality pairs
-  bool Compare(const FQ_pair_t& A, const FQ_pair_t& B)
+  bool PoorerFirst(const FQ_pair_t& A, const FQ_pair_t& B)
   { return A.second>B.second; }
   
   // agglomerate faces in a subset
@@ -67,13 +69,14 @@ namespace vm
 				 double qfactor,
 				 const ProgressCallback &callback)
   {
-    assert(qfactor>=1.);
+    assert(qfactor>=1. && qmin>0.);
     
     // tolerance for comparing qualities
     const double qeps = qmin/100.;
 
     // priority queue of faces to be merged during this iteration
-    std::priority_queue<FQ_pair_t, std::vector<FQ_pair_t>, decltype(&Compare)> face_queue(Compare);
+    // priority_queue top() gives the face with lowest quality
+    std::priority_queue<FQ_pair_t, std::vector<FQ_pair_t>, decltype(&PoorerFirst)> face_queue(PoorerFirst);
     for(auto f:subset)
       {
 	double qval = QE(f, mesh);
@@ -142,6 +145,7 @@ namespace vm
 				 double qfactor,
 				 const ProgressCallback &callback)
   {
+    assert(qmin>0. && qfactor>1.);
     std::set<pmp::Face> faceset{};
     auto f_container = mesh.faces();
     for(auto f:f_container)
@@ -153,15 +157,15 @@ namespace vm
   
   // ----- optimal agglomerable neighbor ----- //
   
-  // identify the face along which to merger a given face
+  // identify the face along which to merge a given face
   std::tuple<bool, double, pmp::Halfedge>
   MeshOptimizer::find_halfedge_for_face_merge(const pmp::Face& face,
 					      const QualityEvaluator &QE) const
   {
     assert(!mesh.is_deleted(face));
     assert(mesh.has_face_property("domain_id")==true);
-    auto domain_id = mesh.get_face_property<int>("domain_id");
-    const int my_domain_id = domain_id[face];
+    auto domain_id = mesh.get_face_property<unsigned int>("domain_id");
+    const unsigned int my_domain_id = domain_id[face];
     
     // face needs to be merged with a neighbor
     // pick the neighbor so that the resulting face has the best quality among all possibilities
@@ -233,7 +237,7 @@ namespace vm
 
   // ---- execute merging across a halfedge
   // Agglomerate poor quality elements
-  void MeshOptimizer::merge_neighbors(const pmp::Halfedge& h0)
+  pmp::Face MeshOptimizer::merge_neighbors(const pmp::Halfedge& h0)
   {
     // sanity checks
     assert(mesh.has_face_property("domain_id")==true);
@@ -252,7 +256,7 @@ namespace vm
     assert(mesh.is_valid(f1) && !mesh.is_deleted(f1));
 
     // check on domain id
-    auto domain_id = mesh.get_face_property<int>("domain_id");
+    auto domain_id = mesh.get_face_property<unsigned int>("domain_id");
     assert(domain_id[f0]==domain_id[f1]);
     
     const int nvertices = mesh.n_vertices();
@@ -273,7 +277,10 @@ namespace vm
     assert(!(mesh.is_deleted(f0) && mesh.is_deleted(f1)));
     
     // done
-    return;
+    if(mesh.is_deleted(f0))
+      return f1;
+    else
+      return f0;
   }
 
   

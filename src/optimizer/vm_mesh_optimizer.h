@@ -32,7 +32,7 @@ namespace vm
    *
    * The callback is called 
    * - after a face is agglomerated, or
-   * - a vertex is erlaxed.
+   * - a vertex is relaxed.
    *
    * It allows the user to inspect the current state of the mesh, record
    * intermediate results (e.g., saving the mesh to file), or terminate the mesh optimization early.
@@ -71,14 +71,14 @@ namespace vm
    *
    * The class provides immutable external access to the mesh. \n
    * The assignment of domain and interface identifiers to faces and vertices is assumed at construction. \n
-   * When requested, face and vertex qualitites evaluated  by the class are stored as face and vertex properties in the mesh.
+   * When requested, face and vertex qualities evaluated  by the class are stored as face and vertex properties in the mesh.
    * The property tags for these are specified by the user at the time of evaluation.
    * 
    * ---
    *
    * **Element agglomeration**: \n
    * One of the two main functionalities provided by the class is element agglomeration. \n
-   * Element agglomeration attempts to merge faces with their neighors to improve quality, as defined by a user-specified metric. \n
+   * Element agglomeration attempts to merge faces with their neighbors to improve quality, as defined by a user-specified metric. \n
    * The operation changes the element count and connectivity of the mesh, but leaves the vertex set unchanged.\n
    * Given a face quality metric \f$Q\f$, the class enables merging a face \f$f\f$ with a neighbor \f$n_f\f$ to create a new face \f$g\f$, provided that:
    * - the set of *agglomerable* neighbors \f${\cal A}(f)\f$ is not empty. 
@@ -97,7 +97,7 @@ namespace vm
    * - \ref  agglomerate(const QualityEvaluator&, double, double, const ProgressCallback &): \n
    * First determines the subset of faces to be considered for agglomeration by performing a mesh-wide search
    * to tag faces with quality below the specified threshold \f$\epsilon\f$.
-   * Then, attempts aggomerating them, starting from the poorest one first.
+   * Then, attempts agglomerating them, starting from the poorest one first.
    *
    * In general, an attempt to agglomerate a face may not be successful. This may be because there isn't an agglomerable neighbor, or 
    * the aglomerated face's quality is not sufficiently better. 
@@ -162,98 +162,96 @@ namespace vm
     { return mesh; }
     
     //! \brief Agglomerate a face with a feasible neighbor
-    //! \param[in] f The face to agglomerate. Considered only if its current quality is lower than qepsilon
+    //! \param[in] f The face to agglomerate. Considered only if its current quality is lower than qmin
     //! \param[in] QE Reference to an instance of QualityEvaluator, used to evaluate face qualities
-    //! \param[in] qepsilon Acceptable positive lower bound for quality 
+    //! \param[in] qmin Acceptable positive lower bound for quality 
     //! \param[in] qfactor Lower bound for factor of improvement in face quality, assumed to be greater than of equal to 1.
     //! \return A triplet `result` such that:
-    //! - `result->first`: true if the face was agglomerated, and false otherwise
-    //! - `result->second`: quality of the agglomerated face in case of success, of the existing face otherwise
-    //! - `result->second`: the new agglomerated face in case of success, and `f' otherwise
+    //! - `std::get<0>(result)`: true if the face was agglomerated, and false otherwise
+    //! - `std::get<1>(result)`: quality of the agglomerated face in case of success, of the existing face otherwise
+    //! - `std::get<2>(result)`: the new agglomerated face in case of success, and `f' otherwise
     std::tuple<bool, double, pmp::Face> agglomerate(const pmp::Face& f,
 						    const QualityEvaluator& QE,
-						    double qepsilon,
+						    double qmin,
 						    double qfactor);
 
     //! \brief Agglomerate a given set of faces
     //! \param[in] subset Given subset of faces in the mesh.
-    //!                   Among these, faces with qualities lower than qepsilon are considered for agglomeration
+    //!                   Among these, faces with qualities lower than qmin are considered for agglomeration
     //! \param[in] QE Reference to an instance of QualityEvaluator, used to evaluate face qualities
-    //! \param[in] qepsilon Acceptable positive lower bound for quality of an agglomerated face
+    //! \param[in] qmin Acceptable positive lower bound for quality of an agglomerated face
     //! \param[in] qfactor Lower bound for factor of improvement in face quality,
     //!                    assumed to be greater than of equal to 1.
     //! \param[in] callback Callback function invoked after each successful agglomeration attempt
     //! \return Number of aglomerated faces. Can help decide if another iteration of agglomeration is warranted
     int agglomerate(const std::set<pmp::Face>& subset,
 		    const QualityEvaluator& QE,
-		    double qepsilon,
+		    double qmin,
 		    double qfactor,
 		    const ProgressCallback &callback=nullptr);
 
     //! \brief Agglomerate faces in a mesh
     //! Attempts merging all faces satisfying \f$Q(f)\leq \epsilon\f$ for the given quality threshold \f$\epsilon\f$.
     //! \param[in] QE Reference to an instance of QualityEvaluator, used to evaluate face qualities
-    //! \param[in] qepsilon Acceptable positive lower bound for quality
+    //! \param[in] qmin Acceptable positive lower bound for quality
     //! \param[in] qfactor Lower bound for factor of improvement in face quality, assumed to be greater than of equal to 1.
     //! \param[in] callback Callback function invoked after each successful agglomeration attempt
     //! \return Number of agglomerated faces.  Can help decide if another iteration of agglomeration is warranted
     int agglomerate(const QualityEvaluator& QE,
-		    double qepsilon,
+		    double qmin,
 		    double qfactor,
 		    const ProgressCallback &callback=nullptr);
 
     //! \brief Relaxes a vertex to a more favorable position
     //! \param[in] vertex Vertex to consider relaxing
-    //! \param[in] num_samples Number of sample points to generate
+    //! \param[in] num_samples Number of sample points to generate per strategy:
+    //!                        (i) within a bounding rectangle enclosing the faces incident at the vertex.
+    //!                        (ii) as convex combinations of the vertex and its 1-ring of vertices
     //! \param[in] QE Reference to an instance of QualityEvaluator, used to evaluate face qualities incident at a vertex
-    //! \param[in] qepsilon Acceptable positive lower bound for quality.
+    //! \param[in] qmin Acceptable positive lower bound for quality.
     //!            The vertex is relocated only if the curr quality exceeds this value, and if the new location improves
     //!            the quality beyond this value
     //! \return A pair `result`. The boolean `result->first` indicates if the relaxation was successful.
     //! The double `result->second` returns the quality of the vertex at its new location if the relaxation was successful, and
     //! at its existing location otherwise.
-    //! \note num_samples refers to the number of random sample points to generate over a bounding rectangle enclosing the
-    //! faces incident at the vertex.
+    //! \note A total of 2*num_samples sample points are generated. 
     //! In general, only a (small) fraction of these sample points will be *feasible*.
-    //! To ensure that a few feasible samples are inspected, the method includes the midpoints of each edge incident at the vertex
-    //! in addition to the randomly generated samples.
     std::pair<bool,double> relax(const pmp::Vertex& vertex,
 				 const QualityEvaluator& QE,
-				 double qepsilon,
+				 double qmin,
 				 int num_samples);
 
     //! \brief Relaxes a specified subset of vertices to more favorable positions.
     //! \param[in] subset Set of vertices to consider relaxing
-    //! \param[in] num_samples Number of sample points to generate for *each* vertex
+    //! \param[in] num_samples Number of sample points to generate for *each* vertex, per strategy:
+    //                         (i) within a bounding rectangle enclosing the faces incident at the vertex.
+    //!                        (ii) as convex combinations of the vertex and its 1-ring of vertices
     //! \param[in] QE Reference to an instance of QualityEvaluator, used to evaluate face qualities incident at a vertex
-    //! \param[in] qepsilon Acceptable positive lower bound for quality. The vertex is relocated only if the new quality exceeds this value.
+    //! \param[in] qmin Acceptable positive lower bound for quality. The vertex is relocated only if the new quality exceeds this value.
     //! \param[in] callback Callback function invoked after each successful vertex relaxation
     //! \return Number of relaxed vertices. Can help decide if another iteration of vertex relaxations is warranted
-    //! \note num_samples refers to the number of random sample points to generate over a bounding rectangle enclosing the
-    //! faces incident at the vertex.
+    //! \note A total of 2*num_samples sample points are generated per vertex. 
     //! In general, only a (small) fraction of these sample points will be *feasible*.
-    //! To ensure that a few feasible samples are inspected, the method includes the midpoints of each edge incident at the vertex
-    //! in addition to the randomly generated samples.
     int relax(const std::set<pmp::Vertex>& subset,
 	      const QualityEvaluator& QE,
-	      double qepsilon,
+	      double qmin,
 	      int num_samples,
 	      const ProgressCallback &callback=nullptr);
 
     //! \brief Relaxes vertices of poor quality to more favorable positions.
     //! Attempts relaxing all vertices with quality less than a given tolerance.
+    //! \param[in] num_samples Number of sample points to generate for *each* vertex, per strategy:
+    //!                         (i) within a bounding rectangle enclosing the faces incident at the vertex.
+    //!                        (ii) as convex combinations of the vertex and its 1-ring of vertices
     //! \param[in] num_samples Number of sample points to generate for *each* vertex
     //! \param[in] QE Reference to an instance of QualityEvaluator, used to evaluate face qualities incident at a vertex
-    //! \param[in] qepsilon Acceptable positive lower bound for quality. The vertex is relocated only if the new quality exceeds this value.
+    //! \param[in] qmin Acceptable positive lower bound for quality. The vertex is relocated only if the new quality exceeds this value.
     //! \param[in] callback Callback function invoked after each successful vertex relaxation
     //! \return Number of relaxed vertices. Can help decide if another iteration of vertex relaxations is warranted
-    //! \note num_samples refers to the number of random sample points to generate over a bounding rectangle enclosing the
-    //! faces incident at the vertex.
+    //! \note A total of 2*num_samples sample points are generated per vertex. 
     //! In general, only a (small) fraction of these sample points will be *feasible*.
-    //! To ensure that a few feasible samples are inspected, the method includes the midpoints of each edge incident at the vertex
-    //! in addition to the randomly generated samples.
     int relax(const QualityEvaluator& QE,
-	      double qepsilon,
+	      double qmin,
 	      int num_samples,
 	      const ProgressCallback &callback=nullptr);
     
@@ -278,20 +276,23 @@ namespace vm
     
     //! \brief Helper method to execute a merge faces incident at a given halfedge
     //! \param[in] halfedge Halfedge at which to merge faces
-    void merge_neighbors(const pmp::Halfedge& halfedge);
+    //! \return New agglomerated face
+    pmp::Face merge_neighbors(const pmp::Halfedge& halfedge);
     
     //! \brief Helper method to generate feasible positions to perturb a given vertex to
     //! \param[in] vertex Vertex to perturb
-    //! \param[in] num_bbox_samples Number of random samples to generate over the bounding rectangle of the faces incident at the vertex
-    //! \param[in] num_edge_samples Number of uniformly-spaced samples to include at each edge incident at the vertex
+    //! \param[in] num_samples Number of random samples to generate
+    //!                        (i) within the bounding box of faces incident at the vertex, and 
+    //!                        (ii) as convex combinations of vertices in the 1-ring
     //! \return Vector of pairs of (x,y) coordinates of feasible points. Possibly empty.
     std::vector<std::pair<double,double>>
-      compute_feasible_vertex_positions(const pmp::Vertex& vertex, const int num_bbox_samples, const int num_edge_samples) const; 
+      compute_feasible_vertex_positions(const pmp::Vertex& vertex, const int num_samples) const; 
 
     //! \brief Helper method to compute new location for a vertex
     //! \param[in] vertex Vertex to perturb
-    //! \param[in] num_bbox_samples Number of random samples to generate over the bounding rectangle of the faces incident at the vertex
-    //! \param[in] num_edge_samples Number of uniformly-spaced samples to include at each edge incident at the vertex
+    //! \param[in] num_samples Number of random samples to generate
+    //!                        (i) within the bounding box of faces incident at the vertex, and 
+    //!                        (ii) as convex combinations of vertices in the 1-ring
     //! \param[in] QE Instance of QualityEvaluator used to compute face qualities
     //! \return Triplet result, such that: \n
     //! `std::get<bool>(result)` indicates whether an improved location was found
@@ -299,9 +300,9 @@ namespace vm
     //! std::get<double>` equals the new quality at the vertex in case of success, and the current quality otherwise 
     std::tuple<bool, pmp::Point, double>
       compute_improved_vertex_position(const pmp::Vertex      &vertex,
-				       const int              num_bbox_samples,
-				       const int              num_edge_samples,
+				       const int              num_samples,
 				       const QualityEvaluator& QE);
-    pmp::SurfaceMesh mesh;
+    
+    pmp::SurfaceMesh mesh; //!< Persistent mesh
   };
 }
