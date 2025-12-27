@@ -173,15 +173,17 @@ namespace vm
   }
 
 
-  std::string to_string(const InspectionErrorCode code)
-  {
-    switch (code) {
-    case InspectionErrorCode::EmptyMesh:       return "EmptyMesh";
-    case InspectionErrorCode::InvalidFace:     return "InvalidFace";
-    case InspectionErrorCode::NonSimpleFace:   return "NonSimpleFace";
-    case InspectionErrorCode::NonPositiveArea: return "NonPositiveArea";
-    case InspectionErrorCode::FaceOverlap:     return "FaceOverlap";
-    default:                                   return "UnknownError";
+  namespace {
+    std::string to_string(const InspectionErrorCode code)
+    {
+      switch (code) {
+      case InspectionErrorCode::EmptyMesh:       return "EmptyMesh";
+      case InspectionErrorCode::InvalidFace:     return "InvalidFace";
+      case InspectionErrorCode::NonSimpleFace:   return "NonSimpleFace";
+      case InspectionErrorCode::NonPositiveArea: return "NonPositiveArea";
+      case InspectionErrorCode::FaceOverlap:     return "FaceOverlap";
+      default:                                   return "UnknownError";
+      }
     }
   }
   
