@@ -10,17 +10,56 @@ namespace vm
 {
   namespace quality
   {
-    // VEM stiffness matrix of a polygon
+    /**
+     * \brief Compute the VEM stiffness matrix for a polygon.
+     * 
+     * The stiffness matrix corresponds to the scalar Poisson problem
+     * discretized using the Virtual Element Method (VEM).
+     *
+     * \param coords Coordinates of polygon vertices (in counterclockwise order).
+     * \param stabilization Optional stabilization factor (default = 1.0).
+     * \return Stiffness matrix (Eigen::MatrixXd).
+     */
     Eigen::MatrixXd vem_stiffness_matrix(const std::vector<pmp::Point>& coords, const double stabilization = 1.0);
 
+    /**
+     * @brief Compute the stability ratio of a polygon.
+     * 
+     * The stability ratio is computed as the ratio of the second
+     * smallest eigenvalue to the largest eigenvalue of the VEM
+     * stiffness matrix. The smallest eigenvalue is expected to be
+     * zero (upto numerical precision).
+     * 
+     * The stiffness matrix corresponds to the scalar Poisson problem
+     * discretized using the Virtual Element Method (VEM).
+     *
+     * A small ratio indicates potential for poor conditioning.
+     *
+     * \param coords Coordinates of polygon vertices.
+     * \return Stability ratio in the range [0,1].
+     */
     double vem_stability_ratio(const std::vector<pmp::Point>& coords);
-    
-    // measure quality as the minimum of face qualities around a vertex, with face qualities defined as the
-    // ratio of the area to the perimeter^2
+
+     /**
+     * \brief Measure shape quality using area/perimeter^2 ratio.
+     * 
+     * Returns a normalized measure where 1 indicates an ideal polygon shape.
+     * Useful as a geometric measure of quality.
+     *
+     * \param coords Polygon vertices in counterclockwise order.
+     * \return Shape quality metric in the range [0,1].
+     */
     double geom_shape(const std::vector<pmp::Point>& coords);
 
-    // measure quality as the minimum of face qualities around a vertex, with face qualities defined as the
-    // smallest included angle
+     /**
+     * \brief Measure shape quality as the minimum included angle.
+     * 
+     * Computes the smallest internal angle of the polygon in degrees.
+     * Useful as a geometric measure of quality.
+     *
+     * \param coords Polygon vertices in counterclockwise order.
+     * \return Minimum internal angle in degrees (positive-valued).
+     */
     double geom_min_angle(const std::vector<pmp::Point>& coords);
   }
 }
