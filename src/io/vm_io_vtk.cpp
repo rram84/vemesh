@@ -6,28 +6,35 @@
 
 namespace vm
 {
-  // function to position the cursor at a given word in a file
-  bool position_cursor_after_word(std::ifstream& file, const std::string word)
-  {
-    bool found = false;
-    std::string line;
-    while (std::getline(file, line))
-      {
-	auto position = line.find(word);
-	if ( position != std::string::npos)
-	  {
-	    file.seekg(-line.length()-1+position+word.length(), std::ios::cur);
-	    found = true;
-	    break;
-	  }
-      }
-    // done
-    return found;
+  namespace {
+    bool seek_to_keyword(std::istream& file, const std::string& word)
+    {
+      std::string line;
+      while (std::getline(file, line))
+	{
+	  std::istringstream iss(line);
+	  std::string token;
+	  while (iss >> token)
+	    {
+	      if (token == word)
+		{
+		  // Leave file positioned AFTER this line.
+		  // Next formatted read (>>) will continue correctly.
+		  return true;
+		}
+	    }
+	}
+      return false;
+    }
   }
-  
+
+    
   // read a vtk file
-  void read_vtk(const std::string filename, pmp::SurfaceMesh& mesh)
+  pmp::SurfaceMesh read_vtk(const std::string filename)
   {
+    // Mesh to return
+    pmp::SurfaceMesh mesh;
+    
     assert(std::string(std::filesystem::path(filename).extension())==".vtk");
 
     std::ifstream file;
@@ -35,10 +42,11 @@ namespace vm
     assert(file.good() && file.is_open());
     
     // read # nodes
-    bool flag = position_cursor_after_word(file, "POINTS");
+    bool flag = seek_to_keyword(file, "POINTS");
     assert(flag==true);
     int nNodes;
-    file >> nNodes;
+    if(!(file >> nNodes))
+      throw std::runtime_error("Failed to read POINTS count");
       
     // read coordinates
     double xyz[3];
@@ -53,10 +61,10 @@ namespace vm
 
     // read cells
     std::vector<pmp::Face> faces{};
-    flag = position_cursor_after_word(file, "POLYGONS");
+    flag = seek_to_keyword(file, "POLYGONS");
     assert(flag==true);
-    int nCells;
-    file >> nCells;
+    int nCells, cell_size;  // cell_size is unused
+    file >> nCells >> cell_size;
     std::getline(file, line);
     for(int e=0; e<nCells; ++e)
       {
@@ -69,26 +77,30 @@ namespace vm
 	    file >> node_num;
 	    conn[a] = vertices[node_num];
 	  }
-	faces.push_back(mesh.add_face(conn));
+	auto f = mesh.add_face(conn);
+	assert(f.is_valid());
+	faces.push_back(f);
       }
 
-    // material ids of cells
-    auto material_ids = mesh.add_face_property<int>("material_id", 1);
-    flag = position_cursor_after_word(file, "material_id");
+    // domain ids of cells
+    // default domain id = 1
+    auto domain_ids = mesh.add_face_property<unsigned int>("domain_id", 1);
+    flag = seek_to_keyword(file, "domain_id");
     if(flag==true)
       {
 	std::getline(file, line);
 	std::getline(file, line);
 	for(auto& f:faces)
 	  {
-	    file >> material_ids[f];
+	    file >> domain_ids[f];
 	  }
       }
     
     // vertices on interfaces
-    auto interface_id = mesh.add_vertex_property<int>("interface_id", 1);
+    // default interface id = -1
+    auto interface_id = mesh.add_vertex_property<int>("interface_id", -1);
     file.seekg(0, std::ios::beg);
-    flag = position_cursor_after_word(file, "interface_id");
+    flag = seek_to_keyword(file, "interface_id");
     if(flag==true)
       {
 	std::getline(file, line);
@@ -103,7 +115,7 @@ namespace vm
     file.close();
     
     // done
-    return;
+    return mesh;
   }
 
   
@@ -162,9 +174,9 @@ namespace vm
     out << std::endl << "CELL_DATA " << mesh.n_faces() << std::endl;
 
     // material ids
-    assert(mesh.has_face_property("material_id")==true);
-    auto mat_id = mesh.get_face_property<int>("material_id");
-    out << "SCALARS material_id int" << std::endl
+    assert(mesh.has_face_property("domain_id")==true);
+    auto mat_id = mesh.get_face_property<unsigned int>("domain_id");
+    out << "SCALARS domain_id unsigned int" << std::endl
 	<< "LOOKUP_TABLE default" << std::endl;
     for(auto f:f_circulator)
       {
