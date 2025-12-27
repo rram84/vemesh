@@ -8,8 +8,17 @@
 
 namespace vm
 {
-  namespace test
+  namespace tutorial
   {
+    /*!
+     * \brief Level-set function type.
+     *
+     * The function takes a pointer to a 2D point \f$(x,y)\f$ and returns the
+     * level-set value \f$\phi(x,y)\f$.
+     *
+     * Negative values indicate the *inner* domain, positive values the *outer*
+     * domain.
+     */
     using LevelSetFunction_t = std::function<double(const double*)>;
     
     void clip_mesh(pmp::SurfaceMesh& mesh, const double phi_eps, LevelSetFunction_t& lsfunc,
