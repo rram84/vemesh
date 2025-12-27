@@ -1,16 +1,15 @@
 /**
 * \defgroup io
-* \brief I/O related functionalities
+* \brief Mesh I/O related functionalities
 *
-* \defgroup manager
-* \brief Element agglomeration and vertex relaxation
+* \defgroup optimizer
+* \brief Element agglomeration and vertex relaxation opertions
 *
 * \defgroup quality
-* \brief Face and vertex quality metrics
+* \brief Face/vertex quality metrics and their evaluation
 *
-* \defgroup test_utils
-* \brief Testing-related utilities
-* \ingroup testing
+* \defgroup tutorial
+* \brief Tutorial and demonstration-related utilities
 *
 */
 
