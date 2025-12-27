@@ -4,7 +4,7 @@
 
 namespace vm
 {
-  
+
   // Evaluate the quality of a face
   double QualityEvaluator::operator()(const std::vector<pmp::Point>& pts) const
   { return fqFunc(pts); }
