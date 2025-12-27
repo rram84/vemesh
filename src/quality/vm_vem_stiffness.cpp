@@ -7,18 +7,85 @@ namespace vm
 {
   namespace quality
   {
-    // distance between farthest vertices
-    double compute_polygon_dia(const std::vector<pmp::Point>& coords);
+    namespace {
+      // distance between farthest vertices
+      double compute_polygon_dia(const std::vector<pmp::Point>& coords)
+      {
+	const int nverts = static_cast<int>(coords.size());
+	double dia = 0.;
+	double dist2;
+	for(int i=0; i<nverts; ++i)
+	  {
+	    const auto& X = coords[i];
+	    for(int j=i+1; j<nverts; ++j)
+	      {
+		const auto& Y = coords[j];
+		dist2 = (X[0]-Y[0])*(X[0]-Y[0]) + (X[1]-Y[1])*(X[1]-Y[1]);
+		if(dist2>dia)
+		  dia = dist2;
+	      }
+	  }
+	return std::sqrt(dia);
+      }
 
-    // centroid of the polygon
-    std::array<double,2> compute_polygon_centroid(const std::vector<pmp::Point>& coords, const double area);
+
+      // centroid of the polygon
+      std::array<double,2> compute_polygon_centroid(const std::vector<pmp::Point>& coords, const double area)
+      {
+	std::array<double,2> C{0.,0.};
+	const int nverts = static_cast<int>(coords.size());
+	for(int i=0; i<nverts; ++i)
+	  {
+	    const double& xi = coords[i][0];
+	    const double& yi = coords[i][1];
+	
+	    const int j = (i+1)%nverts;
+	    const double& xj = coords[j][0];
+	    const double& yj = coords[j][1];
+	
+	    C[0] += (xi+xj)*(xi*yj-xj*yi);
+	    C[1] += (yi+yj)*(xi*yj-xj*yi);
+	  }
+	C[0] /= (6.*area);
+	C[1] /= (6.*area);
+	return C;
+      }
+
   
-    // area of the polygon
-    double compute_polygon_area(const std::vector<pmp::Point>& coords);
+      // area of the polygon
+      double compute_polygon_area(const std::vector<pmp::Point>& coords)
+      {
+	// create boost polygon
+	boost_polygon_t poly;
+	for(auto& X:coords)
+	  bg::append(poly.outer(), boost_point_t(X[0],X[1]));
+	bg::append(poly.outer(), boost_point_t(coords[0][0], coords[0][1]));
 
-    // normals at vertices
-    std::vector<std::array<double,2>> compute_vertex_normals(const std::vector<pmp::Point>& coords);
+	return bg::area(poly);
+      }
 
+  
+      // vertex normals
+      std::vector<std::array<double,2>> compute_vertex_normals(const std::vector<pmp::Point>& coords)
+      {
+	// average un-normalized edge vectors
+	const int nverts = static_cast<int>(coords.size());
+	std::vector<std::array<double,2>> bvecs(nverts);
+	for(int i=1; i<=nverts; ++i)
+	  {
+	    // left/right vertices
+	    const auto& XL = coords[i-1];
+	    const auto& XR = coords[(i+1)%nverts];
+
+	    // average = vertex normal
+	    bvecs[i%nverts][0] = 0.5*(XR[1]-XL[1]);
+	    bvecs[i%nverts][1] = 0.5*(XL[0]-XR[0]);
+	  }
+
+	return bvecs;
+      }
+    }
+    
     Eigen::MatrixXd vem_stiffness_matrix(const std::vector<pmp::Point>& coords, const double tau)
     {
       // # vertices
@@ -68,85 +135,6 @@ namespace vm
 
       // stiffness matrix
       return PI.transpose()*G*PI + tau*stab_mat.transpose()*stab_mat;
-    }
-
-
-
-    // distance between farthest vertices
-    double compute_polygon_dia(const std::vector<pmp::Point>& coords)
-    {
-      const int nverts = static_cast<int>(coords.size());
-      double dia = 0.;
-      double dist2;
-      for(int i=0; i<nverts; ++i)
-	{
-	  const auto& X = coords[i];
-	  for(int j=i+1; j<nverts; ++j)
-	    {
-	      const auto& Y = coords[j];
-	      dist2 = (X[0]-Y[0])*(X[0]-Y[0]) + (X[1]-Y[1])*(X[1]-Y[1]);
-	      if(dist2>dia)
-		dia = dist2;
-	    }
-	}
-      return std::sqrt(dia);
-    }
-
-
-    // centroid of the polygon
-    std::array<double,2> compute_polygon_centroid(const std::vector<pmp::Point>& coords, const double area)
-    {
-      std::array<double,2> C{0.,0.};
-      const int nverts = static_cast<int>(coords.size());
-      for(int i=0; i<nverts; ++i)
-	{
-	  const double& xi = coords[i][0];
-	  const double& yi = coords[i][1];
-	
-	  const int j = (i+1)%nverts;
-	  const double& xj = coords[j][0];
-	  const double& yj = coords[j][1];
-	
-	  C[0] += (xi+xj)*(xi*yj-xj*yi);
-	  C[1] += (yi+yj)*(xi*yj-xj*yi);
-	}
-      C[0] /= (6.*area);
-      C[1] /= (6.*area);
-      return C;
-    }
-
-  
-    // area of the polygon
-    double compute_polygon_area(const std::vector<pmp::Point>& coords)
-    {
-      // create boost polygon
-      boost_polygon_t poly;
-      for(auto& X:coords)
-	bg::append(poly.outer(), boost_point_t(X[0],X[1]));
-      bg::append(poly.outer(), boost_point_t(coords[0][0], coords[0][1]));
-
-      return bg::area(poly);
-    }
-
-  
-    // vertex normals
-    std::vector<std::array<double,2>> compute_vertex_normals(const std::vector<pmp::Point>& coords)
-    {
-      // average un-normalized edge vectors
-      const int nverts = static_cast<int>(coords.size());
-      std::vector<std::array<double,2>> bvecs(nverts);
-      for(int i=1; i<=nverts; ++i)
-	{
-	  // left/right vertices
-	  const auto& XL = coords[i-1];
-	  const auto& XR = coords[(i+1)%nverts];
-
-	  // average = vertex normal
-	  bvecs[i%nverts][0] = 0.5*(XR[1]-XL[1]);
-	  bvecs[i%nverts][1] = 0.5*(XL[0]-XR[0]);
-	}
-
-      return bvecs;
     }
 
   }

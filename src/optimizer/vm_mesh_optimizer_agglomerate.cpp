@@ -55,12 +55,14 @@ namespace vm
 
   // -----------  overload 2 ------ //
 
-  // face-quality pairs
-  using FQ_pair_t = std::pair<pmp::Face, double>;
+  namespace {
+    // face-quality pairs
+    using FQ_pair_t = std::pair<pmp::Face, double>;
   
-  // Custom comparator of face/quality pairs
-  bool PoorerFirst(const FQ_pair_t& A, const FQ_pair_t& B)
-  { return A.second>B.second; }
+    // Custom comparator of face/quality pairs
+    bool PoorerFirst(const FQ_pair_t& A, const FQ_pair_t& B)
+    { return A.second>B.second; }
+  }
   
   // agglomerate faces in a subset
   int MeshOptimizer::agglomerate(const std::set<pmp::Face>& subset,

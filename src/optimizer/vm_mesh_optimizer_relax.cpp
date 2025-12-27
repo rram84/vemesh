@@ -59,12 +59,14 @@ namespace vm
 
 
   // ------- overload 2 --------- //
-  // alias
-  using VQ_pair_t = std::pair<pmp::Vertex, double>;
+  namespace {
+    // alias
+    using VQ_pair_t = std::pair<pmp::Vertex, double>;
   
-  // Custom comparator of vertex/quality pairs
-  bool PoorerVertexFirst(const VQ_pair_t& A, const VQ_pair_t& B)
-  { return A.second>B.second; }
+    // Custom comparator of vertex/quality pairs
+    bool PoorerVertexFirst(const VQ_pair_t& A, const VQ_pair_t& B)
+    { return A.second>B.second; }
+  }
 
   int MeshOptimizer::relax(const std::set<pmp::Vertex>& subset,
 			   const QualityEvaluator& QE,
@@ -214,71 +216,72 @@ namespace vm
 
 
   // ------ feasible relocation point generation -------- //
-  
-  // Query whether a point is feasible
-  bool feasibility_test_1(const boost_polygon_t         &poly,
-			  const std::vector<pmp::Point> &connectedVertices,
-			  const boost_point_t           &sample)
-  {
-    // does this point lie within the polygon
-    if(bg::within(sample, poly)==false)
-      return false;
+  namespace {
+    // Query whether a point is feasible
+    bool feasibility_test_1(const boost_polygon_t         &poly,
+			    const std::vector<pmp::Point> &connectedVertices,
+			    const boost_point_t           &sample)
+    {
+      // does this point lie within the polygon
+      if(bg::within(sample, poly)==false)
+	return false;
     
-    // do the segments joining this point to the connected vertices lie within the polygon?
-    const double EPS = 0.01;
-    for(auto& Y:connectedVertices)
-      {
-	boost_linestring_t seg;
-	bg::append(seg, sample);
-	bg::append(seg, boost_point_t(EPS*bg::get<0>(sample)+(1.-EPS)*Y[0],
-				      EPS*bg::get<1>(sample)+(1.-EPS)*Y[1])); // boundary vertex moved inward
-	if(bg::within(seg, poly)==false)
-	  return false;
-      }
+      // do the segments joining this point to the connected vertices lie within the polygon?
+      const double EPS = 0.01;
+      for(auto& Y:connectedVertices)
+	{
+	  boost_linestring_t seg;
+	  bg::append(seg, sample);
+	  bg::append(seg, boost_point_t(EPS*bg::get<0>(sample)+(1.-EPS)*Y[0],
+					EPS*bg::get<1>(sample)+(1.-EPS)*Y[1])); // boundary vertex moved inward
+	  if(bg::within(seg, poly)==false)
+	    return false;
+	}
 
-    // done
-    return true;
-  }
+      // done
+      return true;
+    }
 
 
-  // Query if a point is feasible
-  // check that all faces incident at a vertex are simple when its position is perturbed
-  bool feasibility_test_2(const pmp::SurfaceMesh &mesh,
-			  const pmp::Vertex      &vertex,
-			  const boost_point_t    &sample)
-  {
-    // faces incident at v
-    auto face_circulator = mesh.faces(vertex);
+    // Query if a point is feasible
+    // check that all faces incident at a vertex are simple when its position is perturbed
+    bool feasibility_test_2(const pmp::SurfaceMesh &mesh,
+			    const pmp::Vertex      &vertex,
+			    const boost_point_t    &sample)
+    {
+      // faces incident at v
+      auto face_circulator = mesh.faces(vertex);
 
-    for(auto f:face_circulator)
-      {
-	// this perturbed face
-	boost_polygon_t poly;
-	auto vert_circulator = mesh.vertices(f);
-	for(auto w:vert_circulator)
-	  {
-	    if(w.idx()==vertex.idx())
-	      bg::append(poly.outer(), sample);
-	    else
-	      {
-		const auto& X = mesh.position(w);
-		bg::append(poly.outer(), boost_point_t(X[0], X[1]));
-	      }
-	  }
+      for(auto f:face_circulator)
+	{
+	  // this perturbed face
+	  boost_polygon_t poly;
+	  auto vert_circulator = mesh.vertices(f);
+	  for(auto w:vert_circulator)
+	    {
+	      if(w.idx()==vertex.idx())
+		bg::append(poly.outer(), sample);
+	      else
+		{
+		  const auto& X = mesh.position(w);
+		  bg::append(poly.outer(), boost_point_t(X[0], X[1]));
+		}
+	    }
 
-	// close te polygon
-	auto first_vertex = *poly.outer().begin();  
-	bg::append(poly.outer(), first_vertex);
+	  // close te polygon
+	  auto first_vertex = *poly.outer().begin();  
+	  bg::append(poly.outer(), first_vertex);
 	
-	// is this polygon valid
-	if(!bg::is_valid(poly))
-	  return false;
+	  // is this polygon valid
+	  if(!bg::is_valid(poly))
+	    return false;
 	
-	// is this polygon simple
-	if(!bg::is_simple(poly))
-	  return false;
-      }
-    return true;
+	  // is this polygon simple
+	  if(!bg::is_simple(poly))
+	    return false;
+	}
+      return true;
+    }
   }
     
   
