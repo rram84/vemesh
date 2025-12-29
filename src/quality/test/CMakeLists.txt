@@ -6,9 +6,9 @@ project(quality_tests
   DESCRIPTION "Unit tests for computing qualities")
 
 foreach(TARGET
-	test_vem_stiffness
-#        test_sutton
-#	test_sigma
+	test_vem_quality
+	test_geom_qualities
+	test_quality_evaluator
 #	eg1
 	)
 

@@ -15,7 +15,6 @@ bool eigenvalues_close(Eigen::VectorXd a,
   std::sort(a.data(), a.data() + a.size());
   std::sort(b.data(), b.data() + b.size());
 
-  std::cout << "\n" << (a-b).norm() << std::flush;
   return (a - b).norm() <= tol;
 }
 
@@ -77,6 +76,14 @@ int main()
     if(!eigenvalues_close(evals, evals_ref, eig_tol))
       {
 	std::cerr << "Eigenvalue mismatch\n" << std::flush;
+	return EXIT_FAILURE;
+      }
+
+    // stability ratio
+    double stab_ratio = vm::quality::vem_stability_ratio(coords);
+    if(std::abs(stab_ratio-0.2896/3.9703)>eig_tol)
+      {
+	std::cerr << "Stability ratio mismatch\n" << std::flush;
 	return EXIT_FAILURE;
       }
     

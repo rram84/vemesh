@@ -68,10 +68,10 @@ pmp::SurfaceMesh make_test_mesh()
 {
   pmp::SurfaceMesh mesh;
 
-  auto v0 = mesh.add_vertex(pmp::Point({0, 0, 0}));
-  auto v1 = mesh.add_vertex(pmp::Point({1, 0, 0}));
-  auto v2 = mesh.add_vertex(pmp::Point({1, 1, 0}));
-  auto v3 = mesh.add_vertex(pmp::Point({0, 1, 0}));
+  auto v0 = mesh.add_vertex(pmp::Point(0, 0, 0));
+  auto v1 = mesh.add_vertex(pmp::Point(1, 0, 0));
+  auto v2 = mesh.add_vertex(pmp::Point(1, 1, 0));
+  auto v3 = mesh.add_vertex(pmp::Point(0, 1, 0));
 
   auto f0 = mesh.add_face({v0, v1, v2});
   auto f1 = mesh.add_face({v0, v2, v3});
