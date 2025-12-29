@@ -66,8 +66,8 @@ namespace vm
    *
    * | Property  | Attribute | Data type | Notes    |
    * |-----------|-----------|-----------|----------|
-   * | `interface_id`  | Vertex property | int          | Identifier of interface on which a vertex lies; -1 for vertices not lying on an interface |
-   * | `domain_id`     | Face property   | unsigned int | Identifier of domain to which a face belongs |
+   * | `interface_id`  | Vertex property | int      | Identifier of interface on which a vertex lies; -1 for vertices not lying on an interface |
+   * | `domain_id`     | Face property   | int      | Identifier of domain to which a face belongs |
    *
    * The class provides immutable external access to the mesh. \n
    * The assignment of domain and interface identifiers to faces and vertices is assumed at construction. \n

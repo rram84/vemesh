@@ -119,7 +119,7 @@ namespace vm
       throw std::runtime_error("Mesh size mismatch after reading OFF file: " + filename);
 
     // Add default properties
-    mesh.add_face_property<unsigned int>("domain_id", 1);
+    mesh.add_face_property<int>("domain_id", 1);
     mesh.add_vertex_property<int>("interface_id", -1);
 
     return mesh;

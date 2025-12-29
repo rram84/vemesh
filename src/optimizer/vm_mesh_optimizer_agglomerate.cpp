@@ -166,8 +166,8 @@ namespace vm
   {
     assert(!mesh.is_deleted(face));
     assert(mesh.has_face_property("domain_id")==true);
-    auto domain_id = mesh.get_face_property<unsigned int>("domain_id");
-    const unsigned int my_domain_id = domain_id[face];
+    auto domain_id = mesh.get_face_property<int>("domain_id");
+    const int my_domain_id = domain_id[face];
     
     // face needs to be merged with a neighbor
     // pick the neighbor so that the resulting face has the best quality among all possibilities
@@ -258,7 +258,7 @@ namespace vm
     assert(mesh.is_valid(f1) && !mesh.is_deleted(f1));
 
     // check on domain id
-    auto domain_id = mesh.get_face_property<unsigned int>("domain_id");
+    auto domain_id = mesh.get_face_property<int>("domain_id");
     assert(domain_id[f0]==domain_id[f1]);
     
     const int nvertices = mesh.n_vertices();

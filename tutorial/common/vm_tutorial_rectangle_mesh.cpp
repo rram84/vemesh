@@ -9,14 +9,14 @@ namespace vm
   {
     pmp::SurfaceMesh create_rectangle_mesh(const std::array<double,2> left_cnr,
 					   const double hx, const int nx,
-					   const double hy, const int ny,
-					   const unsigned int domain_id)
+					   const double hy, const int ny)
     {
       if (nx <= 1 || ny <= 1)
 	throw std::runtime_error("create_rectangle_mesh: nx and ny must be > 1");
 
       pmp::SurfaceMesh mesh;
-
+      const int domain_id = 1;
+      
       // add vertices row-by-row
       std::vector<pmp::Vertex> vertices(nx*ny);
       for(int j=0; j<ny; ++j)
@@ -38,7 +38,7 @@ namespace vm
       assert(mesh.n_faces()==(nx-1)*(ny-1));
 
       // assign material id
-      mesh.add_face_property<unsigned int>("domain_id", domain_id);
+      mesh.add_face_property<int>("domain_id", domain_id);
       
       // no vertices on an interface
       mesh.add_vertex_property<int>("interface_id", -1);

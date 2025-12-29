@@ -120,7 +120,7 @@ namespace {
 		 const double phi_eps,
 		 const vm::tutorial::LevelSetFunction_t& lsfunc,
 		 const bool discard_outer_faces,
-		 const std::pair<unsigned int, unsigned int> domain_id,     // id for inner domain, outer domain
+		 const std::pair<int,  int> domain_id,     // id for inner domain, outer domain
 		 const int interface_id,                                    // interface id
 		 std::map<pmp::Edge, pmp::Vertex>& cutedgesMap,             // cut edges -> new vertex map
 		 std::map<pmp::Face, std::vector<int>>& cutfacesMap);       // cut faces -> local vertices in phi<0
@@ -177,7 +177,7 @@ namespace {
 		      const pmp::Face& e,
 		      const std::vector<int>& in_verts,
 		      const bool discard_outer,                                // discard the element portion in phi>0
-		      const std::pair<unsigned int, unsigned int> domain_id);  // {inner domain id, outer domain id}
+		      const std::pair<int,  int> domain_id);  // {inner domain id, outer domain id}
 
 
   
@@ -254,7 +254,7 @@ namespace {
 		  const pmp::Face& e,
 		  std::vector<int> in_verts,
 		  const bool discard_outer,                               // discard the element portion in phi>0
-		  const std::pair<unsigned int, unsigned int> domain_id); // {inner domain id, outer domain id}
+		  const std::pair<int,  int> domain_id); // {inner domain id, outer domain id}
 
   // This routine rebuilds a SurfaceMesh from scratch using the current
   // vertex coordinates and face connectivity.
@@ -290,7 +290,7 @@ namespace vm
 		   const double phi_eps,
 		   const LevelSetFunction_t& lsfunc)
     {
-      const std::pair<unsigned int, unsigned int> in_out_domain_id{1, 0}; // in=1, out=0
+      const std::pair<int,  int> in_out_domain_id{1, 0}; // in=1, out=0
       const int boundary_id = 1;
       
       // cut edges -> new vertex map
@@ -330,7 +330,7 @@ namespace vm
 			 const double phi_eps,
 			 const LevelSetFunction_t& lsfunc)
     {
-      const std::pair<unsigned int, unsigned int> domain_id {1,2}; // in=1, out=2
+      const std::pair<int,  int> domain_id {1,2}; // in=1, out=2
       const int interface_id = 1; // rest = -1
       
       // cut edges -> new vertex map
@@ -375,12 +375,11 @@ namespace vm
 
 
 namespace {
-
   void prep_mesh(pmp::SurfaceMesh& mesh,
 		 const double phi_eps,
 		 const vm::tutorial::LevelSetFunction_t& lsfunc,
 		 const bool discard_outer_faces,
-		 const std::pair<unsigned int,unsigned int> domain_id,
+		 const std::pair<int, int> domain_id,
 		 const int interface_num,
 		 std::map<pmp::Edge, pmp::Vertex>& cutedgesMap,
 		 std::map<pmp::Face, std::vector<int>>& cutfacesMap)
@@ -395,7 +394,7 @@ namespace {
 
     // domain id
     assert(mesh.has_face_property("domain_id")==true);
-    auto dom_id = mesh.get_face_property<unsigned int>("domain_id");
+    auto dom_id = mesh.get_face_property<int>("domain_id");
 
     // interface_id
     assert(mesh.has_vertex_property("interface_id")==true);
@@ -513,14 +512,14 @@ namespace {
 		      const pmp::Face& e,
 		      const std::vector<int>& in_verts,
 		      const bool discard_outer,
-		      const std::pair<unsigned int, unsigned int> domain_id)
+		      const std::pair<int,  int> domain_id)
   {
     const int n_in_verts = static_cast<int>(in_verts.size());
     assert(n_in_verts==1 || n_in_verts==2);
 
     // domain id
     assert(mesh.has_face_property("domain_id")==true);
-    auto dom_id = mesh.get_face_property<unsigned int>("domain_id");
+    auto dom_id = mesh.get_face_property<int>("domain_id");
       
     // outer vertices
     const std::vector<int> all_verts{0,1,2};
@@ -615,7 +614,7 @@ namespace {
 		  const std::map<pmp::Edge, pmp::Vertex>& cutedgesMap,
 		  const pmp::Face& e,  std::vector<int> in_verts,
 		  const bool discard_outer,
-		  const std::pair<unsigned int, unsigned int> domain_id)
+		  const std::pair<int,  int> domain_id)
   {
     const int n_in_verts = static_cast<int>(in_verts.size());
     assert(n_in_verts>0 && n_in_verts<4);
@@ -637,7 +636,7 @@ namespace {
 
     // domain id
     assert(mesh.has_face_property("domain_id")==true);
-    auto dom_id = mesh.get_face_property<unsigned int>("domain_id");
+    auto dom_id = mesh.get_face_property<int>("domain_id");
       
     // 1-in, 3-out
     if(n_in_verts==1)
@@ -835,7 +834,7 @@ namespace {
     assert(mesh.n_faces()==renum_mesh.n_faces());
 
     // material id
-    renum_mesh.add_face_property<unsigned int>("domain_id", 1);
+    renum_mesh.add_face_property<int>("domain_id", 1);
       
     // transfer interface ids from the old mesh
     auto renum_interface_id = renum_mesh.add_vertex_property<int>("interface_id", -1);

@@ -46,7 +46,7 @@ namespace vm
      * Vertices are generated row-by-row starting from the lower-left corner,
      * and faces are added as rectangles with consistent orientation.
      *
-     * All faces are assigned the same \p domain_id, and all vertices are
+     * All faces are assigned the same \p domain_id of 1, and all vertices are
      * initialized with \c interface_id = -1.
      *
      *
@@ -55,14 +55,12 @@ namespace vm
      * \param[in] nx        Number of vertices in the x-direction (must be > 1).
      * \param[in] hy        Grid spacing in the y-direction.
      * \param[in] ny        Number of vertices in the y-direction (must be > 1).
-     * \param[in] domain_id Domain identifier assigned to all faces.
      *
      * \return A \ref pmp::SurfaceMesh representing the rectangular grid.
      * \ingroup tutorial
      */
     pmp::SurfaceMesh create_rectangle_mesh(const std::array<double,2> left_cnr,
 					   const double hx, const int nx,
-					   const double hy, const int ny,
-					   const unsigned int domain_id);
+					   const double hy, const int ny);
   }
 }

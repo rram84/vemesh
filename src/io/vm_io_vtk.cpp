@@ -84,7 +84,7 @@ namespace vm
 
     // domain ids of cells
     // default domain id = 1
-    auto domain_ids = mesh.add_face_property<unsigned int>("domain_id", 1);
+    auto domain_ids = mesh.add_face_property<int>("domain_id", 1);
     flag = seek_to_keyword(file, "domain_id");
     if(flag==true)
       {
@@ -175,12 +175,12 @@ namespace vm
 
     // material ids
     assert(mesh.has_face_property("domain_id")==true);
-    auto mat_id = mesh.get_face_property<unsigned int>("domain_id");
-    out << "SCALARS domain_id unsigned int" << std::endl
+    auto dom_id = mesh.get_face_property<int>("domain_id");
+    out << "SCALARS domain_id int" << std::endl
 	<< "LOOKUP_TABLE default" << std::endl;
     for(auto f:f_circulator)
       {
-	out << mat_id[f] << std::endl;
+	out << static_cast<int>(dom_id[f]) << std::endl;
       }
     
     // face qualities
