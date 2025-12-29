@@ -2,21 +2,23 @@
 
 cmake_minimum_required(VERSION 3.12)
 
-project(manager_tests
+project(optimizer_tests
   DESCRIPTION "Unit tests for the Manager class")
 
-file(GLOB MESH_FILES "${CMAKE_SOURCE_DIR}/src/manager/test/*.OFF")
-file(COPY ${MESH_FILES} DESTINATION ${CMAKE_BINARY_DIR}/src/manager/test/)
+# Copy sample mesh files to build directory
+file(COPY
+     "${CMAKE_CURRENT_SOURCE_DIR}/sample_meshes"
+     DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
+
 
 foreach(TARGET
-	agglomeration)
-	#improve_mesh)
+	test_mesh_optimizer_helpers)
 
   # add executable
   add_executable(${TARGET} ${TARGET}.cpp)
 
   # link 
-  target_link_libraries(${TARGET} PUBLIC vm_manager CLI11::CLI11)
+  target_link_libraries(${TARGET} PUBLIC vm_optimizer)
 
   # choose appropriate flags
   target_compile_features(${TARGET} PUBLIC ${COMPILE_FEATURES})

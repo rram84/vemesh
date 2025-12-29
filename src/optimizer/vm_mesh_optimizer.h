@@ -267,7 +267,7 @@ namespace vm
     //! \param[in] vertex_quality_tag Tag under which vertex qualities are saved. If the property already exists, values are overwritten.
     void evaluate_vertex_qualities(std::string face_quality_tag, std::string vertex_quality_tag);
     
-  private:
+  protected:
     //! \brief Helper method to identify the optimal agglomerable neighbor for merging a given face
     //! \param[in] face Face to consider
     //! \param[in] QE QualityEvaluator instance used to compute face qualities
