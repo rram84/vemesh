@@ -12,22 +12,19 @@ namespace vm
       std::string line;
       while (std::getline(file, line))
 	{
-	  std::istringstream iss(line);
-	  std::string token;
-	  while (iss >> token)
+	  std::size_t pos = line.find(word);
+	  if (pos != std::string::npos)
 	    {
-	      if (token == word)
-		{
-		  // Leave file positioned AFTER this line.
-		  // Next formatted read (>>) will continue correctly.
-		  return true;
-		}
+	      // Move the stream to just after the keyword in this line
+	      file.clear(); // clear any eof/fail bits
+	      file.seekg(file.tellg() - static_cast<std::streamoff>(line.size()) + static_cast<std::streamoff>(pos + word.size()));
+	      return true;
 	    }
 	}
       return false;
     }
   }
-
+  
     
   // read a vtk file
   pmp::SurfaceMesh read_vtk(const std::string filename)
@@ -42,12 +39,14 @@ namespace vm
     assert(file.good() && file.is_open());
     
     // read # nodes
-    bool flag = seek_to_keyword(file, "POINTS");
-    assert(flag==true);
+    if(!seek_to_keyword(file, "POINTS"))
+      throw std::runtime_error("Could not find keyword POINTS");
+    
     int nNodes;
-    if(!(file >> nNodes))
+    std::string datatype;
+    if(!(file >> nNodes >> datatype))
       throw std::runtime_error("Failed to read POINTS count");
-      
+    
     // read coordinates
     double xyz[3];
     std::string line;
@@ -61,53 +60,68 @@ namespace vm
 
     // read cells
     std::vector<pmp::Face> faces{};
-    flag = seek_to_keyword(file, "POLYGONS");
-    assert(flag==true);
+    if(!seek_to_keyword(file, "POLYGONS"))
+      throw std::runtime_error("Could not find keyword POLYGONS");
+    
     int nCells, cell_size;  // cell_size is unused
-    file >> nCells >> cell_size;
-    std::getline(file, line);
+    if(!(file >> nCells >> cell_size))
+      throw std::runtime_error("Could not read number of cells and cellsize");
+    
     for(int e=0; e<nCells; ++e)
       {
 	int num_nodes;
-	file >> num_nodes;
+	if(!(file >> num_nodes))
+	  throw std::runtime_error("Failed to read num_nodes");
+	    
 	int node_num;
 	std::vector<pmp::Vertex> conn(num_nodes);
 	for(int a=0; a<num_nodes; ++a)
 	  {
-	    file >> node_num;
+	    if(!(file >> node_num))
+	      throw std::runtime_error("Failed to read vertex index");
+
+	    // enforce sequential numbering
+	    if(node_num < 0 || node_num >= vertices.size())
+	      throw std::runtime_error("Vertex index out of bounds");
+	    
 	    conn[a] = vertices[node_num];
 	  }
 	auto f = mesh.add_face(conn);
-	assert(f.is_valid());
+	if(!f.is_valid())
+	  throw std::runtime_error("Failed to create face");
 	faces.push_back(f);
       }
 
     // domain ids of cells
     // default domain id = 1
     auto domain_ids = mesh.add_face_property<int>("domain_id", 1);
-    flag = seek_to_keyword(file, "domain_id");
-    if(flag==true)
+    if(seek_to_keyword(file, "domain_id"))
       {
-	std::getline(file, line);
-	std::getline(file, line);
-	for(auto& f:faces)
+	std::getline(file, line); // skip SCALARS line
+	std::getline(file, line); // skip LOOKUP_TABLE line
+	for(auto f:faces)
 	  {
-	    file >> domain_ids[f];
+	    int val;
+	    if(!(file >> val))
+	      throw std::runtime_error("Failed to read domain_id");
+	    domain_ids[f] = val;
 	  }
       }
     
-    // vertices on interfaces
-    // default interface id = -1
+    // vertices on interfaces, default interface id = -1
     auto interface_id = mesh.add_vertex_property<int>("interface_id", -1);
+    file.clear();
     file.seekg(0, std::ios::beg);
-    flag = seek_to_keyword(file, "interface_id");
-    if(flag==true)
+    if(seek_to_keyword(file, "interface_id"))
       {
-	std::getline(file, line);
-	std::getline(file, line);
-	for(auto& v:vertices)
+	std::getline(file, line); // skip SCALARS line
+	std::getline(file, line); // skip LOOKUP_TABLE line
+	for(auto v:vertices)
 	  {
-	    file >> interface_id[v];
+	    int val;
+	    if(!(file >> val))
+	      throw std::runtime_error("Failed to read interface_id");
+	    interface_id[v] = val;
 	  }
       }
     
@@ -171,7 +185,7 @@ namespace vm
 	out << std::endl;
       }
 
-    out << std::endl << "CELL_DATA " << mesh.n_faces() << std::endl;
+    out << "CELL_DATA " << mesh.n_faces() << std::endl;
 
     // material ids
     assert(mesh.has_face_property("domain_id")==true);
@@ -195,7 +209,7 @@ namespace vm
 	  }
       }
     
-    out << std::endl << "POINT_DATA " << mesh.n_vertices() << std::endl;
+    out << "POINT_DATA " << mesh.n_vertices() << std::endl;
 
     // interface id
     assert(mesh.has_vertex_property("interface_id")==true);
