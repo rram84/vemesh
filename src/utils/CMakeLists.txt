@@ -1,8 +1,7 @@
 # Sriramajayam
 
 add_library(vm_utils STATIC
-		 vm_mesh_inspection.cpp
-     	         vm_vertex_ring.cpp)
+		 vm_mesh_inspection.cpp)
 
 # include headers in the current directory
 target_include_directories(vm_utils PUBLIC

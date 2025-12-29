@@ -1,10 +1,14 @@
 // Sriramajayam
 
-#include <vm_utils.h>
-#include <set>
+#include <vm_mesh_optimizer.h>
 
-namespace vm
+namespace
 {
+  // Remove consecutive duplicate vertices that would create non-manifold edges.
+  //
+  // Assume that v represents a circular sequence of vertices.
+  // If three consecutive vertices satisfy v[i-1] == v[i+1], the current and previous
+  // vertices are removed to eliminate the non-manifold condition.
   void erase_nonmanifold_edges(std::vector<pmp::Vertex>& vec) {
 
     if (static_cast<int>(vec.size()) < 3) return; // No operation if there are fewer than 3 elements
@@ -26,11 +30,12 @@ namespace vm
       }
     }
   }
+}
 
-
-  
+namespace vm
+{
   // compute the vertex ring
-  std::vector<pmp::Vertex> get_vertex_ring(const pmp::SurfaceMesh& mesh, const pmp::Vertex& v)
+  std::vector<pmp::Vertex> MeshOptimizer::get_vertex_ring(const pmp::Vertex& v)
   {
     // list to return
     std::vector<pmp::Vertex> vertex_ring{};

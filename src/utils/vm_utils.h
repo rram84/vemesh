@@ -22,7 +22,4 @@ namespace vm
 
   // create a boost polygon from a set of vertices
   boost_polygon_t make_polygon(const std::vector<pmp::Point>& coords);
-
-  // compute the vertex ring
-  std::vector<pmp::Vertex> get_vertex_ring(const pmp::SurfaceMesh& mesh, const pmp::Vertex& v);
 }
