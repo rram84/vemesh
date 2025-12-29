@@ -13,7 +13,7 @@ set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 # Build options
 option(BUILD_DOCS "Build documentation" OFF)
-option(BUILD_TESTS "Run unit tests" ON)
+option(BUILD_TESTS "Run unit tests" OFF)
 
 # Dependencies
 find_package(pmp REQUIRED)
@@ -48,10 +48,9 @@ include(CMakePackageConfigHelpers)
 install(TARGETS
   vm_utils
   vm_io
-  vm_optimizer
   vm_quality
-  vm_test_rect
-  vm_test_mesh_slicer
+  vm_optimizer
+  vm_tutorial
   EXPORT ${PROJECT_NAME}Targets
   DESTINATION ${PROJECT_NAME}/${CMAKE_INSTALL_LIBDIR}
   INCLUDES DESTINATION ${PROJECT_NAME}/${CMAKE_INSTALL_INCLUDEDIR})
