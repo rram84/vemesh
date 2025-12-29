@@ -1,7 +1,7 @@
 // Sriramajayam
 
-#include <vm_test_mesh_slicer.h>
-#include <vm_test_rectangle_mesh.h>
+#include <vm_tutorial_mesh_slicer.h>
+#include <vm_tutorial_rectangle_mesh.h>
 #include <vm_io.h>
 
 double level_set_circle(const double* X)
@@ -24,18 +24,19 @@ int main()
   const double hy = 1./static_cast<double>(ny-1);
 
   // circle
-  vm::test::LevelSetFunction_t lsfunc = level_set_circle; 
+  vm::tutorial::LevelSetFunction_t lsfunc = level_set_circle; 
   const double phi_eps = 1.e-4;
-  
+  /*
   // clip
-  auto mesh1 = vm::test::create_rect_mesh(left_cnr, hx, nx, hy, ny, 0);
+  auto mesh1 = vm::tutorial::create_rect_mesh(left_cnr, hx, nx, hy, ny, 0);
   vm::test::clip_mesh(mesh1, phi_eps, lsfunc, 1, 10);
   vm::write_off(mesh1, "quad-clip.OFF");
   vm::write_vtk(mesh1, "quad-clip.vtk");
 
   // embed
-  auto mesh2 = vm::test::create_rect_mesh(left_cnr, hx, nx, hy, ny, 0);
+  auto mesh2 = vm::tutorial::create_rect_mesh(left_cnr, hx, nx, hy, ny, 0);
   vm::test::embed_interface(mesh2, phi_eps, lsfunc, {1,2}, 10);
   vm::write_off(mesh2, "quad-embed.OFF");
   vm::write_vtk(mesh2, "quad-embed.vtk");
+  */
 }

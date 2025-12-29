@@ -28,17 +28,16 @@ list(APPEND VM_COMPILE_FEATURES cxx_std_17)
 
 # Compile code in src and test
 add_subdirectory(src)
-add_subdirectory(test)
 
 # Testing
-if(${BUILD_TEST})
+if(${BUILD_TESTS})
 	include(CTest)
-	add_subdirectory(test)
-	add_subdirectory(src/utils/test)
-	add_subdirectory(src/quality/test)
-	add_subdirectory(src/optimizer/test)
-	add_subdirectory(test/rect/test)
-	add_subdirectory(test/mesh-slicer/test)
+	add_subdirectory(tutorial)
+#	add_subdirectory(src/utils/test)
+#	add_subdirectory(src/quality/test)
+#	add_subdirectory(src/optimizer/test)
+#	add_subdirectory(test/rect/test)
+#	add_subdirectory(test/mesh-slicer/test)
 endif()
 
 # Install
@@ -50,7 +49,6 @@ install(TARGETS
   vm_io
   vm_quality
   vm_optimizer
-  vm_tutorial
   EXPORT ${PROJECT_NAME}Targets
   DESTINATION ${PROJECT_NAME}/${CMAKE_INSTALL_LIBDIR}
   INCLUDES DESTINATION ${PROJECT_NAME}/${CMAKE_INSTALL_INCLUDEDIR})

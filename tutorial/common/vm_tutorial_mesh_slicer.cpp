@@ -118,7 +118,7 @@ namespace {
   // - mesh has vertex property "interface_id"
   void prep_mesh(pmp::SurfaceMesh& mesh,
 		 const double phi_eps,
-		 const LevelSetFunction_t& lsfunc,
+		 const vm::tutorial::LevelSetFunction_t& lsfunc,
 		 const bool discard_outer_faces,
 		 const std::pair<unsigned int, unsigned int> domain_id,     // id for inner domain, outer domain
 		 const int interface_id,                                    // interface id
@@ -378,7 +378,7 @@ namespace {
 
   void prep_mesh(pmp::SurfaceMesh& mesh,
 		 const double phi_eps,
-		 const LevelSetFunction_t& lsfunc,
+		 const vm::tutorial::LevelSetFunction_t& lsfunc,
 		 const bool discard_outer_faces,
 		 const std::pair<unsigned int,unsigned int> domain_id,
 		 const int interface_num,

@@ -10,6 +10,8 @@ find_package(OpenMP)
 file(GLOB SAMPLE_MESH_FILES "${CMAKE_CURRENT_SOURCE_DIR}/sample_meshes/*")
 file(COPY ${SAMPLE_MESH_FILES} DESTINATION "${CMAKE_BINARY_DIR}/sample_meshes")
 
+set(COMMON_DIR "${CMAKE_CURRENT_SOURCE_DIR}/common")
+
 foreach(TARGET
 	    mesh_slicing)
 
@@ -18,13 +20,16 @@ foreach(TARGET
 
   # local sources
  target_sources(${TARGET} PUBLIC
-				       "${CMAKE_SOURCE_DIR}/common/vm_tutorial_mesh_slicer.h"
-				       "${CMAKE_SOURCE_DIR}/common/vm_tutorial_mesh_slicer.cpp"
-				       "${CMAKE_SOURCE_DIR}/common/vm_tutorial_rectangle_mesh.h"
-				       "${CMAKE_SOURCE_DIR}/common/vm_tutorial_rectangle_mesh.cpp")
+				       "${CMAKE_CURRENT_SOURCE_DIR}/common/vm_tutorial_mesh_slicer.h"
+				       "${CMAKE_CURRENT_SOURCE_DIR}/common/vm_tutorial_mesh_slicer.cpp"
+				       "${CMAKE_CURRENT_SOURCE_DIR}/common/vm_tutorial_rectangle_mesh.h"
+				       "${CMAKE_CURRENT_SOURCE_DIR}/common/vm_tutorial_rectangle_mesh.cpp")
 
   # link 
   target_link_libraries(${TARGET} PUBLIC vm_optimizer OpenMP::OpenMP_CXX)
+
+  # include			  
+  target_include_directories(${TARGET} PUBLIC ${COMMON_DIR})
 
   # choose appropriate flags
   target_compile_features(${TARGET} PUBLIC ${COMPILE_FEATURES})

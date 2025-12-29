@@ -3,6 +3,7 @@
 #pragma once
 
 #include <pmp/SurfaceMesh.h>
+#include <array>
 
 /*!
  * \namespace vm::tutorial

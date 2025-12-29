@@ -4,7 +4,6 @@
 
 #include <pmp/SurfaceMesh.h>
 #include <functional>
-#include <map>
 
 namespace vm
 {
