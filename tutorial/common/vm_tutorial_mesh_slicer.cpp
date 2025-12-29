@@ -286,10 +286,11 @@ namespace vm
 {
   namespace tutorial
   {
-    void clip_mesh(pmp::SurfaceMesh& mesh,
-		   const double phi_eps,
-		   const LevelSetFunction_t& lsfunc)
+    pmp::SurfaceMesh clip_mesh(const pmp::SurfaceMesh& in_mesh,
+			       const double phi_eps,
+			       const LevelSetFunction_t& lsfunc)
     {
+      pmp::SurfaceMesh mesh = in_mesh;
       const std::pair<int,  int> in_out_domain_id{1, 0}; // in=1, out=0
       const int boundary_id = 1;
       
@@ -323,13 +324,14 @@ namespace vm
       mesh = rebuild_mesh(mesh);
      
       // done
-      return;
+      return mesh;
     }
 
-    void embed_interface(pmp::SurfaceMesh& mesh,
-			 const double phi_eps,
-			 const LevelSetFunction_t& lsfunc)
+    pmp::SurfaceMesh embed_interface(const pmp::SurfaceMesh& in_mesh,
+				     const double phi_eps,
+				     const LevelSetFunction_t& lsfunc)
     {
+      pmp::SurfaceMesh mesh = in_mesh;
       const std::pair<int,  int> domain_id {1,2}; // in=1, out=2
       const int interface_id = 1; // rest = -1
       
@@ -366,7 +368,7 @@ namespace vm
 	}
     
       // done
-      return;
+      return mesh;
     }
   }
 }

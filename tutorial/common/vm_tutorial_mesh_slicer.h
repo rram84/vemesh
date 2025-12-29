@@ -97,8 +97,8 @@ namespace vm
      * Face/vertex properties in the original mesh are discarded.
      * The returned mesh has the face property `domain_id` and vertex property `interface_id`.
      *
-     * \param[in,out] mesh
-     *   Surface mesh to be clipped. On return, it contains only the
+     * \param[in] mesh
+     *   Surface mesh to be clipped. The returned mesh only contains the 
      *   \f$\phi < 0\f$ portion of the original mesh.
      *
      * \param[in] phi_eps
@@ -109,7 +109,7 @@ namespace vm
      *   Level-set function defining the clipping interface.
      *   The interface is given by \f$\phi(x) = 0\f$.
      *
-     * \post
+     * \return Clipped mesh
      * - All remaining faces belong to the inner domain.
      * - The mesh contains no deleted entities.
      * - Vertex indices are contiguous.
@@ -119,10 +119,10 @@ namespace vm
      * \see adjust_mesh_nodes
      * \see embed_interface
      */
-    void clip_mesh(pmp::SurfaceMesh& mesh,
-		   const double phi_eps,
-		   const LevelSetFunction_t& lsfunc);
-
+    pmp::SurfaceMesh clip_mesh(const pmp::SurfaceMesh& mesh,
+			       const double phi_eps,
+			       const LevelSetFunction_t& lsfunc);
+    
 
     /**
      * \brief Embed a level-set interface into a surface mesh of triangles/quads.
@@ -139,13 +139,17 @@ namespace vm
      * - Assigns domain_id=1 to faces with |phi|<0, and 2 to faces with |phi|>0
      * - Assigns interface_id=1 to interface nodes, and -1 to remaining nodes
      
-     * \param[in,out] mesh The input mesh of triangles/quads to be modified. Faces intersecting the interface
+     * \param[in] mesh The input mesh of triangles/quads to be modified. Faces intersecting the interface
      *                     will be subdivided, and new vertices may be added along edges.
      * \param[in] phi_eps   Tolerance for identifying nodes close to the interface.
      *                      Vertices with |phi(x)| < phi_eps are considered near the interface.
      * \param[in] lsfunc    Level-set function that defines the interface. Should return
      *                      a signed distance or signed function value at a given point.
      * 
+     * \return Mesh with embedded interface.
+     * - Face/vertex properties in the original mesh are discarded.
+     * - The returned mesh has the face property `domain_id` and vertex property `interface_id`.
+
      * \note
      * - It is assumed that all existing mesh vertices satisfy
      *   \f$|\phi(x)| > \texttt{phi_eps}\f$ prior to clipping.
@@ -155,8 +159,6 @@ namespace vm
      * \warning
      * This routine mutates the input mesh. All face and vertex handles
      * obtained prior to calling this function are invalid after execution.
-     * Face/vertex properties in the original mesh are discarded.
-     * The returned mesh has the face property `domain_id` and vertex property `interface_id`.
      *
      * \note The function internally calls `prep_mesh` to compute intersections and
      *       assign interface/domain properties, and `slice_triangle` / `slice_quad` 
@@ -165,9 +167,9 @@ namespace vm
      * \see adjust_mesh_nodes
      * \see clip_mesh
      */
-    void embed_interface(pmp::SurfaceMesh& mesh,
-			 const double phi_eps,
-			 const LevelSetFunction_t& lsfunc);
+    pmp::SurfaceMesh embed_interface(const pmp::SurfaceMesh& mesh,
+				     const double phi_eps,
+				     const LevelSetFunction_t& lsfunc);
 
   }
 }

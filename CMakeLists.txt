@@ -13,7 +13,7 @@ set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 # Build options
 option(BUILD_DOCS "Build documentation" OFF)
-option(BUILD_TESTS "Run unit tests" OFF)
+option(BUILD_TESTS "Run unit tests" OFF)  
 
 # Dependencies
 find_package(pmp REQUIRED)
@@ -33,8 +33,8 @@ add_subdirectory(src)
 if(${BUILD_TESTS})
 	include(CTest)
 	add_subdirectory(tutorial)
+	add_subdirectory(src/quality/test)
 #	add_subdirectory(src/utils/test)
-#	add_subdirectory(src/quality/test)
 #	add_subdirectory(src/optimizer/test)
 #	add_subdirectory(test/rect/test)
 #	add_subdirectory(test/mesh-slicer/test)

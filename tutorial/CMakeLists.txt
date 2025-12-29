@@ -7,8 +7,9 @@ project(tutorial DESCRIPTION "Tutorial examples accompanying vemesh")
 find_package(OpenMP)
 
 # Copy sample mesh files to build directory
-file(GLOB SAMPLE_MESH_FILES "${CMAKE_CURRENT_SOURCE_DIR}/sample_meshes/*")
-file(COPY ${SAMPLE_MESH_FILES} DESTINATION "${CMAKE_BINARY_DIR}/sample_meshes")
+file(COPY
+     "${CMAKE_CURRENT_SOURCE_DIR}/sample_meshes"
+     DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
 
 set(COMMON_DIR "${CMAKE_CURRENT_SOURCE_DIR}/common")
 
