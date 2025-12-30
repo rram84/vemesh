@@ -314,23 +314,7 @@ namespace vm
 				       const int              num_samples,
 				       const QualityEvaluator& QE);
 
-    //! \brief Helper to compute the 1-ring vertices around a given vertex.
-    //!
-    //! The vertex ring consists of the set of vertices connected to the given vertex
-    //! via the mesh faces.
-    //!
-    //! For each face incident to the vertex, the vertex list is
-    //! rotated so that the target vertex is first, then all other vertices except the
-    //! first two (including the target) are appended to the ring. Non-manifold edges
-    //! are removed during this process.
-    //!
-    //! \param v The vertex whose ring is to be computed.
-    //! \return A vector of vertices forming the vertex ring around `v`.
-    //!
-    //! \note The order of vertices in the returned vector depends on the order of
-    //!       faces incident to `v` in the mesh.
-    //! \note Non-manifold edges are removed to avoid duplicate or invalid connections.
-    std::vector<pmp::Vertex> get_vertex_ring(const pmp::Vertex& v) const;
+   
     
     pmp::SurfaceMesh mesh; //!< Persistent mesh
   };
