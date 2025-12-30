@@ -1,9 +1,9 @@
 // Sriramajayam
 
 #include <vm_mesh_optimizer.h>
-#include <vm_io.h>
 #include <vm_mesh_inspection.h>
-
+#include <vm_face_qualities.h>
+#include <vm_io.h>
 
 // Class for testing
 class TestMeshOptimizer: public vm::MeshOptimizer
@@ -38,6 +38,9 @@ void test_agglomerability(const TestMeshOptimizer&);
 // test feasible vertex positions
 void test_feasible_vertex_positions(const TestMeshOptimizer&);
 
+// test optimal vertex location
+void test_improved_vertex_position(const pmp::SurfaceMesh&, const vm::QualityEvaluator&);
+
 int main()
 {
   // read a sample mesh
@@ -55,6 +58,11 @@ int main()
 
   // test feasible vertex positions
   test_feasible_vertex_positions(opt);
+
+  // geometric quality
+  vm::QualityEvaluator QE(vm::quality::geom_shape);
+  test_improved_vertex_position(mesh, QE);
+
   
 }
 
@@ -148,7 +156,7 @@ void test_feasible_vertex_positions(const TestMeshOptimizer& opt)
     if(!mesh.is_boundary(v))
       {
 	// get feasible locations
-	auto points = opt.compute_feasible_vertex_positions(v, 5);
+	auto points = opt.compute_feasible_vertex_positions(v, 4);
 
 	// mutable mesh
 	pmp::SurfaceMesh tmp = mesh;
@@ -167,10 +175,55 @@ void test_feasible_vertex_positions(const TestMeshOptimizer& opt)
 
 	    // inspect modified faces
 	    std::vector<vm::InspectionError> errors{}; 
-	    bool flag = vm::inspect_mesh(tmp, vm::MeshInspection::Adjacency, errors); return;
+	    bool flag = vm::inspect_mesh(tmp, vm::MeshInspection::Adjacency, errors);
 	    if(flag==false)
 	      {
 		std::cerr << "\ntest_feasible_vertex_positions: unexpected failure with feasible point \nErrors: \n";
+		for(auto &e:errors) std::cerr << e << "\n";
+		std::exit(EXIT_FAILURE);
+	      }
+	  }
+      }
+}
+
+
+// test optimal vertex location
+void test_improved_vertex_position(const pmp::SurfaceMesh &in_mesh, const vm::QualityEvaluator &QE)
+{
+  TestMeshOptimizer opt(in_mesh);
+  auto mesh = opt.get_mesh();
+  auto v_circulator = mesh.vertices();
+  for(auto v:v_circulator)
+    if(!mesh.is_boundary(v))
+      {
+	auto result = opt.compute_improved_vertex_position(v, 4, QE);
+	if(std::get<bool>(result)==true)
+	  {
+	    // quality should be improved
+	    double curr_quality = QE(v,mesh);
+	    if(std::get<double>(result)<curr_quality)
+	      {
+		std::cerr << "\ntest_improved_vertex_position: quality did not improve\n";
+		std::exit(EXIT_FAILURE);
+	      }
+
+	    // new location should be feasible
+	    pmp::SurfaceMesh tmp = mesh;
+	    tmp.position(v) = std::get<pmp::Point>(result);
+	    std::vector<vm::InspectionError> errors{}; 
+	    bool flag = vm::inspect_mesh(tmp, vm::MeshInspection::Adjacency, errors);
+	    if(flag==false)
+	      {
+		std::cerr << "\ntest_improved_vertex_position: optimal pointis not feasible\n";
+		for(auto &e:errors) std::cerr << e << "\n";
+		std::exit(EXIT_FAILURE);
+	      }
+
+	    // check quality
+	    double check_quality = QE(v, tmp);
+	    if(std::abs(check_quality-std::get<double>(result))>1.e-4)
+	      {
+		std::cerr << "\ntest_improved_vertex_position: inconsistency in optimal quality\n";
 		for(auto &e:errors) std::cerr << e << "\n";
 		std::exit(EXIT_FAILURE);
 	      }
