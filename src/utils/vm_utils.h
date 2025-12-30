@@ -42,7 +42,7 @@ namespace vm
     //! \note Non-manifold edges are removed to avoid duplicate or invalid connections.
   std::vector<pmp::Vertex> get_environment_vertices(const pmp::Vertex& v, const pmp::SurfaceMesh& mesh);
 
-  boost_polygon_t make_environment_polygon(const pmp::Vertex& v, const pmp::SurfaceMesh& mesh);
+  boost_polygon_t get_environment_polygon(const pmp::Vertex& v, const pmp::SurfaceMesh& mesh);
   
   std::vector<pmp::Point> get_connected_vertices(const pmp::Vertex &v, const pmp::SurfaceMesh& mesh);
   

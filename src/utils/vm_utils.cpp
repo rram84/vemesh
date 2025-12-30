@@ -104,7 +104,7 @@ namespace vm
 // ---- Create a boost polygon for the environment around a vertex in a mesh --- //
 namespace vm
 {
-  boost_polygon_t make_environment_polygon(const pmp::Vertex& v, const pmp::SurfaceMesh& mesh)
+  boost_polygon_t get_environment_polygon(const pmp::Vertex& v, const pmp::SurfaceMesh& mesh)
   {
     // boost polygon of the environment around the vertex
     boost_polygon_t poly;
