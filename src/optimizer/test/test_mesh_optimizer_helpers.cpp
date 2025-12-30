@@ -2,6 +2,7 @@
 
 #include <vm_mesh_optimizer.h>
 #include <vm_io.h>
+#include <vm_mesh_inspection.h>
 
 
 // Class for testing
@@ -53,7 +54,7 @@ int main()
   test_merge_faces(mesh);
 
   // test feasible vertex positions
-  //test_feasible_vertex_positions(opt);
+  test_feasible_vertex_positions(opt);
   
 }
 
@@ -138,3 +139,41 @@ void test_agglomerability(const TestMeshOptimizer& opt)
       }
 }
       
+// test feasible vertex positions
+void test_feasible_vertex_positions(const TestMeshOptimizer& opt)
+{
+  auto mesh = opt.get_mesh();
+  auto v_circulator = mesh.vertices();
+  for(auto v:v_circulator)
+    if(!mesh.is_boundary(v))
+      {
+	// get feasible locations
+	auto points = opt.compute_feasible_vertex_positions(v, 5);
+
+	// mutable mesh
+	pmp::SurfaceMesh tmp = mesh;
+	
+	// check that moving v -> new location retains mesh sanctity
+	auto f_circulator = tmp.faces(v);
+	std::set<pmp::Face> faces{};
+	for(auto f:f_circulator)
+	  faces.insert(f);
+	
+	// mutate for each feasible location
+	for(auto pt:points)
+	  {
+	    pmp::Point X(pt.first, pt.second, 0.);
+	    tmp.position(v) = X;
+
+	    // inspect modified faces
+	    std::vector<vm::InspectionError> errors{}; 
+	    bool flag = vm::inspect_mesh(tmp, vm::MeshInspection::Adjacency, errors); return;
+	    if(flag==false)
+	      {
+		std::cerr << "\ntest_feasible_vertex_positions: unexpected failure with feasible point \nErrors: \n";
+		for(auto &e:errors) std::cerr << e << "\n";
+		std::exit(EXIT_FAILURE);
+	      }
+	  }
+      }
+}

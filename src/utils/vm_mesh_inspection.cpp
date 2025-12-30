@@ -6,21 +6,11 @@
 namespace vm
 {
   namespace {
-    MeshInspection operator|(MeshInspection a, MeshInspection b) {
-      return static_cast<MeshInspection>(
-					 static_cast<unsigned>(a) | static_cast<unsigned>(b));
-    }
-
-    bool has(MeshInspection flags, MeshInspection test) {
-      return (static_cast<unsigned>(flags) &
-	      static_cast<unsigned>(test)) != 0;
-    }
-
+    
     // Helper to add error if optional list is provided
     void add_error(const std::optional<std::reference_wrapper<ErrorList>> &errors, InspectionError e) {
       if (errors) errors->get().push_back(std::move(e));
     }
-  
   
     bool inspect_mesh_basic(const pmp::SurfaceMesh& mesh,
 			    const std::optional<std::reference_wrapper<ErrorList>> &errors)
@@ -34,7 +24,7 @@ namespace vm
 	
       return flag;
     }
-
+    
     bool inspect_mesh_faces(const std::map<int, boost_polygon_t>& polygons,
 			    const std::optional<std::reference_wrapper<ErrorList>> &errors)
     {
@@ -135,40 +125,34 @@ namespace vm
 		    MeshInspection level,
 		    std::optional<std::reference_wrapper<ErrorList>> errors)
   {
-    bool flag = true;
-
-    // basic checks
-    if(has(level, MeshInspection::Basic))
-      flag = inspect_mesh_basic(mesh, errors);
-
-    // translate faces into boost polygons
+    // ---- Basic checks ---- //
+    bool flag = inspect_mesh_basic(mesh, errors);
+    if (flag==false || level==MeshInspection::Basic)
+      return flag;
+    
+    // ---- Face geometry checks ---- //
     std::map<int, boost_polygon_t> polygons{};
-    if(has(level, MeshInspection::FaceGeometry) || has(level, MeshInspection::Adjacency))
+    auto face_circulator = mesh.faces();
+    for(auto face:face_circulator)
       {
-	auto face_circulator = mesh.faces();
-	for(auto face:face_circulator)
-	  {
-	    // vertices of this face
-	    auto vertex_circulator = mesh.vertices(face);
-	    
-	    // boost polygon representation
-	    std::vector<pmp::Point> coords{};
-	    for(auto v:vertex_circulator)
-	      coords.push_back(mesh.position(v));
-	    boost_polygon_t poly = make_polygon(coords);
-	    
-	    polygons.insert({face.idx(), poly});
-	  }
+	// vertices of this face
+	auto vertex_circulator = mesh.vertices(face);
+	
+	// boost polygon representation
+	std::vector<pmp::Point> coords{};
+	for(auto v:vertex_circulator)
+	  coords.push_back(mesh.position(v));
+	boost_polygon_t poly = make_polygon(coords);
+	
+	polygons.insert({face.idx(), poly});
       }
 
-    // face geometry checks
-    if(has(level, MeshInspection::FaceGeometry))
-      flag = (flag && inspect_mesh_faces(polygons, errors));
-
-    // face overlap checks
-    if(has(level, MeshInspection::Adjacency))
-      flag = (flag && inspect_mesh_adjacency(mesh, polygons, errors));
-
+    flag = inspect_mesh_faces(polygons, errors);
+    if(flag==false || level==MeshInspection::FaceGeometry)
+      return flag;
+    
+    // ---- Adjacency ---- //
+    flag = inspect_mesh_adjacency(mesh, polygons, errors);
     return flag;
   }
 

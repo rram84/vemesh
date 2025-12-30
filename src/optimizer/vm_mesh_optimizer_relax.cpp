@@ -217,18 +217,23 @@ namespace vm
 
   // ------ feasible relocation point generation -------- //
   namespace {
-    // Query whether a point is feasible
-    bool feasibility_test_1(const boost_polygon_t         &poly,
-			    const std::vector<pmp::Point> &connectedVertices,
-			    const boost_point_t           &sample)
+    
+    // Query whether a point is feasible: does point lie within the env polygon
+    bool feasibility_test_1(const boost_polygon_t &poly,
+			    const boost_point_t   &sample)
     {
       // does this point lie within the polygon
-      if(bg::within(sample, poly)==false)
-	return false;
-    
+      return bg::within(sample, poly);
+    }
+
+    // Query whether a point is feasible: do all connected edges lie within the env polygon
+    bool feasibility_test_2(const boost_polygon_t &poly,
+			    const boost_point_t   &sample,
+			    const std::vector<pmp::Point> &connected_verts)
+    {
       // do the segments joining this point to the connected vertices lie within the polygon?
       const double EPS = 0.01;
-      for(auto& Y:connectedVertices)
+      for(auto& Y:connected_verts)
 	{
 	  boost_linestring_t seg;
 	  bg::append(seg, sample);
@@ -237,15 +242,14 @@ namespace vm
 	  if(bg::within(seg, poly)==false)
 	    return false;
 	}
-
+      
       // done
       return true;
     }
 
 
-    // Query if a point is feasible
-    // check that all faces incident at a vertex are simple when its position is perturbed
-    bool feasibility_test_2(const pmp::SurfaceMesh &mesh,
+    // Query if a point is feasible: are all perturbed faces ok
+    bool feasibility_test_3(const pmp::SurfaceMesh &mesh,
 			    const pmp::Vertex      &vertex,
 			    const boost_point_t    &sample)
     {
@@ -255,27 +259,23 @@ namespace vm
       for(auto f:face_circulator)
 	{
 	  // this perturbed face
-	  boost_polygon_t poly;
 	  auto vert_circulator = mesh.vertices(f);
+	  std::vector<pmp::Point> coords{};
 	  for(auto w:vert_circulator)
 	    {
 	      if(w.idx()==vertex.idx())
-		bg::append(poly.outer(), sample);
+		coords.push_back(pmp::Point(bg::get<0>(sample), bg::get<1>(sample), 0.));
 	      else
-		{
-		  const auto& X = mesh.position(w);
-		  bg::append(poly.outer(), boost_point_t(X[0], X[1]));
-		}
+		coords.push_back(mesh.position(w));
 	    }
+	  
+	  // boost polygon
+	  boost_polygon_t poly = make_polygon(coords);
 
-	  // close te polygon
-	  auto first_vertex = *poly.outer().begin();  
-	  bg::append(poly.outer(), first_vertex);
-	
 	  // is this polygon valid
 	  if(!bg::is_valid(poly))
 	    return false;
-	
+	  
 	  // is this polygon simple
 	  if(!bg::is_simple(poly))
 	    return false;
@@ -291,14 +291,7 @@ namespace vm
 						   const int num_samples) const
   {
     // boost polygon of the environment around the vertex
-    boost_polygon_t poly;
-    auto vertex_ring = get_vertex_ring(vertex);
-    for(auto& v:vertex_ring)
-      {
-	const auto& X = mesh.position(v);
-	bg::append(poly.outer(), boost_point_t(X[0], X[1]));
-      }
-    bg::correct(poly);
+    boost_polygon_t poly = get_environment_polygon(vertex, mesh);
 
     // axis-aligned bounding box for poly
     boost_box_t bbox;
@@ -306,17 +299,9 @@ namespace vm
     const auto& min_corner = bbox.min_corner();
     const auto& max_corner = bbox.max_corner();
 
-    // outgoing halfedges from vertex
-    auto out_halfedges = mesh.halfedges(vertex);
+    // connected vertices
+    const std::vector<pmp::Point> connected_verts = get_connected_vertices(vertex, mesh);
 
-    // neighbors to which "vertex" is connected
-    std::vector<pmp::Point> connected_vertices{};
-    for(auto h:out_halfedges)
-      {
-	assert(mesh.from_vertex(h)==vertex);
-	connected_vertices.push_back(mesh.position(mesh.to_vertex(h)));
-      }
-        
     // Random generator
     std::random_device rd; 
     std::mt19937 gen(rd());
@@ -333,7 +318,7 @@ namespace vm
 
     // convex combinations of connected vertices not including "vertex" itself
     std::uniform_real_distribution<> lambda_dis(0.,1.);
-    const int nconn = static_cast<int>(connected_vertices.size());
+    const int nconn = static_cast<int>(connected_verts.size());
     std::vector<double> wts(nconn);
     double wsum;
     double pt[2];
@@ -341,46 +326,35 @@ namespace vm
 
       // weights
       wsum = 0.;
-      for(int i=0; i<nconn; ++i) {
-	wts[i] = lambda_dis(gen);
-	wsum += wts[i];
-      }
+      for(int i=0; i<nconn; ++i)
+	{
+	  wts[i] = lambda_dis(gen);
+	  wsum += wts[i];
+	}
 
       // normalize
       for(int i=0; i<nconn; ++i)
 	wts[i] /= wsum;
-
+      
       // sample point
       pt[0] = pt[1] = 0.;
-      for(int i=0; i<nconn; ++i) {
-	pt[0] += wts[i]*connected_vertices[i][0];
-	pt[1] += wts[i]*connected_vertices[i][1];
-      }
+      for(int i=0; i<nconn; ++i)
+	{
+	  const auto& X = connected_verts[i];
+	  pt[0] += wts[i]*X[0];
+	  pt[1] += wts[i]*X[1];
+	}
       samples.push_back(boost_point_t(pt[0], pt[1]));
     }
       
-    // // sample incident edges
-    // const double dlambda = 1./static_cast<double>(num_edge_samples+1);
-    // const pmp::Point& Xv = mesh.position(vertex);
-    // for(auto& Y:connected_vertices)
-    //   {
-    // 	double lambda = dlambda;
-    // 	for(int iter=0; iter<num_edge_samples; ++iter)
-    // 	{
-    // 	  samples.push_back(boost_point_t(lambda*Xv[0]+(1.-lambda)*Y[0],
-    // 					  lambda*Xv[1]+(1.-lambda)*Y[1]));
-    // 	  lambda += dlambda;
-    // 	}
-    //   }
-    
     // output = subset of feasible samples
     std::vector<std::pair<double,double>> feasible_points{};
     for(auto& sample:samples)
-      if(feasibility_test_1(poly, connected_vertices, sample)==true &&
-	 feasibility_test_2(mesh, vertex, sample)==true) {
+      if( feasibility_test_1(poly, sample) &&
+	  feasibility_test_2(poly, sample, connected_verts) &&
+	  feasibility_test_3(mesh, vertex, sample) )
 	feasible_points.push_back({bg::get<0>(sample), bg::get<1>(sample)});
-      }
-
+    
     // done
     return feasible_points;
   }
