@@ -156,7 +156,39 @@ namespace vm
     return agglomerate(faceset, QE, qmin, qfactor, callback);
   }
   
+
+  // ---- agglomerability condition ---- //
+  // to determine agglomerable neighbors of a face along a given halfedge
+  bool MeshOptimizer::is_agglomerable(const pmp::Halfedge& h) const
+  {
+    // validity
+    if(!mesh.is_valid(h)) return false;
+    auto f = mesh.face(h);
+    if(!mesh.is_valid(f)) return false;
+    
+    // boundary
+    if(mesh.is_boundary(mesh.edge(h))) return false;
+
+    // isolated vertices
+    if(mesh.valence(mesh.from_vertex(h))<=2) return false;
+    if(mesh.valence(mesh.to_vertex(h))<=2)   return false;
+
+    // neighbor
+    auto nb_h = mesh.opposite_halfedge(h);
+    if(!mesh.is_valid(nb_h)) return false;
+    auto nb_f = mesh.face(nb_h);
+    if(!mesh.is_valid(nb_f)) return false;
+
+    // domain ids
+    auto f_id = mesh.get_face_property<int>("domain_id")[f];
+    auto nb_f_id = mesh.get_face_property<int>("domain_id")[nb_f];
+    if(f_id!=nb_f_id) return false;
+
+    // agglomerable
+    return true;
+  }
   
+			 
   // ----- optimal agglomerable neighbor ----- //
   
   // identify the face along which to merge a given face
@@ -164,71 +196,52 @@ namespace vm
   MeshOptimizer::find_halfedge_for_face_merge(const pmp::Face& face,
 					      const QualityEvaluator &QE) const
   {
-    assert(!mesh.is_deleted(face));
-    assert(mesh.has_face_property("domain_id")==true);
-    auto domain_id = mesh.get_face_property<int>("domain_id");
-    const int my_domain_id = domain_id[face];
-    
     // face needs to be merged with a neighbor
-    // pick the neighbor so that the resulting face has the best quality among all possibilities
-    // cannot merge along boundary faces
-    // cannot merge along faces that would result in an isolated vertex
-    // can merge with a face having the same "domain_id"
-
+    // pick the agglomerable neighbor so that the resulting face has the best quality among all possibilities
     
     // evaluate halfedge merged -> resulting face quality
     pmp::Halfedge best_h;
     double best_quality = -1.;
     auto halfedge_circulator = mesh.halfedges(face);
     for(auto h:halfedge_circulator)
-      if(!mesh.is_boundary(mesh.edge(h)) &&                                         // no boundary merges
-	 mesh.valence(mesh.from_vertex(h))>2 &&
-	 mesh.valence(mesh.to_vertex(h))>2)  // prevent isolated vertices
+      if(is_agglomerable(h))
 	{
-	  auto nb_h         = mesh.opposite_halfedge(h);
-	  auto nb_face      = mesh.face(nb_h);
-	  int  nb_domain_id = domain_id[nb_face];
-
-	  if(mesh.is_valid(nb_h)       &&
-	     mesh.is_valid(nb_face)    &&
-	     !mesh.is_deleted(nb_face) &&
-	     my_domain_id==nb_domain_id  )
-	    {
-	      // vertices of the new face created by merging face/nb_face
-	      std::vector<pmp::Point> verts{};
-	      
-	      // vertices from the face of h
-	      verts.push_back(mesh.position(mesh.to_vertex(h)));
-	      auto it_h = mesh.next_halfedge(h);
-	      while(it_h!=h)
-		{
-		  verts.push_back(mesh.position(mesh.to_vertex(it_h)));
-		  it_h = mesh.next_halfedge(it_h);
-		}
+	  auto nb_h = mesh.opposite_halfedge(h);
 	  
-	      // vertices from the face of nb_h
-	      it_h = mesh.next_halfedge(nb_h);
-	      while(it_h!=nb_h)
+	  // vertices of the new face created by merging face/nb_face
+	  std::vector<pmp::Point> verts{};
+	  
+	  // vertices from the face of h
+	  verts.push_back(mesh.position(mesh.to_vertex(h)));
+	  auto it_h = mesh.next_halfedge(h);
+	  while(it_h!=h)
+	    {
+	      verts.push_back(mesh.position(mesh.to_vertex(it_h)));
+	      it_h = mesh.next_halfedge(it_h);
+	    }
+	  
+	  // vertices from the face of nb_h
+	  it_h = mesh.next_halfedge(nb_h);
+	  while(it_h!=nb_h)
+	    {
+	      verts.push_back(mesh.position(mesh.to_vertex(it_h)));
+	      it_h = mesh.next_halfedge(it_h);
+	    }
+	  verts.pop_back();
+	  
+	  // quality of the candidate merged face
+	  //assert(inspect_face(verts)==true);
+	  if(inspect_face(verts)==true)
+	    {
+	      double quality = QE(verts);
+	      if(quality>best_quality)
 		{
-		  verts.push_back(mesh.position(mesh.to_vertex(it_h)));
-		  it_h = mesh.next_halfedge(it_h);
-		}
-	      verts.pop_back();
-
-	      // quality of the candidate merged face
-	      //assert(inspect_face(verts)==true);
-	      if(inspect_face(verts)==true)
-		{
-		  double quality = QE(verts);
-		  if(quality>best_quality)
-		    {
-		      best_quality = quality;
-		      best_h       = h;
-		    }
+		  best_quality = quality;
+		  best_h       = h;
 		}
 	    }
 	}
-
+    
     // there should be at least one candidate
     if(best_quality>0. && mesh.is_valid(best_h))
       return {true, best_quality, best_h};

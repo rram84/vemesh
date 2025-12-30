@@ -292,7 +292,7 @@ namespace vm
   {
     // boost polygon of the environment around the vertex
     boost_polygon_t poly;
-    auto vertex_ring = get_vertex_ring(mesh, vertex);
+    auto vertex_ring = get_vertex_ring(vertex);
     for(auto& v:vertex_ring)
       {
 	const auto& X = mesh.position(v);

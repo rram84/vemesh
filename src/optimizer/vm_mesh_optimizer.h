@@ -268,6 +268,17 @@ namespace vm
     void evaluate_vertex_qualities(std::string face_quality_tag, std::string vertex_quality_tag);
     
   protected:
+    //! \brief Helper method to determine agglomerable neighbors of a face along a given halfedge
+    //! A halfedge is consider agglomerable if the adjacent faces can be merged. For this:
+    //! - The halfedge should be valid
+    //! - The halfedge should not lie on the boundary
+    //! - The two faces adjacent to the half edge should be valid
+    //! - Both faces adjacent to the half edge should have the same domain id
+    //! - Both vertices of the halfedge should have valence>2
+    //! \param[in] h Halfedge.
+    //! \return True if agglomerable, and false otherwise
+    bool is_agglomerable(const pmp::Halfedge& h) const;
+			 
     //! \brief Helper method to identify the optimal agglomerable neighbor for merging a given face
     //! \param[in] face Face to consider
     //! \param[in] QE QualityEvaluator instance used to compute face qualities

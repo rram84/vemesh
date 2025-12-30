@@ -22,4 +22,5 @@ namespace vm
 
   // create a boost polygon from a set of vertices
   boost_polygon_t make_polygon(const std::vector<pmp::Point>& coords);
+
 }

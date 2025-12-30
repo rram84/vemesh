@@ -35,7 +35,7 @@ namespace
 namespace vm
 {
   // compute the vertex ring
-  std::vector<pmp::Vertex> MeshOptimizer::get_vertex_ring(const pmp::Vertex& v)
+  std::vector<pmp::Vertex> MeshOptimizer::get_vertex_ring(const pmp::Vertex& v) const
   {
     // list to return
     std::vector<pmp::Vertex> vertex_ring{};
