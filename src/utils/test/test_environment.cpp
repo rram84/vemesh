@@ -12,8 +12,9 @@ void test_environment_polygon(const pmp::SurfaceMesh&);
 int main()
 {
   // read a sample mesh
-  auto mesh = vm::read_off("sample_meshes/random_triangles.OFF");
-
+  auto mesh = vm::read_off("sample_meshes/sorgente_mesh1_40.off");  //random_triangles.OFF";
+  vm::write_vtk(mesh, "sorgente.vtk");
+  
   // test environment vertices
   test_environment_vertices(mesh);
 
@@ -27,31 +28,51 @@ int main()
 // test the get_environment_vertices function
 void test_environment_vertices(const pmp::SurfaceMesh& mesh)
 {
-  // compare get_vertex_ring with 1-ring at each vertex
-  // get_vertex_ring
-  // compare with 1-ring
+  // compare get_environment_vertices with a direct identification
   auto v_container = mesh.vertices();
   for(auto v:v_container)
     if(!mesh.is_boundary(v))
       {
 	auto v_ring = vm::get_environment_vertices(v, mesh);
-	std::vector<int> vec1{};
+	std::set<int> vec1{};
 	for(auto it:v_ring)
-	  vec1.push_back(it.idx());
-	std::sort(vec1.begin(), vec1.end());
+	  {
+	    auto result = vec1.insert(it.idx());
+	    if(result.second==false)
+	      {
+		std::cerr << "\ntest_environment_vertices: duplication in vertices\n";
+		std::exit(EXIT_FAILURE);
+	      }
+	  }
 	
-	auto v_circulator = mesh.vertices(v);
-	std::vector<int> vec2{};
-	for(auto it:v_circulator)
-	  vec2.push_back(it.idx());
-	std::sort(vec2.begin(), vec2.end());
+	auto f_circulator = mesh.faces(v);
+	std::set<pmp::Edge> unique_edges{};
+	for(auto f:f_circulator)
+	  {
+	    auto h_edges = mesh.halfedges(f);
+	    for(auto h:h_edges)
+	      {
+		auto e = mesh.edge(h);
+		auto [it, inserted] = unique_edges.insert(e);
+		if(inserted==false)
+		  unique_edges.erase(it);
+	      }
+	  }
+	std::set<int> vec2{};
+	for(auto e:unique_edges)
+	  {
+	    vec2.insert(mesh.vertex(e, 0).idx());
+	    vec2.insert(mesh.vertex(e, 1).idx());
+	  }
+
 	if(vec1!=vec2)
 	  {
-	    std::cerr << "\ntest_vertex_ring failed\n" << std::flush;
+	    std::cerr << "\ntest_environment_vertices failed\n" << std::flush;
 	    std::exit(EXIT_FAILURE);
 	  }
       }
 }
+  
 
 // test the environment polygon
 void test_environment_polygon(const pmp::SurfaceMesh& mesh)

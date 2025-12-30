@@ -10,7 +10,7 @@ file(COPY
      "${CMAKE_CURRENT_SOURCE_DIR}/sample_meshes"
      DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
 
-
+ 
 foreach(TARGET
 	test_mesh_optimizer_helpers)
 

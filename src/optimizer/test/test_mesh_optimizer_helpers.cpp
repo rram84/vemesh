@@ -41,10 +41,13 @@ void test_feasible_vertex_positions(const TestMeshOptimizer&);
 // test optimal vertex location
 void test_improved_vertex_position(const pmp::SurfaceMesh&, const vm::QualityEvaluator&);
 
+// test optimal halfedge for agglomeration
+void test_optimal_halfedge(const TestMeshOptimizer&, const vm::QualityEvaluator&);
+
 int main()
 {
   // read a sample mesh
-  auto mesh = vm::read_off("sample_meshes/random_triangles.OFF");
+  auto mesh = vm::read_off("sample_meshes/sorgente_mesh1_40.off"); // random_triangles.OFF
   vm::write_vtk(mesh, "tri.vtk");
   
   // testable mesh optimizer
@@ -61,9 +64,12 @@ int main()
 
   // geometric quality
   vm::QualityEvaluator QE(vm::quality::geom_shape);
+
+  // test optimal vertex relaxation
   test_improved_vertex_position(mesh, QE);
 
-  
+  // test optimal halfedge for agglomeration
+  test_optimal_halfedge(opt, QE);
 }
 
 
@@ -230,3 +236,54 @@ void test_improved_vertex_position(const pmp::SurfaceMesh &in_mesh, const vm::Qu
 	  }
       }
 }
+
+
+// test optimal halfedge for agglomeration
+void test_optimal_halfedge(const TestMeshOptimizer &opt, const vm::QualityEvaluator &QE)
+{
+  auto mesh = opt.get_mesh();
+  auto f_circulator = mesh.faces();
+  for(auto face:f_circulator)
+    {
+      // optimal halfedge for merge
+      auto result = opt.find_halfedge_for_face_merge(face, QE);
+
+      // verify result with feasible merges
+      auto halfedges = mesh.halfedges(face);
+      bool success = false;
+      double opt_quality = -1.;
+      pmp::Halfedge opt_h;
+      for(auto h:halfedges)
+	if(opt.is_agglomerable(h))
+	  {
+	    TestMeshOptimizer tmp(mesh);
+	    auto new_face = tmp.merge_neighbors(h);
+	    double new_quality = QE(new_face, tmp.get_mesh());
+	    if(new_quality>opt_quality)
+	      {
+		opt_quality = new_quality;
+		opt_h = h;
+		success = true;
+	      }
+	  }
+
+      // validate
+      if(std::get<bool>(result)!=success)
+	{
+	  std::cerr << "\ntest_optimal_halfedge: discrepancy in feasibility.\n";
+	  std::exit(EXIT_FAILURE);
+	}
+      if(std::get<pmp::Halfedge>(result).idx()!=opt_h.idx())
+	{
+	  std::cerr << "\ntest_optimal_halfedge: discrepancy in optimal halfedge\n";
+	  std::exit(EXIT_FAILURE);
+	}
+      if(std::abs(std::get<double>(result)-opt_quality)>1.e-4)
+	{
+	  std::cerr << "\ntest_optimal_halfedge: discrepancy in optimal quality\n";
+	  std::exit(EXIT_FAILURE);
+	}
+    }
+}
+
+  

@@ -33,7 +33,7 @@ namespace
   void erase_nonmanifold_edges(std::vector<pmp::Vertex>& vec) {
 
     if (static_cast<int>(vec.size()) < 3) return; // No operation if there are fewer than 3 elements
-
+    
     // lambdas for circular listing
     auto circular_previous = [&vec](auto it) { return it == vec.begin() ? vec.end() - 1 : it - 1; };
     auto circular_next = [&vec](auto it) { return it == vec.end() - 1 ? vec.begin() : it + 1;};
@@ -88,12 +88,22 @@ namespace vm
 	assert(face_vertices.front().idx()==v.idx());
 
 	// append vertices to the ring, exclude 'v'
+	// start from 2 to avoid successive repitition
 	for(int i=2; i<nVerts; ++i)
 	  vertex_ring.push_back(face_vertices[i]);
 
-	// remove non-manifold edges
-	erase_nonmanifold_edges(vertex_ring);
+	// if starting from i=1, use this:
+	// Remove linear consecutive duplicates
+	//auto it = std::unique(vec.begin(), vec.end());
+	//vec.erase(it, vec.end());
+	
+	// Fix circular adjacency (first == last)
+	//if (vec.size() > 1 && vec.front() == vec.back())
+	//vec.pop_back();
       }
+    
+    // remove non-manifold edges
+    erase_nonmanifold_edges(vertex_ring);
     
     // done
     return vertex_ring;
