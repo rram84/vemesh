@@ -3,8 +3,7 @@
 add_library(vm_optimizer STATIC
 		 vm_mesh_optimizer.cpp
 		 vm_mesh_optimizer_agglomerate.cpp
-		 vm_mesh_optimizer_relax.cpp
-		 vm_mesh_optimizer_vertex_ring.cpp)
+		 vm_mesh_optimizer_relax.cpp)
 		 
 # include headers in the current directory
 target_include_directories(vm_optimizer PUBLIC

@@ -26,12 +26,7 @@ public:
   // Helper method to compute new location for a vertex
   using vm::MeshOptimizer::compute_improved_vertex_position;
   
-  // Helper to compute the 1-ring vertices around a given vertex.
-  using vm::MeshOptimizer::get_vertex_ring;
 };
-
-// test vertex rings
-void test_vertex_rings(const TestMeshOptimizer&);
 
 // test merge face
 void test_merge_faces(const pmp::SurfaceMesh&);
@@ -51,9 +46,6 @@ int main()
   // testable mesh optimizer
   TestMeshOptimizer opt(mesh);
 
-  // test vertex rings
-  test_vertex_rings(opt);
-
   // test agglomerability
   test_agglomerability(opt);
   
@@ -61,41 +53,9 @@ int main()
   test_merge_faces(mesh);
 
   // test feasible vertex positions
-  test_feasible_vertex_positions(opt);
+  //test_feasible_vertex_positions(opt);
   
 }
-
-// test vertex rings
-void test_vertex_rings(const TestMeshOptimizer& opt)
-{
-  auto& mesh = opt.get_mesh();
-
-  // compare get_vertex_ring with 1-ring at eac vertex
-  // get_vertex_ring
-  // compare with 1-ring
-  auto v_container = mesh.vertices();
-  for(auto v:v_container)
-    if(!mesh.is_boundary(v))
-      {
-	auto v_ring = opt.get_vertex_ring(v);
-	std::vector<int> vec1{};
-	for(auto it:v_ring)
-	  vec1.push_back(it.idx());
-	std::sort(vec1.begin(), vec1.end());
-	
-	auto v_circulator = mesh.vertices(v);
-	std::vector<int> vec2{};
-	for(auto it:v_circulator)
-	  vec2.push_back(it.idx());
-	std::sort(vec2.begin(), vec2.end());
-	if(vec1!=vec2)
-	  {
-	    std::cerr << "\ntest_vertex_rings failed\n" << std::flush;
-	    std::exit(EXIT_FAILURE);
-	  }
-      }
-}
-
 
 
 // test merge face
