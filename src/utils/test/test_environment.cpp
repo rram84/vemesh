@@ -13,7 +13,7 @@ int main()
 {
   // read a sample mesh
   auto mesh = vm::read_off("sample_meshes/sorgente_mesh1_40.off");  //random_triangles.OFF";
-  vm::write_vtk(mesh, "sorgente.vtk");
+  //vm::write_vtk(mesh, "sorgente.vtk");
   
   // test environment vertices
   test_environment_vertices(mesh);

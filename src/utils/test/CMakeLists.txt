@@ -11,7 +11,7 @@ file(COPY
      DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
 
 
-foreach(TARGET test_environment) 
+foreach(TARGET test_environment test_mesh_inspection) 
 
   # add executable
   add_executable(${TARGET} ${TARGET}.cpp)
