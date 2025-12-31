@@ -18,17 +18,10 @@ namespace vm
   std::pair<bool, double>
   MeshOptimizer::relax(const pmp::Vertex& vertex,
 		       const QualityEvaluator &QE,
-		       double qmin,
 		       int num_samples)
   {
-    assert(qmin>0.);
-    
     const double curr_quality = QE(vertex, mesh);
 
-    // needs improvement?
-    if(curr_quality>qmin)
-      return {false, curr_quality};
-    
     // cannot move boundary vertices
     if(mesh.is_boundary(vertex)==true)
       return {false, curr_quality};
@@ -45,16 +38,9 @@ namespace vm
     if(std::get<bool>(result)==false)
       return {false, curr_quality};
     
-    // found a feasible point.
-
-    // is the quality improved sufficiently
-    if(std::get<double>(result)>qmin)
-      {
-	mesh.position(vertex) = std::get<pmp::Point>(result);
-	return {true, std::get<double>(result)};
-      }
-    else
-      return {false, curr_quality};
+    // found a feasible point. update.
+    mesh.position(vertex) = std::get<pmp::Point>(result);
+    return {true, std::get<double>(result)};
   }
 
 
@@ -70,14 +56,13 @@ namespace vm
 
   int MeshOptimizer::relax(const std::set<pmp::Vertex>& subset,
 			   const QualityEvaluator& QE,
-			   double qmin,
 			   int num_samples,
 			   const ProgressCallback &callback)
   {
-    assert(qmin>0. && num_samples>=1);
+    assert(num_samples>=1);
     
     // tolerance for comparing qualities
-    const double qeps = qmin/100.;
+    const double qeps = 1.e-8;
 
     // interface ids of vertices
     auto v_interface_ids = mesh.get_vertex_property<int>("interface_id");
@@ -89,8 +74,7 @@ namespace vm
 	 v_interface_ids[v]==-1)
 	{
 	  double qval = QE(v, mesh);
-	  if(qval<qmin)
-	    vertex_queue.push({v, qval});
+	  vertex_queue.push({v, qval});
 	}
     const int qsize = static_cast<int>(vertex_queue.size());
 
@@ -105,14 +89,9 @@ namespace vm
 	const auto& v = vq.first;
 	vertex_queue.pop();
 
-	// do nothing if:
 	// vertex may have improved due to neighboring relaxations
-	// the quality at this vertex, which could have changed due to other vertices moving, is > qmin
-	const double curr_q = QE(v, mesh);
-	if(curr_q>qmin)
-	  continue;
-	
 	// reposition this vertex in the queue if its quality has changed
+	const double curr_q = QE(v, mesh);
 	if(std::abs(curr_q-vq.second)>qeps)
 	  {
 	    vertex_queue.push({vq.first,curr_q});
@@ -120,7 +99,7 @@ namespace vm
 	  }
 
 	// this vertex is the current priority
-	auto result = this->relax(v, QE, qmin, num_samples);
+	auto result = this->relax(v, QE, num_samples);
 	auto success = result.first;
 	if(success==true)
 	  {
@@ -152,15 +131,25 @@ namespace vm
 			   const ProgressCallback &callback)
   {
     assert(qmin>0. && num_samples>=1);
-    
+
     // all vertices
     auto v_container = mesh.vertices();
+    
+    // interface ids of vertices
+    auto v_interface_ids = mesh.get_vertex_property<int>("interface_id");
+    
     std::set<pmp::Vertex> vertex_set{};
     for(auto v:v_container)
-      vertex_set.insert(v);
+      if(mesh.is_boundary(v)==false &&
+	 v_interface_ids[v]==-1)
+	{
+	  double qval = QE(v, mesh);
+	  if(qval<qmin)
+	    vertex_set.insert(v);
+	}
 
     // agglomerate
-    return relax(vertex_set, QE, qmin, num_samples, callback);
+    return relax(vertex_set, QE, num_samples, callback);
   }
   
   // ------ optimal relocation point calculation -------- //

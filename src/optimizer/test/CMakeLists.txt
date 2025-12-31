@@ -12,7 +12,8 @@ file(COPY
 
  
 foreach(TARGET
-	test_mesh_optimizer_helpers)
+	test_mesh_optimizer_helpers
+	test_mesh_optimizer)
 
   # add executable
   add_executable(${TARGET} ${TARGET}.cpp)

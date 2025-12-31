@@ -208,9 +208,7 @@ namespace vm
     //!                        (i) within a bounding rectangle enclosing the faces incident at the vertex.
     //!                        (ii) as convex combinations of the vertex and its 1-ring of vertices
     //! \param[in] QE Reference to an instance of QualityEvaluator, used to evaluate face qualities incident at a vertex
-    //! \param[in] qmin Acceptable positive lower bound for quality.
-    //!            The vertex is relocated only if the curr quality exceeds this value, and if the new location improves
-    //!            the quality beyond this value
+    //!
     //! \return A pair `result`. The boolean `result->first` indicates if the relaxation was successful.
     //! The double `result->second` returns the quality of the vertex at its new location if the relaxation was successful, and
     //! at its existing location otherwise.
@@ -218,7 +216,6 @@ namespace vm
     //! In general, only a (small) fraction of these sample points will be *feasible*.
     std::pair<bool,double> relax(const pmp::Vertex& vertex,
 				 const QualityEvaluator& QE,
-				 double qmin,
 				 int num_samples);
 
     //! \brief Relaxes a specified subset of vertices to more favorable positions.
@@ -227,14 +224,12 @@ namespace vm
     //                         (i) within a bounding rectangle enclosing the faces incident at the vertex.
     //!                        (ii) as convex combinations of the vertex and its 1-ring of vertices
     //! \param[in] QE Reference to an instance of QualityEvaluator, used to evaluate face qualities incident at a vertex
-    //! \param[in] qmin Acceptable positive lower bound for quality. The vertex is relocated only if the new quality exceeds this value.
     //! \param[in] callback Callback function invoked after each successful vertex relaxation
     //! \return Number of relaxed vertices. Can help decide if another iteration of vertex relaxations is warranted
     //! \note A total of 2*num_samples sample points are generated per vertex. 
     //! In general, only a (small) fraction of these sample points will be *feasible*.
     int relax(const std::set<pmp::Vertex>& subset,
 	      const QualityEvaluator& QE,
-	      double qmin,
 	      int num_samples,
 	      const ProgressCallback &callback=nullptr);
 
@@ -245,7 +240,7 @@ namespace vm
     //!                        (ii) as convex combinations of the vertex and its 1-ring of vertices
     //! \param[in] num_samples Number of sample points to generate for *each* vertex
     //! \param[in] QE Reference to an instance of QualityEvaluator, used to evaluate face qualities incident at a vertex
-    //! \param[in] qmin Acceptable positive lower bound for quality. The vertex is relocated only if the new quality exceeds this value.
+    //! \param[in] qmin Positive lower bound for quality used to identify vertices to relax
     //! \param[in] callback Callback function invoked after each successful vertex relaxation
     //! \return Number of relaxed vertices. Can help decide if another iteration of vertex relaxations is warranted
     //! \note A total of 2*num_samples sample points are generated per vertex. 
