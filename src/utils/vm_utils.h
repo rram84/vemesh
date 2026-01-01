@@ -16,17 +16,59 @@
 
 namespace vm
 {
-  // boost aliases
+  /** \namespace bg
+   * \brief Alias for the Boost.Geometry namespace.
+   * \ingroup utils
+   */
   namespace bg  = boost::geometry;
+
+  /** \namespace bgm
+   * \brief Alias for Boost.Geometry model types.
+   * \ingroup utils
+   */
   namespace bgm = bg::model;
-  using boost_point_t          = bgm::point<double, 2, bg::cs::cartesian>;
+
+  /** \brief 2D Cartesian point type.
+   *
+   * Represents a point in two-dimensional Cartesian space using double-precision coordinates.
+   * \ingroup utils
+   */
+  using boost_point_t = bgm::point<double, 2, bg::cs::cartesian>;
+
+  /** \brief Simple 2D polygon with counterclockwise orientation.
+   *
+   * Represents a simple polygon whose outer boundary is stored
+   * in counterclockwise (CCW) order. This convention is required
+   * for robust Boolean and topological operations in Boost.Geometry.
+   * \ingroup utils
+   */
   using boost_polygon_t        = bgm::polygon<boost_point_t, false>; // false = ccw orientation
+
+  /** \brief Collection of polygons.
+   *
+   * Represents a set of polygons, typically produced as the result
+   * of Boolean operations such as union, intersection, or difference.
+   * \ingroup utils
+   */
   using boost_multi_polygon_t  = bgm::multi_polygon<boost_polygon_t>;
+
+  /** \brief Axis-aligned bounding box in 2D.
+   *
+   * Represents a rectangular bounding box aligned with the
+   * Cartesian coordinate axes, defined by two corner points.
+   * \ingroup utils
+   */
   using boost_box_t        = bgm::box<boost_point_t>;
+
+  /** \brief 2D polyline (line string).
+   *
+   * Represents an ordered sequence of points forming a polyline.
+   * Used for representing edges
+   * \ingroup utils
+   */
   using boost_linestring_t = bgm::linestring<boost_point_t>;
 
-  /**
-   * \brief Create a 2D Boost.Geometry polygon from a list of points.
+  /** \brief Create a 2D Boost.Geometry polygon from a list of points.
    *
    * Constructs a polygon by interpreting the input points as an
    * ordered boundary loop in the plane. The polygon is represented in
@@ -41,6 +83,7 @@ namespace vm
    *         the input vertex sequence.
    *
    * \note Does not check is the resulting polygon is valid, simple, or correctly oriented.
+   * \ingroup utils
    */
   boost_polygon_t make_polygon(const std::vector<pmp::Point>& coords);
 
@@ -61,6 +104,7 @@ namespace vm
    * \note The order of vertices in the returned vector depends on the order of
    *       faces incident to `v` in the mesh.
    * \note Non-manifold edges are removed to avoid duplicate or invalid connections.
+   * \ingroup utils
    */
   std::vector<pmp::Vertex> get_environment_vertices(const pmp::Vertex& v,
 						    const pmp::SurfaceMesh& mesh);
@@ -76,7 +120,7 @@ namespace vm
    *
    * \return An ordered list of vertices forming the one-ring
    *         environment of \p v.
-   *
+   * \ingroup utils
    */
   boost_polygon_t get_environment_polygon(const pmp::Vertex& v,
 					  const pmp::SurfaceMesh& mesh);
@@ -95,6 +139,7 @@ namespace vm
    * \note The order of the returned vertices follows the order of the
    *       outgoing halfedge circulator provided by the mesh.
    *
+   * \ingroup utils
    */
   std::vector<pmp::Point> get_connected_vertices(const pmp::Vertex &v,
 						 const pmp::SurfaceMesh& mesh);

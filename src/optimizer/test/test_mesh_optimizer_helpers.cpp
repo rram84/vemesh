@@ -2,6 +2,7 @@
 
 /** \file test_mesh_optimizer_helpers.cpp
  * \brief Unit tests for protected helper methods of the class vm::MeshOptimizer
+ * \ingroup tests
  * \author Ramsharan Rangarajan
  */
 

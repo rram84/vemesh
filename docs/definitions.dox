@@ -1,15 +1,20 @@
 /**
-* \defgroup io
+* \defgroup io I/O
 * \brief Mesh I/O related functionalities
 *
 * \defgroup optimizer
 * \brief Element agglomeration and vertex relaxation opertions
 *
-* \defgroup quality
+* \defgroup utils Utilities
+* \brief Utilties related to Boost.Geometry, pmp::SurfaceMesh and mesh inspection
+*
+* \defgroup quality Mesh quality
 * \brief Face/vertex quality metrics and their evaluation
 *
 * \defgroup tutorial
 * \brief Tutorial and demonstration-related utilities
 *
+* \defgroup tests Unit tests
+* \brief Unit tests for functions and classes 
 */
 

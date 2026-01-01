@@ -24,6 +24,7 @@ namespace vm
    * \param[in] filename The path to the .OFF file to read.
    * \return The pmp::SurfaceMesh object that will be populated with
    *                  vertices and faces from the file.
+   * \ingroup io
    */
   pmp::SurfaceMesh read_off(const std::string filename);
 
@@ -38,14 +39,11 @@ namespace vm
    * 
    * \note This function writes only the mesh geometry and connectivity.
    *       Face and vertex properties- `domain_id` and  `interface_id` are not written.
+   * \ingroup io
    */
-  // Writes a mesh in .off format
-  // mesh [in]           : polygon mesh
-  // filename [in]       : name of the file
   void write_off(const pmp::SurfaceMesh& mesh, const std::string filename);
   
-  // VTK
-
+  
   /** \brief Read a polygonal surface mesh from an ASCII VTK (.vtk) file.
    *
    * This function reads a VTK file in the legacy ASCII POLYDATA format and
@@ -78,6 +76,7 @@ namespace vm
    * expected legacy ASCII POLYDATA format may not be read correctly.
    *
    * \pre \p filename has extension .vtk
+   * \ingroup io
    */
   pmp::SurfaceMesh read_vtk(const std::string filename);
 
@@ -113,6 +112,7 @@ namespace vm
    *
    * \pre \c mesh.has_face_property("material_id") == true
    * \pre \c mesh.has_vertex_property("interface_id") == true
+   * \ingroup io
    */
   void write_vtk(const pmp::SurfaceMesh& mesh, const std::string filename);
 }

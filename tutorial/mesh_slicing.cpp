@@ -1,5 +1,10 @@
 // Sriramajayam
 
+/** \file mesh_slicing.cpp
+ * \brief Testing utility routines for embedding boundaries/interfaces in meshes
+ * \ingroup tests tutorial
+ */
+
 #include <vm_tutorial_mesh_slicer.h>
 #include <vm_tutorial_rectangle_mesh.h>
 #include <vm_io.h>

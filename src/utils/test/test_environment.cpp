@@ -2,6 +2,7 @@
 
 /** \file test_environment.cpp
  * \brief Unit tests for utility routines vm::get_vertex_environment and vm::get_environment_polygon defined in vm_utils.h
+ * \ingroup tests
  * \author Ramsharan Rangarajan
  */
 

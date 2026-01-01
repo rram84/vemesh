@@ -19,6 +19,7 @@ namespace vm
 {
   //! \brief Function pointer type for evaluating the quality of a polygon
   //! \sa vm::quality::vem_stability_ratio, vm::quality::geom_shape, vm::quality::geom_min_angle
+  //! \ingroup quality
   using FaceQualityFn = double(*)(const std::vector<pmp::Point>&);
 
   /**
@@ -32,8 +33,8 @@ namespace vm
    where \f$f_1,\ldots,f_n\f$ are the faces incident at vertex \f$v\f$ and \f$Q\f$ is the 
    * given face-quality metric.
    * 
-   * \sa vm::quality
    * \sa vm::quality::vem_stability_ratio, vm::quality::geom_shape, vm::quality::geom_min_angle
+   * \ingroup quality
    */
   class QualityEvaluator {
 

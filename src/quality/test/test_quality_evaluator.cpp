@@ -2,6 +2,7 @@
 
 /** \file test_quality_evaluator.cpp
  * \brief Unit tests for the class vm::QualityEvaluator
+ * \ingroup tests
  * \author Ramsharan Rangarajan
  */
 

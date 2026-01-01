@@ -139,6 +139,7 @@ namespace vm
    * The evaluation of vertex qualities is based on an existing evaluation of face qualities.
    * 
    * ---
+   * \ingroup optimizer
    */
   class MeshOptimizer
   {

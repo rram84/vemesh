@@ -19,6 +19,7 @@ namespace vm
    * - Higher levels include all checks from lower levels.
    *
    * \sa inspect_mesh
+   * \ingroup utils
    */
   enum class MeshInspection {
     Basic = 0,         //!< Basic mesh sanity checks
@@ -30,6 +31,7 @@ namespace vm
    *
    * Each error corresponds to a specific failure mode detected during
    * mesh inspection.
+   * \ingroup utils
    */
   enum class InspectionErrorCode {
     EmptyMesh,          /**< Mesh has zero vertices, faces, or edges */
@@ -43,6 +45,7 @@ namespace vm
   /** \brief Detailed information about a mesh inspection failure.
    *
    * Stores the error code, affected face indices, and a readable diagnostic message.
+   * \ingroup utils
    */
   struct InspectionError {
     InspectionErrorCode code; /**< Error classification */
@@ -59,11 +62,13 @@ namespace vm
    * \param os Output stream
    * \param e  InspectionError instance
    * \return Reference to the output stream
+   * \ingroup utils
    */
   std::ostream& operator<<(std::ostream& os,
 			   const InspectionError& e);
 
   /** \brief Container type for inspection errors.
+   * \ingroup utils
    */
   using ErrorList = std::vector<InspectionError>;
 
@@ -92,6 +97,7 @@ namespace vm
  * \param[out] errors Optional container collecting inspection errors
  *
  * \return True if all requested checks pass, false otherwise
+ * \ingroup utils
  */
   bool inspect_mesh(const pmp::SurfaceMesh& mesh,
 		    MeshInspection level,
@@ -105,6 +111,7 @@ namespace vm
    * \return True if the face polygon is valid and simple, false otherwise
    *
    * \note Does not check face orientation or area sign.
+   * \ingroup utils
    */
   bool inspect_face(const std::vector<pmp::Point>& coords);
 

@@ -2,6 +2,7 @@
 
 /** \file test_mesh_optimizer.cpp
  * \brief Unit tests for the class vm::MeshOptimizer
+ * \ingroup tests
  * \author Ramsharan Rangarajan
  */
 

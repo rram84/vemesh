@@ -2,6 +2,7 @@
 
 /** \file test_io.cpp
  * \brief Unit tests for mesh I/O routines defined in vm_io.h
+ * \ingroup tests
  * \author Ramsharan Rangarajan
  */
 

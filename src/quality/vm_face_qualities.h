@@ -43,6 +43,7 @@ namespace vm
      * \param stabilization Optional stabilization factor (default = 1.0).
      * \return Stiffness matrix (Eigen::MatrixXd).
      * \sa  vm::vem_stability_ratio
+     * \ingroup quality
      */
     Eigen::MatrixXd vem_stiffness_matrix(const std::vector<pmp::Point>& coords,
 					 const double stabilization = 1.0);
@@ -63,6 +64,7 @@ namespace vm
      * \param coords Coordinates of polygon vertices.
      * \return Stability ratio in the range [0,1].
      * \sa vm::vem_stiffness_matrix
+     * \ingroup quality
      */
     double vem_stability_ratio(const std::vector<pmp::Point>& coords);
 
@@ -85,6 +87,7 @@ namespace vm
      *
      * \param coords Polygon vertices in counterclockwise order.
      * \return Minimum internal angle in degrees (positive-valued).
+     * \ingroup quality
      */
     double geom_min_angle(const std::vector<pmp::Point>& coords);
   }

@@ -2,6 +2,7 @@
 
 /** \file test_vem_quality.cpp
  * \brief Unit tests for routines vm::quality::vem_stiffness_matrix and vm::quality_vem_stability_ratio defined in vm_face_qualities.h
+ * \ingroup tests
  * \author Ramsharan Rangarajan
  */
 
