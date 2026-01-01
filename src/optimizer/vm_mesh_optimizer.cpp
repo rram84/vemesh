@@ -49,20 +49,18 @@ namespace vm
     
     // add vertex quality tag
     if(mesh.has_vertex_property(vertex_quality_tag)==false)
-      {
-	mesh.add_vertex_property<double>(vertex_quality_tag);
-      }
-
+      mesh.add_vertex_property<double>(vertex_quality_tag);
+    
     // access face and vertex qualities
     auto face_qualities = mesh.get_face_property<double>(face_quality_tag);
     auto vertex_qualities = mesh.get_vertex_property<double>(vertex_quality_tag);
     
     // compute vertex qualities
     auto v_circulator = mesh.vertices();
-    double q;
+    double q, min_q;
     for(auto v:v_circulator)
       {
-	double &min_q = vertex_qualities[v];
+	min_q = std::numeric_limits<double>::max();
 	
 	// faces incident at this vertex
 	auto f_circulator = mesh.faces(v);
@@ -72,6 +70,7 @@ namespace vm
 	    if(q < min_q)
 	      min_q = q;
 	  }
+	vertex_qualities[v] = min_q;
       }
 
     // done
