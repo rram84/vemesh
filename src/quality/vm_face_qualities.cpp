@@ -1,5 +1,10 @@
 // Sriramajayam
 
+/** \file vm_face_qualities.cpp
+ * \brief Implementation of VEM-based and geometric face quality metrics
+ * \author Ramsharan Rangarajan
+ */
+
 #include <vm_face_qualities.h>
 #include <vm_utils.h>
 

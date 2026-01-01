@@ -1,11 +1,16 @@
 // Sriramajayam
 
 /** \file vm_quality_evaluator.h
- * \brief Defines the class vm::QualityEvaluator that performs face and vertex quality evaluations
+ * \brief Definition of the class vm::QualityEvaluator 
  * \author Ramsharan Rangarajan
  */
 
 #pragma once
+
+/** \file vm_quality_evaluator.h
+ * \brief Defines the class vm::QualityEvaluator for face/vertex quality evaluations
+ * \author Ramsharan Rangarajan
+ */
 
 #include <pmp/SurfaceMesh.h>
 #include <utility>
@@ -13,9 +18,7 @@
 namespace vm
 {
   //! \brief Function pointer type for evaluating the quality of a polygon
-  //! \sa quality::vem_stability_ratio
-  //! \sa quality::geom_shape
-  //! \sa quality::geom_min_angle
+  //! \sa vm::quality::vem_stability_ratio, vm::quality::geom_shape, vm::quality::geom_min_angle
   using FaceQualityFn = double(*)(const std::vector<pmp::Point>&);
 
   /**
@@ -28,6 +31,9 @@ namespace vm
    * \f[ Q(v) = \min_{1\leq i\leq n}Q(f_i), \f]
    where \f$f_1,\ldots,f_n\f$ are the faces incident at vertex \f$v\f$ and \f$Q\f$ is the 
    * given face-quality metric.
+   * 
+   * \sa vm::quality
+   * \sa vm::quality::vem_stability_ratio, vm::quality::geom_shape, vm::quality::geom_min_angle
    */
   class QualityEvaluator {
 

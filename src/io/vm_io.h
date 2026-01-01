@@ -1,5 +1,10 @@
 // Sriramajayam
 
+/** \file vm_io.h
+ * \brief Defines helper function for mesh I/O
+ * \author Ramsharan Rangarajan
+ */
+
 #pragma once
 
 #include <pmp/SurfaceMesh.h>
@@ -8,8 +13,7 @@
 
 namespace vm
 {
-  /**
-   * \brief Reads a polygonal mesh from a .OFF file into a SurfaceMesh.
+  /** \brief Reads a polygonal mesh from a .OFF file into a SurfaceMesh.
    * 
    * This function parses a standard OFF file containing vertex coordinates
    * and face connectivity. 
@@ -23,8 +27,7 @@ namespace vm
    */
   pmp::SurfaceMesh read_off(const std::string filename);
 
-  /**
-   * \brief Writes a polygonal mesh to a .OFF file.
+  /** \brief Writes a polygonal mesh to a .OFF file.
    * 
    * This function serializes a SurfaceMesh into the standard OFF format.
    * It writes vertex coordinates followed by face connectivity.
@@ -43,8 +46,7 @@ namespace vm
   
   // VTK
 
-  /**
-   * \brief Read a polygonal surface mesh from an ASCII VTK (.vtk) file.
+  /** \brief Read a polygonal surface mesh from an ASCII VTK (.vtk) file.
    *
    * This function reads a VTK file in the legacy ASCII POLYDATA format and
    * populates a \c pmp::SurfaceMesh with vertices, polygonal faces, and
@@ -54,7 +56,7 @@ namespace vm
    * - Vertex coordinates from the \c POINTS section
    * - Polygonal faces from the \c POLYGONS section
    *
-   The following data are read if present; otherwise default properties are created
+   * The following data are read if present; otherwise default properties are created
    * - Face scalar property \c domain_id (default = 1)
    * - Vertex scalar property \c interface_id (default = -1)
    *
@@ -79,8 +81,7 @@ namespace vm
    */
   pmp::SurfaceMesh read_vtk(const std::string filename);
 
-  /**
-   * \brief Write a polygonal surface mesh to an ASCII VTK file.
+  /** \brief Write a polygonal surface mesh to an ASCII VTK file.
    *
    * Writes the given \c pmp::SurfaceMesh to file in legacy ASCII VTK
    * (\c POLYDATA) format. 
@@ -114,13 +115,4 @@ namespace vm
    * \pre \c mesh.has_vertex_property("interface_id") == true
    */
   void write_vtk(const pmp::SurfaceMesh& mesh, const std::string filename);
-  
-  // suku
-  
-  // Writes a mesh in Sukumar's format
-  void write_suku_format(const pmp::SurfaceMesh& mesh, const std::string filename);
-
-  // GNUPLOT
-  // Writes a mesh in .dat format, suitable for plotting with gnuplot
-  void write_dat(const pmp::SurfaceMesh &mesh, const std::string filename);  
 }

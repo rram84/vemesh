@@ -1,5 +1,10 @@
 // Sriramajayam
 
+/** \file vm_mesh_inspection.cpp
+ * \brief Implements utilities for mesh inspection
+ * \author Ramsharan Rangarajan
+ */
+
 #include <vm_mesh_inspection.h>
 #include <sstream>
 

@@ -1,5 +1,10 @@
 // Sriramajayam
 
+/** \file vm_io_vtk.cpp
+ * \brief Implementation of mesh I/O in VTK format
+ * \author Ramsharan Rangarajan
+ */
+
 #include <vm_io.h>
 #include <filesystem>
 #include <fstream>

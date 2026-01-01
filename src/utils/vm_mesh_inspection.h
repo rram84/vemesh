@@ -1,5 +1,11 @@
 // Sriramajayam
 
+/** \file vm_mesh_inspection.h
+ * \brief Defines utilities for mesh inspection
+ * \author Ramsharan Rangarajan
+ */
+
+
 #pragma once
 
 #include <vm_utils.h>

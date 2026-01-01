@@ -1,5 +1,12 @@
 // Sriramajayam
 
+/** \file vm_vem_stiffness.cpp 
+ * \brief Implements the VEM stiffness matrix
+ * Compute the stiffness matrix in the VEM
+ * \author Ramsharan Rangarajan
+ */
+
+
 #include <vm_face_qualities.h>
 #include <vm_utils.h>
 

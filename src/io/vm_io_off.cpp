@@ -1,11 +1,17 @@
 // Sriramajayam
 
+/** \file vm_io_off.cpp
+ * \brief Implementation of mesh I/O in OFF format
+ * \author Ramsharan Rangarajan
+ */
+
 #include <vm_io.h>
 #include <filesystem>
 #include <fstream>
 #include <sstream>
 #include <algorithm>
 #include <stdexcept>
+#include <cctype>
 
 namespace vm
 {

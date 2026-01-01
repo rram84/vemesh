@@ -1,7 +1,11 @@
 // Sriramajayam
 
-#include <vm_utils.h>
+/** \file vm_utils.cpp
+ * \brief Implements Boost.Geometry and pmp::SurfaceMesh related utility functions
+ * \author Ramsharan Rangarajan
+ */
 
+#include <vm_utils.h>
 
 // ---- Create a boost polygon from a set of points --- //
 namespace vm

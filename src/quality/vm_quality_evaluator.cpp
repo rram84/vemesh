@@ -1,5 +1,10 @@
 // Sriramajayam
 
+/** \file vm_quality_evaluator.cpp
+ * \brief Implementation of the class vm::QualityEvaluator 
+ * \author Ramsharan Rangarajan
+ */
+
 #include <vm_quality_evaluator.h>
 
 namespace vm

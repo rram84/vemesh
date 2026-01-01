@@ -1,5 +1,10 @@
 // Sriramajayam
 
+/** \file vm_utils.h
+ * \brief Defines Boost.Geometry and pmp::SurfaceMesh related utility functions
+ * \author Ramsharan Rangarajan
+ */
+
 #pragma once
 
 #include <pmp/SurfaceMesh.h>
