@@ -164,7 +164,6 @@ namespace vm
     //! \brief Agglomerate a face with a feasible neighbor
     //! \param[in] f The face to agglomerate. Considered only if its current quality is lower than qmin
     //! \param[in] QE Reference to an instance of QualityEvaluator, used to evaluate face qualities
-    //! \param[in] qmin Acceptable positive lower bound for quality of agglomerated face
     //! \param[in] qfactor Lower bound for factor of improvement in face quality, assumed to be greater than of equal to 1.
     //! \return A triplet `result` such that:
     //! - `std::get<0>(result)`: true if the face was agglomerated, and false otherwise
@@ -172,21 +171,18 @@ namespace vm
     //! - `std::get<2>(result)`: the new agglomerated face in case of success, and `f' otherwise
     std::tuple<bool, double, pmp::Face> agglomerate(const pmp::Face& f,
 						    const QualityEvaluator& QE,
-						    double qmin,
 						    double qfactor);
 
     //! \brief Agglomerate a given set of faces
     //! \param[in] subset Given subset of faces in the mesh.
     //!                   Among these, faces with qualities lower than qmin are considered for agglomeration
     //! \param[in] QE Reference to an instance of QualityEvaluator, used to evaluate face qualities
-    //! \param[in] qmin Acceptable positive lower bound for quality of an agglomerated face
     //! \param[in] qfactor Lower bound for factor of improvement in face quality,
     //!                    assumed to be greater than of equal to 1.
     //! \param[in] callback Callback function invoked after each successful agglomeration attempt
     //! \return Number of aglomerated faces. Can help decide if another iteration of agglomeration is warranted
     int agglomerate(const std::set<pmp::Face>& subset,
 		    const QualityEvaluator& QE,
-		    double qmin,
 		    double qfactor,
 		    const ProgressCallback &callback=nullptr);
 

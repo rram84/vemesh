@@ -363,10 +363,8 @@ void test_agglomerate_1(const pmp::SurfaceMesh &mesh,
 {
   std::random_device rd;
   std::mt19937 gen(rd());
-  std::uniform_real_distribution<double> d1(0.01, 0.1);
-  const double qmin = d1(gen);
-  std::uniform_real_distribution<double> d2(1.01, 1.2);
-  const double qfactor = d2(gen);
+  std::uniform_real_distribution<double> d(1.01, 1.2);
+  const double qfactor = d(gen);
 
   const int nfaces = mesh.n_faces();
   
@@ -388,7 +386,7 @@ void test_agglomerate_1(const pmp::SurfaceMesh &mesh,
       vm::MeshOptimizer opt(mesh);
 
       // try agglomerating this face
-      auto result = opt.agglomerate(f, QE, qmin, qfactor);
+      auto result = opt.agglomerate(f, QE, qfactor);
 
       const bool success = std::get<bool>(result);
       const int new_idx = std::get<pmp::Face>(result).idx();
@@ -398,7 +396,7 @@ void test_agglomerate_1(const pmp::SurfaceMesh &mesh,
       if(success)
 	{
 	  // quality improvement
-	  if( !(new_quality>=qfactor*curr_quality && new_quality>qmin) )
+	  if( !(new_quality>=qfactor*curr_quality) )
 	    {
 	      std::cerr << "\ntest_agglomerate_1: inconsistency in merged face quality\n";
 	      std::exit(EXIT_FAILURE);
@@ -459,11 +457,9 @@ void test_agglomerate_2(const pmp::SurfaceMesh &in_mesh,
   auto& mesh = opt.get_mesh();
   
   // relax faces
-  std::uniform_real_distribution<double> d1(0.01, 0.1);
-  const double qmin = d1(gen);
-  std::uniform_real_distribution<double> d2(1.01, 1.2);
-  const double qfactor = d2(gen);
-  int nmerged = opt.agglomerate(subset, QE, qmin, qfactor);
+  std::uniform_real_distribution<double> d(1.01, 1.2);
+  const double qfactor = d(gen);
+  int nmerged = opt.agglomerate(subset, QE, qfactor);
 
   // consistency in number of faces
   if(nmerged>static_cast<int>(subset.size()) || mesh.n_faces()!=in_mesh.n_faces()-nmerged)
@@ -492,15 +488,17 @@ void test_agglomerate_3(const pmp::SurfaceMesh &in_mesh,
   // optimizer
   vm::MeshOptimizer opt(in_mesh);
   auto& mesh = opt.get_mesh();
+  //vm::write_vtk(mesh, "in.vtk");
   
   // relax faces
   std::random_device rd;
   std::mt19937 gen(rd());
-  std::uniform_real_distribution<double> d1(0.01, 0.1);
+  std::uniform_real_distribution<double> d1(0.8, 0.95); // shortlist many faces for merge
   const double qmin = d1(gen);
   std::uniform_real_distribution<double> d2(1.01, 1.2);
   const double qfactor = d2(gen);
   int nmerged = opt.agglomerate(QE, qmin, qfactor);
+  //vm::write_vtk(mesh, "out.vtk");
   
   // consistency in number of faces
   if(nmerged>in_mesh.n_faces()-1 || mesh.n_faces()!=in_mesh.n_faces()-nmerged)
@@ -510,12 +508,13 @@ void test_agglomerate_3(const pmp::SurfaceMesh &in_mesh,
     }
 
   int ndeleted = 0;
-  auto f_circulator = mesh.faces();
+  auto f_circulator = in_mesh.faces();
   for(auto f:f_circulator)
     if(mesh.is_deleted(f))
       ++ndeleted;
   if(nmerged!=ndeleted)
     {
+      std::cout << "nmerged = " << nmerged <<", ndeleted = " << ndeleted << "\n";
       std::cerr << "\ntest_agglomerate_3: inconsistency in number of deleted/merged faces\n";
       std::exit(EXIT_FAILURE);
     }

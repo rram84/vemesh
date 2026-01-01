@@ -19,10 +19,9 @@ namespace vm
   std::tuple<bool, double, pmp::Face>
   MeshOptimizer::agglomerate(const pmp::Face& face,
 			     const QualityEvaluator &QE,
-			     double qmin,
 			     double qfactor)
   {
-    assert(qmin>0. && qfactor>1.);
+    assert(qfactor>1.);
     assert(mesh.is_valid(face) && !mesh.is_deleted(face));
     
     // current quality
@@ -37,7 +36,6 @@ namespace vm
     const auto& best_quality  = std::get<double>(result);
     const auto& best_halfedge = std::get<pmp::Halfedge>(result);
     if(success==true &&
-       best_quality>qmin &&
        best_quality>qfactor*curr_quality)
       {
 	//ret_data = {success, best_quality, mesh.face(mesh.opposite_halfedge(best_halfedge))};
@@ -63,14 +61,13 @@ namespace vm
   // agglomerate faces in a subset
   int MeshOptimizer::agglomerate(const std::set<pmp::Face>& subset,
 				 const QualityEvaluator& QE,
-				 double qmin,
 				 double qfactor,
 				 const ProgressCallback &callback)
   {
-    assert(qfactor>=1. && qmin>0.);
+    assert(qfactor>=1.);
     
     // tolerance for comparing qualities
-    const double qeps = qmin/100.;
+    const double qeps = 1.e-6;
 
     // priority queue of faces to be merged during this iteration
     // priority_queue top() gives the face with lowest quality
@@ -108,7 +105,7 @@ namespace vm
 	  }
 	  
 	// this face is the current priority
-	auto result = this->agglomerate(f, QE, qmin, qfactor);
+	auto result = this->agglomerate(f, QE, qfactor);
 	auto success = std::get<bool>(result);
 	if(success==true) {
 	  ++nmerged;
@@ -142,10 +139,10 @@ namespace vm
     std::set<pmp::Face> faceset{};
     auto f_container = mesh.faces();
     for(auto f:f_container)
-      if(QE(f, mesh)<qmin)
+      if(QE(f,mesh)<qmin)
 	faceset.insert(f);
-
-    return agglomerate(faceset, QE, qmin, qfactor, callback);
+      
+    return agglomerate(faceset, QE, qfactor, callback);
   }
   
 
