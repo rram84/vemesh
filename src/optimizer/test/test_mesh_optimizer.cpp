@@ -284,7 +284,7 @@ void test_relax_3(const pmp::SurfaceMesh& in_mesh,
   // optimizer
   vm::MeshOptimizer opt(in_mesh);
   auto& mesh = opt.get_mesh();
-  vm::write_vtk(mesh, "in.vtk");
+  //vm::write_vtk(mesh, "in.vtk");
   
   // random lower bound for quality
   std::random_device rd;
@@ -300,7 +300,7 @@ void test_relax_3(const pmp::SurfaceMesh& in_mesh,
 
   // relax
   opt.relax(QE, qmin, 4);
-  vm::write_vtk(mesh, "out.vtk");
+  //vm::write_vtk(mesh, "out.vtk");
 
   // compute face/vertex qualities after relaxation
   const std::string f_tag_post = "geom_face_quality_post";
