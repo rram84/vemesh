@@ -3,6 +3,7 @@
 #include <vm_mesh_optimizer.h>
 #include <vm_face_qualities.h>
 #include <vm_io.h>
+#include <random>
 
 // test face quality evaluation
 void test_evaluate_face_quality(const pmp::SurfaceMesh&, const vm::QualityEvaluator&);
@@ -15,6 +16,9 @@ void test_relax_1(const pmp::SurfaceMesh&, const vm::QualityEvaluator&);
 
 // test relax() overload 2
 void test_relax_2(const pmp::SurfaceMesh&, const vm::QualityEvaluator&);
+
+// test relax() overload 3
+void test_relax_3(const pmp::SurfaceMesh&, const vm::QualityEvaluator&);
 
 int main()
 {
@@ -33,6 +37,12 @@ int main()
   // overload 1 for relaxation
   test_relax_1(mesh, QE);
 
+  // overload 2 for relaxation
+  test_relax_2(mesh, QE);
+
+  // overload 3 for relaxation
+  test_relax_3(mesh, QE);
+  
 }
 
 // ------- test face quality evaluation -------- //
@@ -146,8 +156,182 @@ void test_relax_1(const pmp::SurfaceMesh& in_mesh,
 }
   
 
+// ------ test that vector u < vector v ----- //
+// assumes that u and v are sorted in ascending order and have identical length
+// u > v if there exist n such that
+// u[i] >= v[i] for i<=n
+bool is_greater(const std::vector<double>& u, const std::vector<double>& v)
+{
+  if(u.size()!=v.size())
+    {
+      std::cerr << "\nis_greater: cannot compare vectors of different sizes\n";
+      std::exit(EXIT_FAILURE);
+    }
+  const int nsize = static_cast<int>(u.size());
+  const double EPS = 1.e-6;
+
+  // find the first index n for which u[i] neq v[i]
+  int n = nsize;
+  for(int i=0; i<nsize; ++i)
+    if(std::abs(u[i]-v[i])>EPS)
+      {
+	n = i;
+	break;
+      }
+  
+  // expect u[i]>=v[i] until index n
+  for(int i=0; i<n; ++i)
+    if(u[i]<v[i]-EPS)
+      return false;
+
+  return true;
+}
+
 
 // --------- test relax() overload 2 -------//
-void test_relax_2(const pmp::SurfaceMesh& in_mesh, const vm::QualityEvaluator &QE)
+void test_relax_2(const pmp::SurfaceMesh& in_mesh,
+		  const vm::QualityEvaluator &QE)
 {
+  // generate a random subset of relaxable vertices
+  // relax them and check consistency of the vector-valued mesh quality
+  vm::MeshOptimizer opt(in_mesh);
+  auto& mesh = opt.get_mesh();
+  auto v_circulator = mesh.vertices();
+
+  // compute face/vertex qualities before relaxation
+  const std::string f_tag_pre = "geom_face_quality_pre";
+  const std::string v_tag_pre = "geom_vertex_quality_pre";
+  opt.evaluate_face_qualities(QE, f_tag_pre);
+  opt.evaluate_vertex_qualities(f_tag_pre, v_tag_pre);
+  
+  std::set<pmp::Vertex> subset{};
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::bernoulli_distribution d(0.5);
+
+  for(auto v:v_circulator)
+    if(!mesh.is_boundary(v))
+      if(d(gen))
+	subset.insert(v);
+
+  // relax vertices
+  opt.relax(subset, QE, 4); // 4 samples
+
+  // compute face/vertex qualities after relaxation
+  const std::string f_tag_post = "geom_face_quality_post";
+  const std::string v_tag_post = "geom_vertex_quality_post";
+  opt.evaluate_face_qualities(QE, f_tag_post);
+  opt.evaluate_vertex_qualities(f_tag_post, v_tag_post);
+
+  // face quality vectors
+  std::vector<double> q_face_pre{}, q_face_post{};
+  auto prop_q_face_pre  = mesh.get_face_property<double>(f_tag_pre); 
+  auto prop_q_face_post = mesh.get_face_property<double>(f_tag_post);
+  auto f_circulator = mesh.faces();
+  for(auto f:f_circulator)
+    {
+      q_face_pre.push_back(prop_q_face_pre[f]);
+      q_face_post.push_back(prop_q_face_post[f]);
+    } 
+  std::sort(q_face_pre.begin(), q_face_pre.end());
+  std::sort(q_face_post.begin(), q_face_post.end());
+
+  // vertex quality vectors
+  std::vector<double> q_vertex_pre{}, q_vertex_post{};
+  auto prop_q_vertex_pre  = mesh.get_vertex_property<double>(v_tag_pre);
+  auto prop_q_vertex_post = mesh.get_vertex_property<double>(v_tag_post);
+  for(auto v:v_circulator)
+    {
+      q_vertex_pre.push_back(prop_q_vertex_pre[v]);
+      q_vertex_post.push_back(prop_q_vertex_post[v]);
+    }
+  std::sort(q_vertex_pre.begin(),  q_vertex_pre.end());
+  std::sort(q_vertex_post.begin(), q_vertex_post.end());
+
+  // check ordering of face quality vectors
+  if(!is_greater(q_face_post, q_face_pre))
+    {
+      std::cerr << "\ntest_relax_2: pre face quality > post face quality\n";
+      std::exit(EXIT_FAILURE);
+    }
+
+  // check ordering of vertex quality vectors
+  if(!is_greater(q_vertex_post, q_vertex_pre))
+    {
+      std::cerr << "\ntest_relax_2: pre vertex quality > post vertex quality\n";
+      std::exit(EXIT_FAILURE);
+    }
+
+}
+
+
+// --------- test relax() overload 3 -------//
+void test_relax_3(const pmp::SurfaceMesh& in_mesh,
+		  const vm::QualityEvaluator &QE)
+{
+  // optimizer
+  vm::MeshOptimizer opt(in_mesh);
+  auto& mesh = opt.get_mesh();
+  
+  // random lower bound for quality
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::uniform_real_distribution<double> d(0.25, 0.8);
+  const double qmin = d(gen);
+
+  // compute face/vertex qualities before relaxation
+  const std::string f_tag_pre = "geom_face_quality_pre";
+  const std::string v_tag_pre = "geom_vertex_quality_pre";
+  opt.evaluate_face_qualities(QE, f_tag_pre);
+  opt.evaluate_vertex_qualities(f_tag_pre, v_tag_pre);
+
+  // relax
+  opt.relax(QE, qmin, 4);
+
+  // compute face/vertex qualities after relaxation
+  const std::string f_tag_post = "geom_face_quality_post";
+  const std::string v_tag_post = "geom_vertex_quality_post";
+  opt.evaluate_face_qualities(QE, f_tag_post);
+  opt.evaluate_vertex_qualities(f_tag_post, v_tag_post);
+
+  // face quality vectors
+  std::vector<double> q_face_pre{}, q_face_post{};
+  auto prop_q_face_pre  = mesh.get_face_property<double>(f_tag_pre); 
+  auto prop_q_face_post = mesh.get_face_property<double>(f_tag_post);
+  auto f_circulator = mesh.faces();
+  for(auto f:f_circulator)
+    {
+      q_face_pre.push_back(prop_q_face_pre[f]);
+      q_face_post.push_back(prop_q_face_post[f]);
+    } 
+  std::sort(q_face_pre.begin(), q_face_pre.end());
+  std::sort(q_face_post.begin(), q_face_post.end());
+
+  // vertex quality vectors
+  std::vector<double> q_vertex_pre{}, q_vertex_post{};
+  auto prop_q_vertex_pre  = mesh.get_vertex_property<double>(v_tag_pre);
+  auto prop_q_vertex_post = mesh.get_vertex_property<double>(v_tag_post);
+  auto v_circulator = mesh.vertices();
+  for(auto v:v_circulator)
+    {
+      q_vertex_pre.push_back(prop_q_vertex_pre[v]);
+      q_vertex_post.push_back(prop_q_vertex_post[v]);
+    }
+  std::sort(q_vertex_pre.begin(),  q_vertex_pre.end());
+  std::sort(q_vertex_post.begin(), q_vertex_post.end());
+
+  // check ordering of face quality vectors
+  if(!is_greater(q_face_post, q_face_pre))
+    {
+      std::cerr << "\ntest_relax_3: pre face quality > post face quality\n";
+      std::exit(EXIT_FAILURE);
+    }
+
+  // check ordering of vertex quality vectors
+  if(!is_greater(q_vertex_post, q_vertex_pre))
+    {
+      std::cerr << "\ntest_relax_3: pre vertex quality > post vertex quality\n";
+      std::exit(EXIT_FAILURE);
+    }
+
 }
