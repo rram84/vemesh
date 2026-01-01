@@ -20,6 +20,12 @@ void test_relax_2(const pmp::SurfaceMesh&, const vm::QualityEvaluator&);
 // test relax() overload 3
 void test_relax_3(const pmp::SurfaceMesh&, const vm::QualityEvaluator&);
 
+// test agglomerate() overload 1
+void test_agglomerate_1(const pmp::SurfaceMesh&, const vm::QualityEvaluator&);
+
+// test agglomerate() overload 2
+void test_agglomerate_2(const pmp::SurfaceMesh&, const vm::QualityEvaluator&);
+
 int main()
 {
   // read a polygonal mesh
@@ -42,6 +48,12 @@ int main()
 
   // overload 3 for relaxation
   test_relax_3(mesh, QE);
+
+  // test agglomerate() overload 1
+  test_agglomerate_1(mesh, QE);
+ 
+  // test agglomerate() overload 2
+  //test_agglomerate_2(mesh, QE);
   
 }
 
@@ -272,6 +284,7 @@ void test_relax_3(const pmp::SurfaceMesh& in_mesh,
   // optimizer
   vm::MeshOptimizer opt(in_mesh);
   auto& mesh = opt.get_mesh();
+  vm::write_vtk(mesh, "in.vtk");
   
   // random lower bound for quality
   std::random_device rd;
@@ -287,6 +300,7 @@ void test_relax_3(const pmp::SurfaceMesh& in_mesh,
 
   // relax
   opt.relax(QE, qmin, 4);
+  vm::write_vtk(mesh, "out.vtk");
 
   // compute face/vertex qualities after relaxation
   const std::string f_tag_post = "geom_face_quality_post";
@@ -334,4 +348,86 @@ void test_relax_3(const pmp::SurfaceMesh& in_mesh,
       std::exit(EXIT_FAILURE);
     }
 
+}
+
+
+// -------- test agglomerate() overload 1 ------------ //
+void test_agglomerate_1(const pmp::SurfaceMesh &mesh,
+			const vm::QualityEvaluator &QE)
+{
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::uniform_real_distribution<double> d1(0.01, 0.1);
+  const double qmin = d1(gen);
+  std::uniform_real_distribution<double> d2(1.01, 1.2);
+  const double qfactor = d2(gen);
+
+  const int nfaces = mesh.n_faces();
+  
+  // try agglomerating each face
+  auto f_circulator = mesh.faces();
+  for(auto f:f_circulator)
+    {
+      // quality of this face
+      double curr_quality = QE(f, mesh);
+
+      // neighbors of this face
+      auto h_edges = mesh.halfedges();
+      std::set<int> nbs{};
+      for(auto h:h_edges)
+	if(!mesh.is_boundary(h))
+	  nbs.insert(mesh.face(mesh.opposite_halfedge(h)).idx());
+      
+      // optimizer
+      vm::MeshOptimizer opt(mesh);
+
+      // try agglomerating this face
+      auto result = opt.agglomerate(f, QE, qmin, qfactor);
+
+      const bool success = std::get<bool>(result);
+      const int new_idx = std::get<pmp::Face>(result).idx();
+      const double new_quality = std::get<double>(result);
+      
+      // consistency checks in case of success
+      if(success)
+	{
+	  // quality improvement
+	  if( !(new_quality>=qfactor*curr_quality && new_quality>qmin) )
+	    {
+	      std::cerr << "\ntest_agglomerate_1: inconsistency in merged face quality\n";
+	      std::exit(EXIT_FAILURE);
+	    }
+
+	  // number of faces
+	  if(opt.get_mesh().n_faces()!=nfaces-1)
+	    {
+	      std::cerr << "\ntest_agglomerate_1: inconsistency in number of faces after successful merge\n";
+	      std::exit(EXIT_FAILURE);
+	    }
+
+	  // new face should equal this face or one of the neighbors
+	  if( new_idx!=f.idx() && nbs.find(new_idx)==nbs.end() )
+	    {
+	      std::cerr << "\ntest_agglomerate_1: inconsistency in agglomerated face after successful merge\n";
+	      std::exit(EXIT_FAILURE);
+	    }
+	}
+      // consistency checks in case of failure
+      else 
+	{
+	   // number of faces
+	  if(opt.get_mesh().n_faces()!=nfaces)
+	    {
+	      std::cerr << "\ntest_agglomerate_1: inconsistency in number of faces after unsuccessful merge\n";
+	      std::exit(EXIT_FAILURE);
+	    }
+
+	  // new face should equal old one
+	  if( new_idx!=f.idx() )
+	    {
+	      std::cerr << "\ntest_agglomerate_1: inconsistency in agglomerated face after unsuccessful merge\n";
+	      std::exit(EXIT_FAILURE);
+	    }
+	}
+    }
 }

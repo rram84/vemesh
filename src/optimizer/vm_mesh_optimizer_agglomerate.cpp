@@ -24,16 +24,12 @@ namespace vm
   {
     assert(qmin>0. && qfactor>1.);
     assert(mesh.is_valid(face) && !mesh.is_deleted(face));
-
+    
     // current quality
     const double curr_quality = QE(face, mesh);
     
     // return data
     std::tuple<bool, double, pmp::Face> ret_data{false, curr_quality, face};
-
-    // is quality already acceptable
-    if(curr_quality>qmin)
-      return ret_data;
 
     // no. merge along best possible neighbor
     auto result = find_halfedge_for_face_merge(face, QE);
@@ -82,8 +78,7 @@ namespace vm
     for(auto f:subset)
       {
 	double qval = QE(f, mesh);
-	if(qval<qmin)
-	  face_queue.push({f, qval});
+	face_queue.push({f, qval});
       }
     const int qsize = static_cast<int>(face_queue.size());
       
@@ -98,17 +93,13 @@ namespace vm
 	const auto& f = fq.first;
 	face_queue.pop();
 
-	// do nothing if:
-	// (i)  this face was erased during a merge
-	// (ii) the quality of this face, which could have changed due to a merge, is > qmin
+	// do nothing if this face was erased during a merge
 	if(mesh.is_deleted(f)==true)
 	  continue;
 	  
 	// current quality
 	const double curr_q = QE(f, mesh);
-	if(curr_q>qmin)
-	  continue;
-	  
+	
 	// reposition this face in the queue if its quality has changed
 	if(std::abs(curr_q-fq.second)>qeps)
 	  {

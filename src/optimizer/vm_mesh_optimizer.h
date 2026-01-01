@@ -164,7 +164,7 @@ namespace vm
     //! \brief Agglomerate a face with a feasible neighbor
     //! \param[in] f The face to agglomerate. Considered only if its current quality is lower than qmin
     //! \param[in] QE Reference to an instance of QualityEvaluator, used to evaluate face qualities
-    //! \param[in] qmin Acceptable positive lower bound for quality 
+    //! \param[in] qmin Acceptable positive lower bound for quality of agglomerated face
     //! \param[in] qfactor Lower bound for factor of improvement in face quality, assumed to be greater than of equal to 1.
     //! \return A triplet `result` such that:
     //! - `std::get<0>(result)`: true if the face was agglomerated, and false otherwise
