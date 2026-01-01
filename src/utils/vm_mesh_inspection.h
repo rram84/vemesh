@@ -40,14 +40,14 @@ namespace vm
       };
 
 
-  /* \brief Detailed information about a mesh inspection failure.
+  /** \brief Detailed information about a mesh inspection failure.
    *
    * Stores the error code, affected face indices, and a readable diagnostic message.
    */
   struct InspectionError {
     InspectionErrorCode code; /**< Error classification */
     int face = -1;            /**< Primary face index (if applicable) */
-    int face2 = -1;           /**< Secondary face index (used for face-face overlap errors) */
+    int face2 = -1;           /**< Secondary face index (if applicable) */
     std::string message;      /**< Diagnostic message */
   };
 

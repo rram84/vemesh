@@ -55,7 +55,7 @@ namespace vm
    */
   using ProgressCallback = std::function<bool(const ProgressInfo& info, const pmp::SurfaceMesh &mesh, const MeshOptimizer &optimizer)>;
 
-  /** \brief Class implementing the main functionality of the library.
+  /** \brief Class implementing the main functionality of the library: vertex relaxation and element agglomeration
    *
    * ---
    *
