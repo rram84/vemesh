@@ -1,5 +1,9 @@
 // Sriramajayam
-// Sriramajayam
+
+/** \file test_io.cpp
+ * \brief Unit tests for mesh I/O routines defined in vm_io.h
+ * \author Ramsharan Rangarajan
+ */
 
 #include <vm_io.h>
 #include <pmp/SurfaceMesh.h>
@@ -8,7 +12,7 @@
 #include <cmath>
 #include <filesystem>
 
-/* ---------- helpers ---------- */
+// ---------- helpers ---------- //
 
 bool points_close(const pmp::Point& a,
                   const pmp::Point& b,
@@ -90,7 +94,7 @@ pmp::SurfaceMesh make_test_mesh()
   return mesh;
 }
 
-/* ---------- tests ---------- */
+// ---------- tests ---------- //
 
 void test_off_io()
 {

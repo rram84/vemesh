@@ -1,5 +1,10 @@
 // Sriramajayam
 
+/** \file test_environment.cpp
+ * \brief Unit tests for utility routines vm::get_vertex_environment and vm::get_environment_polygon defined in vm_utils.h
+ * \author Ramsharan Rangarajan
+ */
+
 #include <vm_utils.h>
 #include <vm_io.h>
 
@@ -25,7 +30,7 @@ int main()
 }
 
 
-// test the get_environment_vertices function
+// --------- test the get_environment_vertices function ------- //
 void test_environment_vertices(const pmp::SurfaceMesh& mesh)
 {
   // compare get_environment_vertices with a direct identification
@@ -74,7 +79,7 @@ void test_environment_vertices(const pmp::SurfaceMesh& mesh)
 }
   
 
-// test the environment polygon
+// ---------  test the environment polygon -------- //
 void test_environment_polygon(const pmp::SurfaceMesh& mesh)
 {
   auto v_container = mesh.vertices();

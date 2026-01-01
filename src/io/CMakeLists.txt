@@ -2,8 +2,7 @@
 
 add_library(vm_io STATIC
 		  vm_io_off.cpp
-		  vm_io_vtk.cpp
-		  vm_io_suku.cpp)
+		  vm_io_vtk.cpp)
 
 # include headers in the current directory
 target_include_directories(vm_io PUBLIC

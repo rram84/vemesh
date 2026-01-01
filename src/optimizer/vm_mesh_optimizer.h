@@ -1,6 +1,6 @@
 // Sriramajayam
 
-/** \file vm_mesh_optimzer.h
+/** \file vm_mesh_optimizer.h
  * \brief Defines main class vm::MeshOptimizer that performs face agglomeration and vertex relaxation operations
  * \author Ramsharan Rangarajan
  */

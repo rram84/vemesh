@@ -1,5 +1,10 @@
 // Sriramajayam
 
+/** \file test_mesh_optimizer_helpers.cpp
+ * \brief Unit tests for protected helper methods of the class vm::MeshOptimizer
+ * \author Ramsharan Rangarajan
+ */
+
 #include <vm_mesh_optimizer.h>
 #include <vm_mesh_inspection.h>
 #include <vm_face_qualities.h>

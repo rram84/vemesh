@@ -1,5 +1,11 @@
 // Sriramajayam
 
+/** \file test_mesh_inspection.cpp
+ * \brief Unit tests for utility routines vm::inspect_face and vm::inspect_mesh defined in vm_utils.h
+ * \author Ramsharan Rangarajan
+ */
+
+
 #include <vm_mesh_inspection.h>
 #include <vm_io.h>
 

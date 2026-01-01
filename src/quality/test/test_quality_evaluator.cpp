@@ -1,5 +1,10 @@
 // Sriramajayam
 
+/** \file test_quality_evaluator.cpp
+ * \brief Unit tests for the class vm::QualityEvaluator
+ * \author Ramsharan Rangarajan
+ */
+
 #include <vm_quality_evaluator.h>
 #include <vm_face_qualities.h>
 #include <pmp/SurfaceMesh.h>
