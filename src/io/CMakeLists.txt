@@ -1,7 +1,6 @@
 # Sriramajayam
 
 add_library(vm_io STATIC
-		  vm_io.cpp
 		  vm_io_off.cpp
 		  vm_io_vtk.cpp
 		  vm_io_suku.cpp)
