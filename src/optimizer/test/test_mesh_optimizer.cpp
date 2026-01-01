@@ -26,6 +26,9 @@ void test_agglomerate_1(const pmp::SurfaceMesh&, const vm::QualityEvaluator&);
 // test agglomerate() overload 2
 void test_agglomerate_2(const pmp::SurfaceMesh&, const vm::QualityEvaluator&);
 
+// test agglomerate() overload 3
+void test_agglomerate_3(const pmp::SurfaceMesh&, const vm::QualityEvaluator&);
+
 int main()
 {
   // read a polygonal mesh
@@ -53,7 +56,10 @@ int main()
   test_agglomerate_1(mesh, QE);
  
   // test agglomerate() overload 2
-  //test_agglomerate_2(mesh, QE);
+  test_agglomerate_2(mesh, QE);
+
+  // test agglomerate() overload 3
+  test_agglomerate_3(mesh, QE);
   
 }
 
@@ -429,5 +435,88 @@ void test_agglomerate_1(const pmp::SurfaceMesh &mesh,
 	      std::exit(EXIT_FAILURE);
 	    }
 	}
+    }
+}
+
+
+
+// ----------- test agglomerate() overload 2 --------- //
+void test_agglomerate_2(const pmp::SurfaceMesh &in_mesh,
+			const vm::QualityEvaluator &QE)
+{
+  // identify a subset of faces to relax
+  std::set<pmp::Face> subset{};
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::bernoulli_distribution d0(0.5);
+  auto f_circulator = in_mesh.faces();
+  for(auto f:f_circulator)
+    if(d0(gen))
+      subset.insert(f);
+
+  // optimizer
+  vm::MeshOptimizer opt(in_mesh);
+  auto& mesh = opt.get_mesh();
+  
+  // relax faces
+  std::uniform_real_distribution<double> d1(0.01, 0.1);
+  const double qmin = d1(gen);
+  std::uniform_real_distribution<double> d2(1.01, 1.2);
+  const double qfactor = d2(gen);
+  int nmerged = opt.agglomerate(subset, QE, qmin, qfactor);
+
+  // consistency in number of faces
+  if(nmerged>static_cast<int>(subset.size()) || mesh.n_faces()!=in_mesh.n_faces()-nmerged)
+    {
+      std::cerr << "\ntest_agglomerate_2: inconsistency in number of merged faces\n";
+      std::exit(EXIT_FAILURE);
+    }
+
+  int ndeleted = 0;
+  for(auto f:f_circulator)
+    if(mesh.is_deleted(f))
+      ++ndeleted;
+  if(nmerged!=ndeleted)
+    {
+      std::cerr << "\ntest_agglomerate_2: inconsistency in number of deleted/merged faces\n";
+      std::exit(EXIT_FAILURE);
+    }
+}
+
+
+
+// ----------- test agglomerate() overload 3 --------- //
+void test_agglomerate_3(const pmp::SurfaceMesh &in_mesh,
+			const vm::QualityEvaluator &QE)
+{
+  // optimizer
+  vm::MeshOptimizer opt(in_mesh);
+  auto& mesh = opt.get_mesh();
+  
+  // relax faces
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::uniform_real_distribution<double> d1(0.01, 0.1);
+  const double qmin = d1(gen);
+  std::uniform_real_distribution<double> d2(1.01, 1.2);
+  const double qfactor = d2(gen);
+  int nmerged = opt.agglomerate(QE, qmin, qfactor);
+  
+  // consistency in number of faces
+  if(nmerged>in_mesh.n_faces()-1 || mesh.n_faces()!=in_mesh.n_faces()-nmerged)
+    {
+      std::cerr << "\ntest_agglomerate_3: inconsistency in number of merged faces\n";
+      std::exit(EXIT_FAILURE);
+    }
+
+  int ndeleted = 0;
+  auto f_circulator = mesh.faces();
+  for(auto f:f_circulator)
+    if(mesh.is_deleted(f))
+      ++ndeleted;
+  if(nmerged!=ndeleted)
+    {
+      std::cerr << "\ntest_agglomerate_3: inconsistency in number of deleted/merged faces\n";
+      std::exit(EXIT_FAILURE);
     }
 }

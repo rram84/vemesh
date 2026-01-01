@@ -142,7 +142,8 @@ namespace vm
     std::set<pmp::Face> faceset{};
     auto f_container = mesh.faces();
     for(auto f:f_container)
-      faceset.insert(f);
+      if(QE(f, mesh)<qmin)
+	faceset.insert(f);
 
     return agglomerate(faceset, QE, qmin, qfactor, callback);
   }
