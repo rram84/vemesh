@@ -8,4 +8,4 @@ find_dependency(Boost)
 find_dependency(Eigen3)
 find_dependency(pmp)
 
-include("${CMAKE_CURRENT_LIST_DIR}/VEMeshTargets.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/vemeshTargets.cmake")

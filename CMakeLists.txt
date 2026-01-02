@@ -2,9 +2,9 @@
 
 cmake_minimum_required(VERSION 3.17)
 
-project(VEMesh
+project(vemesh
   VERSION 1.0
-  DESCRIPTION "VEMesh in 2D"
+  DESCRIPTION "vemesh in 2D"
   LANGUAGES CXX)
  
 # Set runtime path (for Linux)
