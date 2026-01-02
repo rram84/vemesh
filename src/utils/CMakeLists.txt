@@ -4,10 +4,12 @@ add_library(vm_utils STATIC
 		 vm_utils.cpp
 		 vm_mesh_inspection.cpp)
 
+add_library(vemesh::vm_utils ALIAS vm_utils)
+
 # include headers in the current directory
 target_include_directories(vm_utils PUBLIC
 				      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-				       $<INSTALL_INTERFACE:include>)
+				       $<INSTALL_INTERFACE:${PROJECT_NAME}/include>)
 
 # link
 target_link_libraries(vm_utils PUBLIC pmp Eigen3::Eigen Boost::boost)

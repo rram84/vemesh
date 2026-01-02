@@ -4,16 +4,19 @@ add_library(vm_optimizer STATIC
 		 vm_mesh_optimizer.cpp
 		 vm_mesh_optimizer_agglomerate.cpp
 		 vm_mesh_optimizer_relax.cpp)
-		 
+
+add_library(vemesh::vm_optimizer ALIAS vm_optimizer)
+
 # include headers in the current directory
 target_include_directories(vm_optimizer PUBLIC
-					$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
+				      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+				      $<INSTALL_INTERFACE:${PROJECT_NAME}/include>) 
 
 # link
 target_link_libraries(vm_optimizer PUBLIC
-			     vm_utils
-			     vm_io
-			     vm_quality)
+			     vemesh::vm_utils
+			     vemesh::vm_io
+			     vemesh::vm_quality)
 
 # Add required flags
 target_compile_features(vm_optimizer PUBLIC ${VM_COMPILE_FEATURES})

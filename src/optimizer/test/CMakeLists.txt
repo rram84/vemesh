@@ -1,6 +1,6 @@
 # Sriramajayam
 
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.17)
 
 project(optimizer_tests
   DESCRIPTION "Unit tests for the Manager class")
@@ -10,18 +10,17 @@ file(COPY
      "${CMAKE_CURRENT_SOURCE_DIR}/sample_meshes"
      DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
 
- 
-foreach(TARGET
-	test_mesh_optimizer_helpers
-	test_mesh_optimizer)
+# List of test executables
+set(TEST_TARGETS
+    test_mesh_optimizer_helpers
+    test_mesh_optimizer)
 
-  # add executable
-  add_executable(${TARGET} ${TARGET}.cpp)
+foreach(TGT IN LISTS TEST_TARGETS)
+  add_executable(${TGT} ${TGT}.cpp)
 
-  # link 
-  target_link_libraries(${TARGET} PUBLIC vm_optimizer)
+  target_link_libraries(${TGT} PRIVATE vemesh::vm_optimizer)
 
-  # choose appropriate flags
-  target_compile_features(${TARGET} PUBLIC ${COMPILE_FEATURES})
+  target_compile_features(${TGT} PRIVATE ${VM_COMPILE_FEATURES})
 
+  add_test(NAME ${TGT} COMMAND ${TGT})
 endforeach()
