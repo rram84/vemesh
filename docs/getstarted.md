@@ -48,7 +48,14 @@ brew install doxygen
 # Ubuntu
 sudo apt-get install doxygen graphviz
 ```
-   
+
+- **[CLI11](https://github.com/CLIUtils/CLI11)** (optional, required by \ref app "vemesh_app" for command-line parsing)
+```bash
+# macOS (Homebrew)
+brew install cli11
+# Ubuntu
+sudo apt-get install cli11-dev
+```
 
 ## Build and install vemesh
 
