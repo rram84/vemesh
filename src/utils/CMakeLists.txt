@@ -12,7 +12,7 @@ target_include_directories(vm_utils PUBLIC
 				       $<INSTALL_INTERFACE:${PROJECT_NAME}/include>)
 
 # link
-target_link_libraries(vm_utils PUBLIC pmp Eigen3::Eigen Boost::boost)
+target_link_libraries(vm_utils PUBLIC pmp Eigen3::Eigen Boost::headers)
 
 # Add required flags
 target_compile_features(vm_utils PUBLIC ${VM_COMPILE_FEATURES})

@@ -8,7 +8,7 @@
 
 #include <vm_quality_evaluator.h>
 #include <vm_face_qualities.h>
-#include <pmp/SurfaceMesh.h>
+#include <pmp/surface_mesh.h>
 #include <cassert>
 #include <cmath>
 

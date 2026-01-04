@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <pmp/SurfaceMesh.h>
+#include <pmp/surface_mesh.h>
 #include <vm_quality_evaluator.h>
 #include <string>
 #include <tuple>

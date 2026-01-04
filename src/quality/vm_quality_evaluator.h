@@ -12,7 +12,7 @@
  * \author Ramsharan Rangarajan
  */
 
-#include <pmp/SurfaceMesh.h>
+#include <pmp/surface_mesh.h>
 #include <utility>
 
 namespace vm

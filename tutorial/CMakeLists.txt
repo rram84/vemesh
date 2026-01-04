@@ -27,7 +27,10 @@ foreach(TARGET
 				       "${CMAKE_CURRENT_SOURCE_DIR}/common/vm_tutorial_rectangle_mesh.cpp")
 
   # link 
-  target_link_libraries(${TARGET} PUBLIC vm_optimizer OpenMP::OpenMP_CXX)
+  target_link_libraries(${TARGET} PUBLIC vm_optimizer)
+  if(OpenMP_FOUND)
+	target_link_libraries(${TARGET} PUBLIC OpenMP::OpenMP_CXX)
+  endif()
 
   # include			  
   target_include_directories(${TARGET} PUBLIC ${COMMON_DIR})

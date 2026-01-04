@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <pmp/SurfaceMesh.h>
+#include <pmp/surface_mesh.h>
 #include <list>
 #include <map>
 

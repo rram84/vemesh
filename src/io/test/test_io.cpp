@@ -7,7 +7,7 @@
  */
 
 #include <vm_io.h>
-#include <pmp/SurfaceMesh.h>
+#include <pmp/surface_mesh.h>
 #include <iostream>
 #include <cstdlib>
 #include <cmath>

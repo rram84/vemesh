@@ -8,7 +8,7 @@
 
 
 #include <vm_face_qualities.h>
-#include <pmp/SurfaceMesh.h>
+#include <pmp/surface_mesh.h>
 
 // non-standard shape
 void test_geom_quality_concave_pentagon();
