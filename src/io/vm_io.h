@@ -55,7 +55,8 @@ namespace vm
    *       Face and vertex properties- `domain_id` and  `interface_id` are not written.
    * \ingroup io
    */
-  void write_off(const pmp::SurfaceMesh& mesh, const std::string filename);
+  void write_off(const pmp::SurfaceMesh& mesh,
+		 const std::string filename);
   
   
   /** \brief Read a polygonal surface mesh from an ASCII VTK (.vtk) file.
@@ -128,5 +129,50 @@ namespace vm
    * \pre \c mesh.has_vertex_property("interface_id") == true
    * \ingroup io
    */
-  void write_vtk(const pmp::SurfaceMesh& mesh, const std::string filename);
+  void write_vtk(const pmp::SurfaceMesh& mesh,
+		 const std::string filename);
+
+
+   /** \brief Write the sorted face quality values of a mesh to a file.
+   *
+   * This function extracts the face quality scalar field stored in the mesh
+   * under the standard tag \c vm::Face_Quality_Tag (="face_quality"), sorts the values in ascending
+   * order, and writes them to a text file.
+   *
+   * The output file contains two columns:
+   * - Column 1: 1-based index after sorting
+   * - Column 2: Face quality value
+   *
+   * One entry is written per face.
+   *
+   * \param[in] mesh     Surface mesh containing face quality data.
+   * \param[in] filename Path to the output file.
+   *
+   * \pre \c mesh.has_face_property(Face_Quality_Tag) == true
+   * \ingroup io
+   */
+  void write_face_quality_vector(const pmp::SurfaceMesh &mesh,
+				 const std::string filename);
+
+  /** \brief Write the sorted vertex quality values of a mesh to a file.
+   *
+   * This function extracts the vertex quality scalar field stored in the mesh
+   * under the standard tag \c Vertex_Quality_Tag (="vertex_quality"), sorts the values in ascending
+   * order, and writes them to a text file.
+   *
+   * The output file contains two columns:
+   * - Column 1: 1-based index after sorting
+   * - Column 2: Vertex quality value
+   *
+   * One entry is written per vertex.
+   *
+   * \param[in] mesh     Surface mesh containing vertex quality data.
+   * \param[in] filename Path to the output file.
+   *
+   * \pre \c mesh.has_vertex_property(Vertex_Quality_Tag) == true
+   *
+   * \ingroup io
+   */
+  void write_vertex_quality_vector(const pmp::SurfaceMesh &mesh,
+				   const std::string filename);
 }

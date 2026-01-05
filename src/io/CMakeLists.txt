@@ -2,7 +2,8 @@
 
 add_library(vm_io STATIC
 		  vm_io_off.cpp
-		  vm_io_vtk.cpp)
+		  vm_io_vtk.cpp
+		  vm_io_quality_vectors.cpp)
 
 add_library(vemesh::vm_io ALIAS vm_io)
 
