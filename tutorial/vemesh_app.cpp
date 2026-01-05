@@ -62,9 +62,6 @@ struct CLIConfig
   MeshOutputMode output_mode = MeshOutputMode::None;
 };
 
-// Parse command line options 
-CLIConfig parse_cli(int argc, char** argv);
-
 // Generate a callback function
 vm::ProgressCallback make_mesh_callback(int iter,
 					const fs::path &outpath,
@@ -76,8 +73,103 @@ void clean_vtk_outputs(const fs::path &vtk_dir);
 
 int main(int argc, char **argv)
 {
-  // parse command line options
-  CLIConfig cfg = parse_cli(argc, argv);
+  // --------  parse command line options into cfg ---------- //
+  CLIConfig cfg;
+
+  // Command line options
+  CLI::App app{"Agglomerate elements and relax vertices in a mesh"};
+  app.footer("Sample usage:	   \
+    \n=================== \
+    \n(i)   agglomerate elements:  ./vemesh -a -i in_mesh.OFF -o out_dir -n 5 -f 1.2 -m 1 -v \"iter\" \
+    \n(ii)  relax vertices:        ./vemesh -r -i in_mesh.OFF -o out_dir -n 5 -s 5 -m 2 \
+    \n(iii) agglomerate and relax: ./vemesh --ar -i in_mesh.OFF -o out_dir -n 5 -f 1.2 -s 5 -m 3 -v \"detailed\" \
+    \n(iv)  relax and agglomerate: ./vemesh --ra -i in_mesh.OFF -o out_dir -n 5 -f 1.2 -s 5  -m 1\n");
+
+  app.set_help_flag("-h,--help", "Print this help message and exit");
+  
+  // Optimization option
+  auto* opt_mode = app.add_option_group("Optimization mode");
+  opt_mode->description("Select exactly one optimization mode");
+  auto opt_a  = opt_mode->add_flag("-a", "flag to agglomerate elements");
+  auto opt_r  = opt_mode->add_flag("-r", "flag to relax mesh vertices");
+  auto opt_ar = opt_mode->add_flag("--ar", "flag to agglomerate elements & relax vertices in that order at each iteration");
+  auto opt_ra = opt_mode->add_flag("--ra", "flag to relax vertices & agglomerate elements in that order at each iteration");
+  //opt_mode->require_option(1);
+
+  // Option dependencies:
+  // -i, -o, -n, -q, -m are required by all operations
+  // -f is required by agglomerate
+  // -s is required by relax
+  
+  app.add_option("-i", cfg.meshfile, "input mesh file in OFF/vtk format; should exist")
+    ->required()
+    ->check(CLI::ExistingFile);
+  
+  app.add_option("-o", cfg.outdir,   "output directory; created if needed; existing VTK files will be removed")
+    ->required();
+
+  app.add_option("-n", cfg.num_iters, "number of iterations")
+    ->required()
+    ->check(CLI::Range(1, std::numeric_limits<int>::max()));
+
+  app.add_option("-q", cfg.qepsilon, "lower bound for acceptable element quality; elements with poorer qualities are marked for improvement")
+    ->required()
+    ->check(CLI::PositiveNumber);
+
+  app.add_option("-m", cfg.metric_num, "quality metric 1=element stability ratio, 2=shape quality, 3=min angle")
+    ->required()
+    ->check(CLI::Range(1,3));
+  
+  auto opt_f = app.add_option("-f", cfg.qfactor, "minimum factor of improvement in element quality for agglomeration")
+    ->check(CLI::PositiveNumber);
+  
+  auto opt_s = app.add_option("-s", cfg.num_samples, "number of random samples to generate for vertex relaxation")
+    ->check(CLI::PositiveNumber);
+  
+  std::string output_mode_str = "none";
+  app.add_option("-v", output_mode_str,
+		 "Mesh output: none | iter | detailed")->check(CLI::IsMember({"none","iter","detailed"}));
+
+  opt_a->needs(opt_f);                 // agglomerate
+  opt_r->needs(opt_s);                 // relax
+  opt_ra->needs(opt_f)->needs(opt_s);  // agglomerate+relax
+  opt_ar->needs(opt_f)->needs(opt_s);
+
+  try {
+    app.parse(argc, argv);
+  } 
+  catch (const CLI::CallForHelp &) {
+    //app.help();   // <-- print your full help
+    std::cout << app.help() << std::endl;
+    return 0;
+  } 
+  catch (const CLI::ParseError &e) {
+    return app.exit(e);
+  }
+  
+  // parse options
+  //app.parse(argc, argv);
+
+  int mode_count = opt_a->count() + opt_r->count() + opt_ar->count() + opt_ra->count();
+  if(mode_count != 1) {
+    throw CLI::ValidationError("Optimization mode", "Exactly one optimization flag must be specified");
+  }
+  
+  // Optimization mode
+  if (*opt_a)       cfg.mode = CLIConfig::Mode::Agglomerate;
+  else if (*opt_r)  cfg.mode = CLIConfig::Mode::Relax;
+  else if (*opt_ar) cfg.mode = CLIConfig::Mode::AgglomerateRelax;
+  else              cfg.mode = CLIConfig::Mode::RelaxAgglomerate;
+
+  // Mesh output mode
+  if(output_mode_str=="none")
+    cfg.output_mode = CLIConfig::MeshOutputMode::None;
+  else if(output_mode_str=="iter")
+    cfg.output_mode = CLIConfig::MeshOutputMode::IterationEnd;
+  else if(output_mode_str=="detailed")
+    cfg.output_mode = CLIConfig::MeshOutputMode::Detailed;
+
+  // --------  finished parsing, start optimization ---------- //
   
   // output directory
   const fs::path outpath = fs::path(cfg.outdir) / "vtk/";
@@ -170,99 +262,6 @@ int main(int argc, char **argv)
   vm::write_vtk(mesh, outpath.string() + "output_mesh.vtk");
 }
 
-
-// Parse command line options
-CLIConfig parse_cli(int argc, char** argv)
-{
-  CLIConfig cfg;
-
-  // Command line options
-  CLI::App app{"Agglomerate elements and relax vertices in a mesh"};
-  app.footer("Sample usage: \
-             \n=================== \
-             \n(i)   agglomerate elements:  ./vemesh -a -i in_mesh.OFF -o out_dir -n 5 -f 1.2 -v \
-             \n(ii)  relax vertices:        ./vemesh -r -i in_mesh.OFF -o out_dir -n 5 -s 5  \
-             \n(iii) agglomerate and relax: ./vemesh --ar -i in_mesh.OFF -o out_dir -n 5 -f 1.2 -s 5 -v \
-             \n(iv)  relax and agglomerate: ./vemesh --ra -i in_mesh.OFF -o out_dir -n 5 -f 1.2 -s 5  \n");
-
-  // Optimization option
-  auto* opt_mode = app.add_option_group("Optimization mode");
-  opt_mode->description("Select exactly one optimization mode");
-  auto opt_a  = opt_mode->add_flag("-a", "flag to agglomerate elements");
-  auto opt_r  = opt_mode->add_flag("-r", "flag to relax mesh vertices");
-  auto opt_ar = opt_mode->add_flag("--ar", "flag to agglomerate elements & relax vertices in that order at each iteration");
-  auto opt_ra = opt_mode->add_flag("--ra", "flag to relax vertices & agglomerate elements in that order at each iteration");
-  opt_mode->require_option(1);
-
-  // Options
-  std::string meshfile;    // input mesh
-  std::string outdir;      // output directory
-  double qepsilon;         // quality threshold
-  int  num_iters;          // iteration count
-  bool vis_flag = false;   // detailed visualization
-  int num_samples;         // number of sample points to generate
-  double qfactor;          // element quality improvement factor
-  int metric_num;          // 1:stability ratio, 2:shape quality, 3:min angle
-
-  // Option dependencies:
-  // -i, -o, -n, -q, -m are required by all operations
-  // -f is required by agglomerate
-  // -s is required by relax
-  
-  app.add_option("-i", cfg.meshfile, "input mesh file in OFF/vtk format; should exist")
-    ->required()
-    ->check(CLI::ExistingFile);
-
-  app.add_option("-o", cfg.outdir,   "output directory; created if needed; existing VTK files will be removed")
-    ->required();
-
-  app.add_option("-n", cfg.num_iters, "number of iterations")
-    ->required()
-    ->check(CLI::Range(1, std::numeric_limits<int>::max()));
-
-  app.add_option("-q", cfg.qepsilon, "lower bound for acceptable element quality; elements with poorer qualities are marked for improvement")
-    ->required()
-    ->check(CLI::PositiveNumber);
-
-  app.add_option("-m", cfg.metric_num, "quality metric 1=element stability ratio, 2=shape quality, 3=min angle")
-    ->required()
-    ->check(CLI::Range(1,3));
-  
-  app.add_option("-f", cfg.qfactor, "minimum factor of improvement in element quality for agglomeration")
-    ->check(CLI::PositiveNumber);
-  
-  app.add_option("-s", cfg.num_samples, "number of random samples to generate for vertex relaxation")
-    ->check(CLI::PositiveNumber);
-
-  std::string output_mode_str = "none";
-  app.add_option("-v", output_mode_str,
-		 "Mesh output: none | iter | detailed")->check(CLI::IsMember({"none","iter","detailed"}));
-
-  opt_a->needs("-f");                // agglomerate
-  opt_r->needs("-s");                // relax
-  opt_ra->needs("-f")->needs("-s");  // agglomerate+relax
-  opt_ar->needs("-f")->needs("-s");
-  
-  // parse options
-  app.parse(argc, argv);
-  
-  // Optimization mode
-  if (*opt_a)       cfg.mode = CLIConfig::Mode::Agglomerate;
-  else if (*opt_r)  cfg.mode = CLIConfig::Mode::Relax;
-  else if (*opt_ar) cfg.mode = CLIConfig::Mode::AgglomerateRelax;
-  else              cfg.mode = CLIConfig::Mode::RelaxAgglomerate;
-
-  // Mesh output mode
-  if(output_mode_str=="none")
-    cfg.output_mode = CLIConfig::MeshOutputMode::None;
-  else if(output_mode_str=="iter")
-    cfg.output_mode = CLIConfig::MeshOutputMode::IterationEnd;
-  else if(output_mode_str=="detailed")
-    cfg.output_mode = CLIConfig::MeshOutputMode::Detailed;
-
-  // done parsing
-  return cfg;
-}
 
 // Generate a callback function
 vm::ProgressCallback make_mesh_callback(int iter,
