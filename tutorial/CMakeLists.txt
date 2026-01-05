@@ -15,7 +15,7 @@ set(COMMON_DIR "${CMAKE_CURRENT_SOURCE_DIR}/common")
 
 # List of test executables
 set(TEST_TARGETS
-	agglomerate
+	iterative_agglomerate
 	mesh_slicing
 	vemesh_app)
 	

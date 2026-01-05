@@ -24,7 +24,6 @@ int main()
   // directory to write outputs to
   const std::string outdir = "output";
   
-
   // ---- load the mesh ---- 
   pmp::SurfaceMesh in_mesh = vm::read_off(meshfile);
   
@@ -55,7 +54,8 @@ int main()
   optimizer.evaluate_face_qualities(QE, vm::Face_Quality_Tag);
   optimizer.evaluate_vertex_qualities(vm::Face_Quality_Tag, vm::Vertex_Quality_Tag);
   vm::write_vtk(mesh, outdir+"/input_mesh.vtk");
-
+  vm::write_face_quality_vector(mesh, outdir+"/qvec-input.dat");
+	
   // --- iteratively optimizer ---
   for(int iter=0; iter<num_iters; ++iter) {
     
@@ -63,12 +63,14 @@ int main()
     int num_agg = optimizer.agglomerate(QE, qepsilon, qfactor);
     std::cout << "agglomerated " << num_agg << "faces " << std::flush;
 
-    // evaluate qualities and save the mesh
+    // evaluate mesh qualities and save file
     optimizer.evaluate_face_qualities(QE, vm::Face_Quality_Tag);
     optimizer.evaluate_vertex_qualities(vm::Face_Quality_Tag, vm::Vertex_Quality_Tag);
     vm::write_vtk(mesh, outdir+"/mesh-iter-"+std::to_string(iter)+".vtk");
+    vm::write_face_quality_vector(mesh, outdir+"/qvec-iter-"+std::to_string(iter)+".dat");
   }
 
-  // --- save the final mesh
+  // --- save the final mesh ---
   vm::write_vtk(mesh, outdir+"/output.vtk");
+  vm::write_face_quality_vector(mesh, outdir+"/qvec-output.dat");
 }
