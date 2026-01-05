@@ -1,5 +1,10 @@
 // Sriramajayam
 
+/** \file iterative_vertex_relaxation.cpp
+ * \brief Tutorial-style example for iterative vertex relaxation with vemesh.
+ * \ingroup tutorial
+ */
+
 #include <vm_mesh_optimizer.h>
 #include <vm_face_qualities.h>
 #include <vm_io.h>
@@ -12,14 +17,14 @@ int main()
   // input mesh to improve: should be vtk or off
   const std::string meshfile = "sample_data/sorgente/mesh3_20.off";
 
-  // number of agglomeration iterations to perform
+  // number of relaxation iterations to perform
   const int num_iters = 5;
 
   // lower bound for element quality
   const double qepsilon = 0.2;
 
-  // improvement factor to accept an agglomerated element
-  const double qfactor = 1.2;
+  // number of sample points per vertex
+  const int num_samples = 5;
 
   // directory to write outputs to
   const std::string outdir = "output";
@@ -54,23 +59,23 @@ int main()
   optimizer.evaluate_face_qualities(QE, vm::Face_Quality_Tag);
   optimizer.evaluate_vertex_qualities(vm::Face_Quality_Tag, vm::Vertex_Quality_Tag);
   vm::write_vtk(mesh, outdir+"/input_mesh.vtk");
-  vm::write_face_quality_vector(mesh, outdir+"/qvec-input.dat");
+  vm::write_vertex_quality_vector(mesh, outdir+"/qvec-input.dat");
 	
   // --- iteratively optimizer ---
   for(int iter=0; iter<num_iters; ++iter) {
     
     std::cout << "\n Iteration " << iter <<": " << std::flush;
-    int num_agg = optimizer.agglomerate(QE, qepsilon, qfactor);
-    std::cout << "agglomerated " << num_agg << "faces " << std::flush;
+    int num_relaxed = optimizer.relax(QE, qepsilon, num_samples);
+    std::cout << "relaxed " << num_relaxed << " vertices " << std::flush;
 
     // evaluate mesh qualities and save file
     optimizer.evaluate_face_qualities(QE, vm::Face_Quality_Tag);
     optimizer.evaluate_vertex_qualities(vm::Face_Quality_Tag, vm::Vertex_Quality_Tag);
     vm::write_vtk(mesh, outdir+"/mesh-iter-"+std::to_string(iter)+".vtk");
-    vm::write_face_quality_vector(mesh, outdir+"/qvec-iter-"+std::to_string(iter)+".dat");
+    vm::write_vertex_quality_vector(mesh, outdir+"/qvec-iter-"+std::to_string(iter)+".dat");
   }
 
   // --- save the final mesh ---
   vm::write_vtk(mesh, outdir+"/output.vtk");
-  vm::write_face_quality_vector(mesh, outdir+"/qvec-output.dat");
+  vm::write_vertex_quality_vector(mesh, outdir+"/qvec-output.dat");
 }
