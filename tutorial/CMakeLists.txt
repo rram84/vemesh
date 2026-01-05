@@ -8,13 +8,14 @@ find_package(OpenMP)
 
 # Copy sample mesh files to build directory
 file(COPY
-     "${CMAKE_CURRENT_SOURCE_DIR}/sample_meshes"
+     "${CMAKE_CURRENT_SOURCE_DIR}/sample_data"
      DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
 
 set(COMMON_DIR "${CMAKE_CURRENT_SOURCE_DIR}/common")
 
 # List of test executables
 set(TEST_TARGETS
+	agglomerate
 	mesh_slicing
 	vemesh_app)
 	

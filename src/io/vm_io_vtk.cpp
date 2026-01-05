@@ -203,10 +203,10 @@ namespace vm
       }
     
     // face qualities
-    if(mesh.has_face_property("face_quality")==true)
+    if(mesh.has_face_property(Face_Quality_Tag)==true)
       {
-	auto face_quality = mesh.get_face_property<double>("face_quality");
-	out << "SCALARS face_quality double" << std::endl
+	auto face_quality = mesh.get_face_property<double>(Face_Quality_Tag);
+	out << "SCALARS " << Face_Quality_Tag << " double" << std::endl
 	    << "LOOKUP_TABLE default" << std::endl;
 	for(auto f:f_circulator)
 	  {
@@ -227,10 +227,10 @@ namespace vm
       }
     
     // write vertex qualities if available
-    if(mesh.has_vertex_property("vertex_quality")==true)
+    if(mesh.has_vertex_property(Vertex_Quality_Tag)==true)
       {
-	auto quality = mesh.get_vertex_property<double>("vertex_quality");
-	out << "SCALARS vertex_quality double" << std::endl
+	auto quality = mesh.get_vertex_property<double>(Vertex_Quality_Tag);
+	out << "SCALARS " << Vertex_Quality_Tag << " double" << std::endl
 	    << "LOOKUP_TABLE default" << std::endl;
 	for(auto v:v_container)
 	  {

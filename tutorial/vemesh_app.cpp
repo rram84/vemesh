@@ -203,10 +203,8 @@ int main(int argc, char **argv)
   vm::QualityEvaluator QE(face_quality_metric);
   
   // initial mesh quality
-  const std::string qf_tag = "face_quality";
-  const std::string qv_tag = "vertex_quality";
-  optimizer.evaluate_face_qualities(QE, qf_tag);
-  optimizer.evaluate_vertex_qualities(qf_tag, qv_tag);
+  optimizer.evaluate_face_qualities(QE, vm::Face_Quality_Tag);
+  optimizer.evaluate_vertex_qualities(vm::Face_Quality_Tag, vm::Vertex_Quality_Tag);
 
   // save mesh with qualities
   vm::write_vtk(mesh, (outpath / "input_mesh.vtk").string());
@@ -250,15 +248,15 @@ int main(int argc, char **argv)
     // output at the end of the iteration
     if(cfg.output_mode == CLIConfig::MeshOutputMode::IterationEnd)
       {
-	optimizer.evaluate_face_qualities(QE, qf_tag);
-	optimizer.evaluate_vertex_qualities(qf_tag, qv_tag);
+	optimizer.evaluate_face_qualities(QE, vm::Face_Quality_Tag);
+	optimizer.evaluate_vertex_qualities(vm::Face_Quality_Tag, vm::Vertex_Quality_Tag);
 	vm::write_vtk(mesh, outpath.string() + "mesh-iter-" + std::to_string(iter)+".vtk");
       }
   }
 
   // Save the final mesh
-  optimizer.evaluate_face_qualities(QE, qf_tag);
-  optimizer.evaluate_vertex_qualities(qf_tag, qv_tag);
+  optimizer.evaluate_face_qualities(QE, vm::Face_Quality_Tag);
+  optimizer.evaluate_vertex_qualities(vm::Face_Quality_Tag, vm::Vertex_Quality_Tag);
   vm::write_vtk(mesh, outpath.string() + "output_mesh.vtk");
 }
 

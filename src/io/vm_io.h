@@ -13,6 +13,20 @@
 
 namespace vm
 {
+  /** \brief Standard tag for storing face quality in a pmp::SurfaceMesh.
+   *
+   * This constant is used as the property name when by mesh i/o functions
+   * to access and store face qualities.
+   */
+  inline const std::string Face_Quality_Tag = "face_quality";
+
+  /** \brief Standard tag for storing vertex quality in a pmp::SurfaceMesh.
+   *
+   * This constant is used as the property name when by mesh i/o functions
+   * to access and store vertex qualities.
+   */
+  inline const std::string Vertex_Quality_Tag = "vertex_quality";
+    
   /** \brief Reads a polygonal mesh from a .OFF file into a SurfaceMesh.
    * 
    * This function parses a standard OFF file containing vertex coordinates
