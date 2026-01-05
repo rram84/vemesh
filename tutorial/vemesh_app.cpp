@@ -80,9 +80,9 @@ int main(int argc, char **argv)
   CLI::App app{"Agglomerate elements and relax vertices in a mesh"};
   app.footer("Sample usage:	   \
     \n=================== \
-    \n(i)   agglomerate elements:  ./vemesh -a -i in_mesh.OFF -o out_dir -n 5 -f 1.2 -m 1 -v \"iter\" \
+    \n(i)   agglomerate elements:  ./vemesh -a -i in_mesh.OFF -o out_dir -n 5 -f 1.2 -m 1 -v iter \
     \n(ii)  relax vertices:        ./vemesh -r -i in_mesh.OFF -o out_dir -n 5 -s 5 -m 2 \
-    \n(iii) agglomerate and relax: ./vemesh --ar -i in_mesh.OFF -o out_dir -n 5 -f 1.2 -s 5 -m 3 -v \"detailed\" \
+    \n(iii) agglomerate and relax: ./vemesh --ar -i in_mesh.OFF -o out_dir -n 5 -f 1.2 -s 5 -m 3 -v detailed \
     \n(iv)  relax and agglomerate: ./vemesh --ra -i in_mesh.OFF -o out_dir -n 5 -f 1.2 -s 5  -m 1\n");
 
   app.set_help_flag("-h,--help", "Print this help message and exit");
