@@ -1,6 +1,6 @@
 # Sriramajayam
 
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.17)
 
 project(tutorial DESCRIPTION "Tutorial examples accompanying vemesh")
 
@@ -13,29 +13,29 @@ file(COPY
 
 set(COMMON_DIR "${CMAKE_CURRENT_SOURCE_DIR}/common")
 
-foreach(TARGET
-	    mesh_slicing)
-
-  # add executable
-  add_executable(${TARGET} ${TARGET}.cpp)
+# List of test executables
+set(TEST_TARGETS
+	mesh_slicing
+	vemesh_app)
+	
+foreach(TGT IN LISTS TEST_TARGETS)
+  add_executable(${TGT} ${TGT}.cpp)
 
   # local sources
- target_sources(${TARGET} PUBLIC
+ target_sources(${TGT} PRIVATE
 				       "${CMAKE_CURRENT_SOURCE_DIR}/common/vm_tutorial_mesh_slicer.h"
 				       "${CMAKE_CURRENT_SOURCE_DIR}/common/vm_tutorial_mesh_slicer.cpp"
 				       "${CMAKE_CURRENT_SOURCE_DIR}/common/vm_tutorial_rectangle_mesh.h"
 				       "${CMAKE_CURRENT_SOURCE_DIR}/common/vm_tutorial_rectangle_mesh.cpp")
 
-  # link 
-  target_link_libraries(${TARGET} PUBLIC vm_optimizer)
+
+  target_include_directories(${TGT} PUBLIC ${COMMON_DIR})
+  target_link_libraries(${TGT} PRIVATE vm_optimizer)
   if(OpenMP_FOUND)
-	target_link_libraries(${TARGET} PUBLIC OpenMP::OpenMP_CXX)
+	target_link_libraries(${TGT} PRIVATE OpenMP::OpenMP_CXX)
   endif()
+  
+  target_compile_features(${TGT} PUBLIC ${VM_COMPILE_FEATURES})
 
-  # include			  
-  target_include_directories(${TARGET} PUBLIC ${COMMON_DIR})
-
-  # choose appropriate flags
-  target_compile_features(${TARGET} PUBLIC ${COMPILE_FEATURES})
-
+  add_test(NAME ${TGT} COMMAND ${TGT})
 endforeach()
