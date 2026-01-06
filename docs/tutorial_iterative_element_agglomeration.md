@@ -1,17 +1,19 @@
 
-\page iterative_element_agglomeration Iterative element agglomeration
+\page tutorial_iterative_element_agglomeration Iterative element agglomeration
 
 This tutorial demonstrates how to iteratively agglomerate low-quality faces
 in a polygonal mesh using vemesh to improve element quality.
 
 **Source code:** iterative_element_agglomeration.cpp
 
+[TOC]
+
 ## Complete example
 \include iterative_element_agglomeration.cpp
 
 ## Explanation
 
-**Load the mesh:**
+### Load the mesh
 ```cpp
 const std::string meshfile = "sample_data/sorgente/mesh3_20.off";
 ... 
@@ -21,7 +23,7 @@ pmp::SurfaceMesh in_mesh = vm::read_off(meshfile);
 vemesh provides readers for OFF and VTK file formats. See @ref io
 for details.
 
-**Algorithmic options:**
+### Algorithmic options
 ```cpp
   const int num_iters = 5;     
   const double qepsilon = 0.2; 
@@ -46,7 +48,7 @@ number of iterations to execute is specified by the parameter
 same quality threshold `qepsilon` is used after each iteration to
 re-identify faces requiring improvement.
 
-**Face quality:**   
+### Face quality
 ```cpp
 	const auto face_quality_metric = vm::quality::geom_min_angle; 
     vm::QualityEvaluator QE(face_quality_metric);
@@ -54,24 +56,20 @@ re-identify faces requiring improvement.
 vemesh provides users complete freedom in defining
 the metric used to evaluate face qualities, see @ref quality.  
 
-Three specific examples are provided for users to test out:  
+Two specific examples are provided for users to test out:  
 - vm::quality::vem_stability_ratio: uses the ratio of extreme eigenvalues of
   the element-level stiffness matrix in the VEM to define element
   quality in a shape-agnostic manner  
 - vm::quality::geom_shape: defines a geometric measure of polygon quality. It uses a non-dimensional ratio of the area and the
   squared-perimeter, so that more regular polygons are assigned a
   better quality closer to 1.
-- vm::quality::geom_min_angle: defines a geometric measure of polygon
-  quality. It measures the quality of a n-sided polygon as the tatio
-  of its smallest included angle to the included angle in a regular
-  n-sided polygon. 
   
 This example uses the element stability ratio as the quality metric.
 
 The vm::QualityEvaluator class provides different interfaces to
 evaluate face/vertex qualities.
 
-**Mesh optimizer:**  
+### Mesh optimizer
 ```cpp
 	vm::MeshOptimizer optimizer(in_mesh);
    auto& mesh = optimizer.get_mesh();
@@ -84,7 +82,7 @@ make a copy. All operations on the mesh executed by the optimizer are
 peformed on this copy, which can be accessed immutably using the
 `vm::MeshOptimizer::get_mesh()` method.
 
-**Face quality evaluation:**  
+### Face quality evaluation
 ```cpp
    optimizer.evaluate_face_qualities(QE, vm::Face_Quality_Tag);
    vm::write_vtk(mesh, outdir+"/input_mesh.vtk");
@@ -117,7 +115,7 @@ mesh @io functions only look for the default tags given by
 to files.
 
 
-**Iterative agglomeration:**  
+### Iterative agglomeration
 ```cpp  
 
    for(int iter=0; iter<num_iters; ++iter) {
@@ -148,7 +146,7 @@ mesh-iter-1.vtk` and so on.
 
 
   
-**Quality vector:**
+### Quality vector
 ```cpp
   vm::write_face_quality_vector(mesh, outdir+"/qvec-input.dat");
   ...

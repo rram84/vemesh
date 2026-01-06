@@ -1,5 +1,5 @@
 
-\page iterative_vertex_relaxation Iterative vertex relaxation
+\page tutorial_iterative_vertex_relaxation Iterative vertex relaxation
 
 This tutorial demonstrates iteratively relaxing vertices in a
 polygonal mesh using vemesh.  
@@ -10,12 +10,14 @@ locations of vertices are adjusted.
 
 **Source code:** iterative_vertex_relaxation.cpp
 
+[TOC]
+
 ## Complete example
 \include iterative_vertex_relaxation.cpp
 
 ## Explanation
 
-**Load the mesh:**
+### Load the mesh
 ```cpp
 const std::string meshfile = "sample_data/sorgente/mesh3_20.off";
 ... 
@@ -52,7 +54,7 @@ number of iterations to execute is specified by the parameter
 same quality threshold `qepsilon` is used after each iteration to
 re-identify vertices requiring improvement.
 
-**Vertex quality:**   
+### Vertex quality
 ```cpp
 	const auto face_quality_metric = vm::quality::geom_min_angle; 
     vm::QualityEvaluator QE(face_quality_metric);
@@ -74,7 +76,7 @@ This example uses the geometric measure for the quality metric.
 The vm::QualityEvaluator class provides different interfaces to
 evaluate face/vertex qualities.
 
-**Mesh optimizer:**  
+### Mesh optimizer
 ```cpp
 	vm::MeshOptimizer optimizer(in_mesh);
    auto& mesh = optimizer.get_mesh();
@@ -87,7 +89,7 @@ make a copy. All operations on the mesh executed by the optimizer are
 peformed on this copy, which can be accessed immutably using the
 `vm::MeshOptimizer::get_mesh()` method.
 
-**Face/vertex quality evaluation:**  
+### Face/vertex quality evaluation
 ```cpp
    optimizer.evaluate_face_qualities(QE, vm::Face_Quality_Tag);
    optimizer.evaluate_vertex_qualities(vm::Face_Quality_Tag, vm::Vertex_Quality_Tag);
@@ -124,7 +126,7 @@ are **not** used or accessed during mesh improvement. The agglomerate
 and relaxation routines evaluate qualities on the fly, using the
 instance of the vm::QualityEvaluator object provided.
 
-**Iterative relaxation:**  
+### Iterative relaxation
 ```cpp  
 
    for(int iter=0; iter<num_iters; ++iter) {
@@ -160,11 +162,11 @@ iteration and the relaxed mesh is saved as `mesh-iter-0.vtk,
 mesh-iter-1.vtk` and so on.
 
   
-**Quality vector:**
+### Quality vector
 ```cpp
   vm::write_vertex_quality_vector(mesh, outdir+"/qvec-input.dat");
   ...
-  // agglomeration iterations
+  // relaxation iterations
   ...
   vm::write_vertex_quality_vector(mesh, outdir+"/qvec-output.dat");
 ```
