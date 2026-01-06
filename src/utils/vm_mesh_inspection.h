@@ -33,7 +33,7 @@ namespace vm
    * mesh inspection.
    * \ingroup utils
    */
-  enum class InspectionErrorCode {
+  enum class MeshInspectionErrorCode {
     EmptyMesh,          /**< Mesh has zero vertices, faces, or edges */
       InvalidFace,      /**< Face polygon is invalid (Boost.Geometry validation failed) */
       NonSimpleFace,    /**< Face polygon is not simple (self-intersections) */
@@ -47,30 +47,30 @@ namespace vm
    * Stores the error code, affected face indices, and a readable diagnostic message.
    * \ingroup utils
    */
-  struct InspectionError {
-    InspectionErrorCode code; /**< Error classification */
-    int face = -1;            /**< Primary face index (if applicable) */
-    int face2 = -1;           /**< Secondary face index (if applicable) */
-    std::string message;      /**< Diagnostic message */
+  struct MeshInspectionError {
+    MeshInspectionErrorCode code; /**< Error classification */
+    int face = -1;                /**< Primary face index (if applicable) */
+    int face2 = -1;               /**< Secondary face index (if applicable) */
+    std::string message;          /**< Diagnostic message */
   };
 
-  /** \brief Stream output operator for InspectionError.
+  /** \brief Stream output operator for MeshInspectionError.
    *
    * Prints a formatted description of the inspection error, including
    * error code, face indices, and message.
    *
    * \param os Output stream
-   * \param e  InspectionError instance
+   * \param e  MeshInspectionError instance
    * \return Reference to the output stream
    * \ingroup utils
    */
   std::ostream& operator<<(std::ostream& os,
-			   const InspectionError& e);
+			   const MeshInspectionError& e);
 
   /** \brief Container type for inspection errors.
    * \ingroup utils
    */
-  using ErrorList = std::vector<InspectionError>;
+  using MeshInspectionErrors = std::vector<MeshInspectionError>;
 
 
   /**
@@ -101,7 +101,7 @@ namespace vm
  */
   bool inspect_mesh(const pmp::SurfaceMesh& mesh,
 		    MeshInspection level,
-		    std::optional<std::reference_wrapper<ErrorList>> errors = std::nullopt);
+		    std::optional<std::reference_wrapper<MeshInspectionErrors>> errors = std::nullopt);
   
   /** \brief Inspect a single face defined by vertex coordinates.
    *

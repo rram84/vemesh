@@ -186,7 +186,7 @@ void test_feasible_vertex_positions(const TestMeshOptimizer& opt)
 	    tmp.position(v) = X;
 
 	    // inspect modified faces
-	    std::vector<vm::InspectionError> errors{}; 
+	    vm::MeshInspectionErrors errors; 
 	    bool flag = vm::inspect_mesh(tmp, vm::MeshInspection::Adjacency, errors);
 	    if(flag==false)
 	      {
@@ -222,7 +222,7 @@ void test_improved_vertex_position(const pmp::SurfaceMesh &in_mesh, const vm::Qu
 	    // new location should be feasible
 	    pmp::SurfaceMesh tmp = mesh;
 	    tmp.position(v) = std::get<pmp::Point>(result);
-	    std::vector<vm::InspectionError> errors{}; 
+	    vm::MeshInspectionErrors errors; 
 	    bool flag = vm::inspect_mesh(tmp, vm::MeshInspection::Adjacency, errors);
 	    if(flag==false)
 	      {

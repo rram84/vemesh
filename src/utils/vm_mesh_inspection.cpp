@@ -13,25 +13,25 @@ namespace vm
   namespace {
     
     // Helper to add error if optional list is provided
-    void add_error(const std::optional<std::reference_wrapper<ErrorList>> &errors, InspectionError e) {
+    void add_error(const std::optional<std::reference_wrapper<MeshInspectionErrors>> &errors, MeshInspectionError e) {
       if (errors) errors->get().push_back(std::move(e));
     }
   
     bool inspect_mesh_basic(const pmp::SurfaceMesh& mesh,
-			    const std::optional<std::reference_wrapper<ErrorList>> &errors)
+			    const std::optional<std::reference_wrapper<MeshInspectionErrors>> &errors)
     {
       bool flag = true;
       if(mesh.n_vertices()==0 || mesh.n_faces()==0 || mesh.n_edges()==0)
 	{
 	  flag = false;
-	  add_error(errors, {InspectionErrorCode::EmptyMesh,-1, -1, "Empty mesh"});
+	  add_error(errors, {MeshInspectionErrorCode::EmptyMesh,-1, -1, "Empty mesh"});
 	}
 	
       return flag;
     }
     
     bool inspect_mesh_faces(const std::map<int, boost_polygon_t>& polygons,
-			    const std::optional<std::reference_wrapper<ErrorList>> &errors)
+			    const std::optional<std::reference_wrapper<MeshInspectionErrors>> &errors)
     {
       bool flag = true;
     
@@ -44,7 +44,7 @@ namespace vm
 	    flag = false;
 	    std::ostringstream oss;
 	    oss << "Boost message: " << message << "\nFace coordinates: " << boost::geometry::wkt(poly) << "\n";
-	    add_error(errors, {InspectionErrorCode::InvalidFace, findx, -1, oss.str()});
+	    add_error(errors, {MeshInspectionErrorCode::InvalidFace, findx, -1, oss.str()});
 	  }
       
 	if(!bg::is_simple(poly))
@@ -52,7 +52,7 @@ namespace vm
 	    flag = false;
 	    std::ostringstream oss;
 	    oss << "Face coordinates: " << boost::geometry::wkt(poly) <<"\n";
-	    add_error(errors, {InspectionErrorCode::NonSimpleFace, findx, -1, oss.str()});
+	    add_error(errors, {MeshInspectionErrorCode::NonSimpleFace, findx, -1, oss.str()});
 	  }
       
 	if(bg::area(poly)<=0.)
@@ -60,7 +60,7 @@ namespace vm
 	    flag = false;
 	    std::ostringstream oss;
 	    oss <<"Face coordinates: " << boost::geometry::wkt(poly) << "\n";
-	    add_error(errors, {InspectionErrorCode::NonPositiveArea, findx, -1, oss.str()});
+	    add_error(errors, {MeshInspectionErrorCode::NonPositiveArea, findx, -1, oss.str()});
 	  }
       }
     
@@ -70,7 +70,7 @@ namespace vm
   
     bool inspect_mesh_adjacency(const pmp::SurfaceMesh& mesh,
 				const std::map<int, boost_polygon_t>& polygons,
-				const std::optional<std::reference_wrapper<ErrorList>> &errors)
+				const std::optional<std::reference_wrapper<MeshInspectionErrors>> &errors)
     {
       auto face_circulator = mesh.faces();
     
@@ -118,7 +118,7 @@ namespace vm
 	      flag = false;
 	      std::ostringstream oss;
 	      oss << "Face: " << boost::geometry::wkt(poly) << "\nNeighbor face: " << boost::geometry::wkt(nb_poly) << "\n";
-	      add_error(errors, {InspectionErrorCode::FaceOverlap, findx, nb_findx, oss.str()});
+	      add_error(errors, {MeshInspectionErrorCode::FaceOverlap, findx, nb_findx, oss.str()});
 	    }
 	  }
       }
@@ -128,7 +128,7 @@ namespace vm
 
   bool inspect_mesh(const pmp::SurfaceMesh& mesh,
 		    MeshInspection level,
-		    std::optional<std::reference_wrapper<ErrorList>> errors)
+		    std::optional<std::reference_wrapper<MeshInspectionErrors>> errors)
   {
     // ---- Basic checks ---- //
     bool flag = inspect_mesh_basic(mesh, errors);
@@ -163,20 +163,20 @@ namespace vm
 
 
   namespace {
-    std::string to_string(const InspectionErrorCode code)
+    std::string to_string(const MeshInspectionErrorCode code)
     {
       switch (code) {
-      case InspectionErrorCode::EmptyMesh:       return "EmptyMesh";
-      case InspectionErrorCode::InvalidFace:     return "InvalidFace";
-      case InspectionErrorCode::NonSimpleFace:   return "NonSimpleFace";
-      case InspectionErrorCode::NonPositiveArea: return "NonPositiveArea";
-      case InspectionErrorCode::FaceOverlap:     return "FaceOverlap";
+      case MeshInspectionErrorCode::EmptyMesh:       return "EmptyMesh";
+      case MeshInspectionErrorCode::InvalidFace:     return "InvalidFace";
+      case MeshInspectionErrorCode::NonSimpleFace:   return "NonSimpleFace";
+      case MeshInspectionErrorCode::NonPositiveArea: return "NonPositiveArea";
+      case MeshInspectionErrorCode::FaceOverlap:     return "FaceOverlap";
       default:                                   return "UnknownError";
       }
     }
   }
   
-  std::ostream& operator<<(std::ostream& os, const InspectionError& e)
+  std::ostream& operator<<(std::ostream& os, const MeshInspectionError& e)
   {
     os << "Code: " << to_string(e.code)
        << ", Face: " << e.face;

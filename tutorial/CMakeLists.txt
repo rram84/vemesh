@@ -15,6 +15,8 @@ set(COMMON_DIR "${CMAKE_CURRENT_SOURCE_DIR}/common")
 
 # List of test executables
 set(TEST_TARGETS
+	element_agglomeration
+	vertex_relaxation
 	iterative_element_agglomeration
 	iterative_vertex_relaxation
 	mesh_slicing

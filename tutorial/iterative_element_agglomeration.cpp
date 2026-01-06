@@ -33,11 +33,7 @@ int main()
   pmp::SurfaceMesh in_mesh = vm::read_off(meshfile);
   
   // ---- face quality metric --- 
-  // options:
-  // vm::quality::vem_stability_ratio
-  // vm::quality::geom_shape
-  // vm::quality::geom_min_angle
-  const auto face_quality_metric = vm::quality::geom_min_angle; 
+  const auto face_quality_metric = vm::quality::vem_stability_ratio;
 
   // ----  quality evaluator ---
   vm::QualityEvaluator QE(face_quality_metric);
@@ -57,7 +53,6 @@ int main()
 
   // --- evaluate and save initial mesh quality ---
   optimizer.evaluate_face_qualities(QE, vm::Face_Quality_Tag);
-  optimizer.evaluate_vertex_qualities(vm::Face_Quality_Tag, vm::Vertex_Quality_Tag);
   vm::write_vtk(mesh, outdir+"/input_mesh.vtk");
   vm::write_face_quality_vector(mesh, outdir+"/qvec-input.dat");
 	
@@ -70,7 +65,6 @@ int main()
 
     // evaluate mesh qualities and save file
     optimizer.evaluate_face_qualities(QE, vm::Face_Quality_Tag);
-    optimizer.evaluate_vertex_qualities(vm::Face_Quality_Tag, vm::Vertex_Quality_Tag);
     vm::write_vtk(mesh, outdir+"/mesh-iter-"+std::to_string(iter)+".vtk");
     vm::write_face_quality_vector(mesh, outdir+"/qvec-iter-"+std::to_string(iter)+".dat");
   }

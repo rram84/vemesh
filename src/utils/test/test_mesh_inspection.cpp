@@ -81,7 +81,7 @@ void test_inspect_face()
 void test_inspect_mesh_empty()
 {
   pmp::SurfaceMesh mesh;
-  vm::ErrorList errors;
+  vm::MeshInspectionErrors errors;
 
   if (vm::inspect_mesh(mesh, vm::MeshInspection::Basic, errors)) {
     std::cerr << "Empty mesh passed Basic inspection\n";
@@ -93,7 +93,7 @@ void test_inspect_mesh_empty()
     std::exit(EXIT_FAILURE);
   }
 
-  if (errors[0].code != vm::InspectionErrorCode::EmptyMesh) {
+  if (errors[0].code != vm::MeshInspectionErrorCode::EmptyMesh) {
     std::cerr << "Wrong error code for empty mesh\n";
     std::exit(EXIT_FAILURE);
   }
@@ -120,7 +120,7 @@ pmp::SurfaceMesh make_self_intersecting_face_mesh()
 void test_inspect_mesh_invalid_face()
 {
   auto mesh = make_self_intersecting_face_mesh();
-  vm::ErrorList errors;
+  vm::MeshInspectionErrors errors;
 
   if (vm::inspect_mesh(mesh, vm::MeshInspection::FaceGeometry, errors)) {
     std::cerr << "Invalid face passed FaceGeometry inspection\n";
@@ -129,8 +129,8 @@ void test_inspect_mesh_invalid_face()
 
   bool ok = false;
   for (const auto& e : errors) {
-    if (e.code == vm::InspectionErrorCode::InvalidFace ||
-        e.code == vm::InspectionErrorCode::NonSimpleFace) {
+    if (e.code == vm::MeshInspectionErrorCode::InvalidFace ||
+        e.code == vm::MeshInspectionErrorCode::NonSimpleFace) {
 
       if (e.face != 0) {
         std::cerr << "Invalid face error should reference face 0\n";
@@ -167,7 +167,7 @@ pmp::SurfaceMesh make_zero_area_face_mesh()
 void test_inspect_mesh_non_positive_area()
 {
   auto mesh = make_zero_area_face_mesh();
-  vm::ErrorList errors;
+  vm::MeshInspectionErrors errors;
 
   if (vm::inspect_mesh(mesh, vm::MeshInspection::FaceGeometry, errors)) {
     std::cerr << "Zero-area face passed inspection\n";
@@ -176,7 +176,7 @@ void test_inspect_mesh_non_positive_area()
 
   bool ok = false;
   for (const auto& e : errors) {
-    if (e.code == vm::InspectionErrorCode::NonPositiveArea) {
+    if (e.code == vm::MeshInspectionErrorCode::NonPositiveArea) {
 
       if (e.face != 0) {
         std::cerr << "NonPositiveArea should reference face 0\n";
@@ -224,7 +224,7 @@ pmp::SurfaceMesh make_overlapping_adjacent_faces_mesh()
 void test_inspect_mesh_face_overlap()
 {
   auto mesh = make_overlapping_adjacent_faces_mesh();
-  vm::ErrorList errors;
+  vm::MeshInspectionErrors errors;
 
   if (vm::inspect_mesh(mesh, vm::MeshInspection::Adjacency, errors)) {
     std::cerr << "Overlapping faces passed Adjacency inspection\n";
@@ -233,7 +233,7 @@ void test_inspect_mesh_face_overlap()
 
   bool ok = false;
   for (const auto& e : errors) {
-    if (e.code == vm::InspectionErrorCode::FaceOverlap) {
+    if (e.code == vm::MeshInspectionErrorCode::FaceOverlap) {
 
       if (e.face != 0 || e.face2 != 1) {
         std::cerr << "FaceOverlap must report faces (0,1)\n";
@@ -254,7 +254,7 @@ void test_inspect_mesh_face_overlap()
 // -------- successful test with inspect_mesh ------ //
 void test_inspect_mesh_success(const pmp::SurfaceMesh& mesh)
 {
-  vm::ErrorList errors;
+  vm::MeshInspectionErrors errors;
 
   if (!vm::inspect_mesh(mesh, vm::MeshInspection::Adjacency, errors)) {
     std::cerr << "Valid mesh failed inspection\n";

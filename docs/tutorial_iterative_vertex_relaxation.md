@@ -1,12 +1,19 @@
 
 \page iterative_vertex_relaxation Iterative vertex relaxation
 
-This tutorial demonstrates how to iteratively relax vertices in a polygonal mesh using vemesh.
+This tutorial demonstrates iteratively relaxing vertices in a
+polygonal mesh using vemesh.  
+Vertex relaxation perturbing vertices to more favorable locations,
+with the goal of improving qualities of elements in the mesh.  
+The topology of the mesh is unchanged in the process; just the
+locations of vertices are adjusted.  
 
-**Source code:** iterative_element_agglomeration.cpp
+**Source code:** iterative_vertex_relaxation.cpp
 
-It starts by loading a mesh with poor-quality elements, the goal is to improve
-element quality by face agglomeration driven by a user-defined quality metric.
+## Complete example
+\include iterative_vertex_relaxation.cpp
+
+## Explanation
 
 **Load the mesh:**
 ```cpp
@@ -22,48 +29,47 @@ for details.
 ```cpp
   const int num_iters = 5;     
   const double qepsilon = 0.2; 
-  const double qfactor = 1.2;  
+  const double num_samples = 10;  
   ```
 The parameter `qepsilon`, in the range [0,1], defines the threshold
-for identifying elements of poor quality. The agglomerate method of
-the vm::MeshOptimizer class used in this example first tags faces
-whose qualities fall below this threshold and improves them in
-ascending order of quality.  
+for identifying vertices of poor quality. The relax() method of
+the vm::MeshOptimizer class used in this example first tags vertices
+whose qualities fall below this threshold and relaxes them to mor
+favorable locations in ascending order of quality.  
 
-The parameter `qfactor`, assumed to be larger than 1, dictates whether
-an agglomerated face is acceptable or not. If a face \f$f\f$ can be
-agglomerated to a new face \f$g\f$, then the result is accepted only
-of \f$Q(g)\geq {\rm qfactor}\times Q(f)\f$. The parameter mainly helps
-prevent over-agglomeration, and avoids faces with large number of
-vertices/edges.
+The parameter `num_samples`, assumed to be larger than 1, dictates the
+number of randomly generated candidate sample points that are
+inspected to relocate each vertex. In general:  
+- only a fraction of the generated sample points are feasible, i.e.,
+result in a valid mesh without self-intersections or degenerate faces.
+- a larger choice for the number of samples will likely yield more
+  improvement. But this comes at the cost of additional computations.
 
-Iterative agglomeration can substantially improve element quality. The
+Iterative relaxation can substantially improve vertex quality, and
+hence, qualities of faces in the mesh. The
 number of iterations to execute is specified by the parameter
 `num_iters`, which is assumed to be positive.  In this example, the
 same quality threshold `qepsilon` is used after each iteration to
-re-identify faces requiring improvement.
+re-identify vertices requiring improvement.
 
-**Face quality:**   
+**Vertex quality:**   
 ```cpp
 	const auto face_quality_metric = vm::quality::geom_min_angle; 
     vm::QualityEvaluator QE(face_quality_metric);
 ```
 vemesh provides users complete freedom in defining
 the metric used to evaluate face qualities, see @ref quality.  
+The vertex quality is defined implicitly using this metric, see @userguide.
 
-Three specific examples are provided for users to test out:  
+Two specific examples are provided for users to test out:  
 - vm::quality::vem_stability_ratio: uses the ratio of extreme eigenvalues of
   the element-level stiffness matrix in the VEM to define element
   quality in a shape-agnostic manner  
 - vm::quality::geom_shape: defines a geometric measure of polygon quality. It uses a non-dimensional ratio of the area and the
   squared-perimeter, so that more regular polygons are assigned a
   better quality closer to 1.
-- vm::quality::geom_min_angle: defines a geometric measure of polygon
-  quality. It measures the quality of a n-sided polygon as the tatio
-  of its smallest included angle to the included angle in a regular
-  n-sided polygon. 
   
-This example uses the element stability ratio as the quality metric.
+This example uses the geometric measure for the quality metric.
 
 The vm::QualityEvaluator class provides different interfaces to
 evaluate face/vertex qualities.
@@ -97,76 +103,83 @@ provided. In this example, we use the *default* tag
 auto face_qualities = mesh.get_face_property<double>(vm::Face_Quality_Tag);
 ```
 
-By virtue of their definition (see @userguide), vertex qualities are
-evaluated using face qualities. Hence, the
+Since vertex qualities are defined using face qualities, the
 `evaluate_vertex_qualities()` method takes the property tag storing
 face qualities in the mesh as input. In this example, the evaluated
 qualities are saved under the *default tag*
 `vm::Vertex_Quality_Tag="vertex_quality"`. 
 Access the evaluated vertex qualities as:
 ```cpp
-auto face_qualities = mesh.get_face_property<double>(vm::Face_Quality_Tag);
+auto vertex_qualities = mesh.get_vertex_property<double>(vm::Vertex_Quality_Tag);
 ```
 
-Notice that it is possible to evaluate and store multiple face quality
+It is possible to evaluate and store multiple face quality
 metrics, and corresponding vertex quality metrics in a mesh. However,
 mesh @io functions only look for the default tags given by
 `vm::Face_Quality_Tag` and `vm::Face_Quality_Tag` when saving meshes
 to files.
 
+The face and vertex qualities computed and stored in the mesh this way
+are **not** used or accessed during mesh improvement. The agglomerate
+and relaxation routines evaluate qualities on the fly, using the
+instance of the vm::QualityEvaluator object provided.
 
-**Iterative agglomeration:**  
+**Iterative relaxation:**  
 ```cpp  
 
    for(int iter=0; iter<num_iters; ++iter) {
       ... 
-     int num_agg = optimizer.agglomerate(QE, qepsilon, qfactor);
+     int num_relaxed = optimizer.relax(QE, qepsilon, num_samples);
       ...
      optimizer.evaluate_face_qualities(QE, vm::Face_Quality_Tag);
      optimizer.evaluate_vertex_qualities(vm::Face_Quality_Tag, vm::Vertex_Quality_Tag);
      vm::write_vtk(mesh, outdir+"/mesh-iter-"+std::to_string(iter)+".vtk");
-     vm::write_face_quality_vector(mesh, outdir+"/qvec-iter-"+std::to_string(iter)+".dat");
+     vm::write_vertex_quality_vector(mesh, outdir+"/qvec-iter-"+std::to_string(iter)+".dat");
   }
 ```
-At each iteration, the optimizer identifies faces whose qualities fall
-below the given threshold `qepsilon`. Internally, the agglomerate()
-method maintains a priorty queue of faces ordered such that the poorest face appears at the front
-of the queue. The agglomeration algorithm ensures that each face is
-agglomerated at most once, and dynamically re-evaluates 
-face qualities which may change during the course of agglomeration.
+At each iteration, the optimizer identifies vertices whose qualities fall
+below the given threshold `qepsilon`. Internally, the relax()
+method maintains a priorty queue of vertices ordered such that the poorest vertex appears at the front
+of the queue. The relaxation method ensures that each vertex is
+relaxed at most once, and dynamically re-evaluates 
+veretx qualities which may change during the course of relaxation.
 
-The vm::MeshOptimizer::agglomerate method used here returns the number
-of faces successfully agglomerated. It can be used to adaptively
-evaluate the need for further agglomeration iterations, for example.
+It is possible that a vertex marked for relaxation may not be
+relocated- this can happen for two reasons:  
+- the quality of a vertex can improve when a neighboring vertex is
+  perturbed. 
+- the generated sample points may not improve a vertex's quality,
+  which is then left undisturbed. 
+  
+The vm::MeshOptimizer::relax method used here returns the number of
+vertice successfully relaxed. It can be used to adaptively evaluate
+the need for further relaxation iterations, for example.
 
-In the example, face qualities are evaluated at the end of each
-iteration and the agglomerated mesh is saved as `mesh-iter-0.vtk,
+In the example, vertex qualities are evaluated at the end of each
+iteration and the relaxed mesh is saved as `mesh-iter-0.vtk,
 mesh-iter-1.vtk` and so on.
-
-
 
   
 **Quality vector:**
 ```cpp
-  vm::write_face_quality_vector(mesh, outdir+"/qvec-input.dat");
+  vm::write_vertex_quality_vector(mesh, outdir+"/qvec-input.dat");
   ...
   // agglomeration iterations
   ...
-  vm::write_face_quality_vector(mesh, outdir+"/qvec-output.dat");
+  vm::write_vertex_quality_vector(mesh, outdir+"/qvec-output.dat");
 ```
-In addition to saving qualities of faces in the mesh, we also save a
-*mesh quality vector* that is simply a sorted list of face
+In addition to saving qualities of vertices in the mesh, we also save a
+*mesh quality vector* that is simply a sorted list of vertex
 qualities. This vector reveals a meaningful and monotonic sense in which the mesh
 quality improves after each mesh update, see @userguide.
 
 The first column of the saved file is an index, and the second is the
-face quality. The length of the vector is hence the number of faces in
-the mesh. In particular, since the input and output meshes have different
-number of elements, the lengths of their quality vectors differ as
-well.  
-Nevertheless,  quality \f$q^{\rm
-out}_{n\times 1}\f$ of the output mesh is better
-than the quality \f$q^{\rm in}_{m\times 1}\f$ of the input mesh in the
+vertex quality. The length of the vector is hence the number of
+vertices in the mesh. In particular, since the number of vertices in
+the mesh remains unchanged during relaxation iterations, the length of
+the quality vector remains a constant.  The quality \f$q^{\rm
+out}_{n\times 1}\f$ of the output mesh is better than the quality
+\f$q^{\rm in}_{m\times 1}\f$ of the input mesh in the
 sense that  
 \f[ q^{\rm out}_i > q^{\rm in}_i~\text{for each}~i<\arg\min_j q^{\rm out}_j = q^{\rm in}_j.\f]
 Visually, the curve representing the output mesh's quality lies

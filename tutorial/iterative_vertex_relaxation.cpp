@@ -33,11 +33,7 @@ int main()
   pmp::SurfaceMesh in_mesh = vm::read_off(meshfile);
   
   // ---- face quality metric --- 
-  // options:
-  // vm::quality::vem_stability_ratio
-  // vm::quality::geom_shape
-  // vm::quality::geom_min_angle
-  const auto face_quality_metric = vm::quality::geom_min_angle; 
+  const auto face_quality_metric = vm::quality::geom_shape;
 
   // ----  quality evaluator ---
   vm::QualityEvaluator QE(face_quality_metric);

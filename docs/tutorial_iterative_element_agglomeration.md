@@ -2,12 +2,14 @@
 \page iterative_element_agglomeration Iterative element agglomeration
 
 This tutorial demonstrates how to iteratively agglomerate low-quality faces
-in a polygonal mesh using vemesh.
+in a polygonal mesh using vemesh to improve element quality.
 
 **Source code:** iterative_element_agglomeration.cpp
 
-It starts by loading a mesh with poor-quality elements, the goal is to improve
-element quality by face agglomeration driven by a user-defined quality metric.
+## Complete example
+\include iterative_element_agglomeration.cpp
+
+## Explanation
 
 **Load the mesh:**
 ```cpp
@@ -82,10 +84,9 @@ make a copy. All operations on the mesh executed by the optimizer are
 peformed on this copy, which can be accessed immutably using the
 `vm::MeshOptimizer::get_mesh()` method.
 
-**Face/vertex quality evaluation:**  
+**Face quality evaluation:**  
 ```cpp
    optimizer.evaluate_face_qualities(QE, vm::Face_Quality_Tag);
-   optimizer.evaluate_vertex_qualities(vm::Face_Quality_Tag, vm::Vertex_Quality_Tag);
    vm::write_vtk(mesh, outdir+"/input_mesh.vtk");
    vm::write_face_quality_vector(mesh, outdir+"/qvec-input.dat");
 ```
