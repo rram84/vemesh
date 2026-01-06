@@ -1,9 +1,35 @@
 
-# Tutorials {#tutorial}
+# Tutorial examples {#tutorial}
 
-- \subpage tutorial_element_agglomeration
-- \subpage tutorial_vertex_relaxation
-- \subpage tutorial_iterative_element_agglomeration
-- \subpage tutorial_iterative_vertex_relaxation
-- \subpage tutorial_app
+- \subpage tutorial_element_agglomeration  
+  Agglomerating elements in a mesh to improve quality  
+  <br> 
+	
+- \subpage tutorial_vertex_relaxation   
+  Relaxing vertices in a mesh to improve quality  
+  <br> 
 
+- \subpage tutorial_iterative_element_agglomeration   
+  Multiple iterations of element agglomeration  
+  <br> 
+
+- \subpage tutorial_iterative_vertex_relaxation   
+  Multiple iterations of vertex relaxation  
+  <br> 
+
+- \subpage tutorial_app   
+  A convenient way of testing out vemesh's capability on your data  
+  <br> 
+  
+- \subpage tutorial_custom_quality   
+  Specifying a user-defined face quality metric  
+  <br>
+
+- \subpage tutorial_embed_circular_boundary   
+  Example embedding a circular boundary in a triangle mesh and subsequent mesh improvement  
+  <br>
+  
+- \subpage tutorial_embed_polygonal_interface   
+  Example embedding a complex geometry represented as a polygonal
+  chain in a structured quad mesh and subsequent mesh improvement  
+  
