@@ -12,7 +12,7 @@ namespace vm {
     void adjust_mesh_nodes(pmp::SurfaceMesh& mesh,
 			   const double phi_eps,
 			   const double pert_eps,
-			   const LevelSetFunction_t& ls_func)
+			   const LevelSetFn& ls_func)
     {
       if (phi_eps <= 0.0)
         throw std::invalid_argument("adjust_mesh_nodes: phi_eps must be positive");
@@ -118,7 +118,7 @@ namespace {
   // - mesh has vertex property "interface_id"
   void prep_mesh(pmp::SurfaceMesh& mesh,
 		 const double phi_eps,
-		 const vm::tutorial::LevelSetFunction_t& lsfunc,
+		 const vm::tutorial::LevelSetFn& lsfunc,
 		 const bool discard_outer_faces,
 		 const std::pair<int,  int> domain_id,     // id for inner domain, outer domain
 		 const int interface_id,                                    // interface id
@@ -288,7 +288,7 @@ namespace vm
   {
     pmp::SurfaceMesh clip_mesh(const pmp::SurfaceMesh& in_mesh,
 			       const double phi_eps,
-			       const LevelSetFunction_t& lsfunc)
+			       const LevelSetFn& lsfunc)
     {
       pmp::SurfaceMesh mesh = in_mesh;
       const std::pair<int,  int> in_out_domain_id{1, 0}; // in=1, out=0
@@ -329,7 +329,7 @@ namespace vm
 
     pmp::SurfaceMesh embed_interface(const pmp::SurfaceMesh& in_mesh,
 				     const double phi_eps,
-				     const LevelSetFunction_t& lsfunc)
+				     const LevelSetFn& lsfunc)
     {
       pmp::SurfaceMesh mesh = in_mesh;
       const std::pair<int,  int> domain_id {1,2}; // in=1, out=2
@@ -379,7 +379,7 @@ namespace vm
 namespace {
   void prep_mesh(pmp::SurfaceMesh& mesh,
 		 const double phi_eps,
-		 const vm::tutorial::LevelSetFunction_t& lsfunc,
+		 const vm::tutorial::LevelSetFn& lsfunc,
 		 const bool discard_outer_faces,
 		 const std::pair<int, int> domain_id,
 		 const int interface_num,

@@ -22,7 +22,7 @@ double level_set_circle(const double* X)
 int main()
 {
   // circle
-  vm::tutorial::LevelSetFunction_t lsfunc = level_set_circle;
+  vm::tutorial::LevelSetFn lsfunc = level_set_circle;
 
   // ---- structured rectangle mesh ------ //
   

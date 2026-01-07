@@ -18,7 +18,7 @@ namespace vm
      * Negative values indicate the *inner* domain, positive values the *outer*
      * domain.
      */
-    using LevelSetFunction_t = std::function<double(const double*)>;
+    using LevelSetFn = std::function<double(const double*)>;
 
     /**
      * \brief Perturb mesh vertices away from the zero level set
@@ -60,7 +60,7 @@ namespace vm
     void adjust_mesh_nodes(pmp::SurfaceMesh& mesh,
 			   const double phi_eps,
 			   const double pert_eps,
-			   const LevelSetFunction_t& ls_func);
+			   const LevelSetFn &ls_func);
 
 
     /**
@@ -119,9 +119,9 @@ namespace vm
      * \see adjust_mesh_nodes
      * \see embed_interface
      */
-    pmp::SurfaceMesh clip_mesh(const pmp::SurfaceMesh& mesh,
+    pmp::SurfaceMesh clip_mesh(const pmp::SurfaceMesh &mesh,
 			       const double phi_eps,
-			       const LevelSetFunction_t& lsfunc);
+			       const LevelSetFn &lsfunc);
     
 
     /**
@@ -169,7 +169,7 @@ namespace vm
      */
     pmp::SurfaceMesh embed_interface(const pmp::SurfaceMesh& mesh,
 				     const double phi_eps,
-				     const LevelSetFunction_t& lsfunc);
+				     const LevelSetFn &lsfunc);
 
   }
 }

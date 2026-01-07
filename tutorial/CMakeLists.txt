@@ -21,7 +21,8 @@ set(TEST_TARGETS
 	iterative_vertex_relaxation
 	custom_quality_metric
 	mesh_slicing
-	vemesh_app)
+	vemesh_app
+	embed_boundary)
 	
 foreach(TGT IN LISTS TEST_TARGETS)
   add_executable(${TGT} ${TGT}.cpp)
