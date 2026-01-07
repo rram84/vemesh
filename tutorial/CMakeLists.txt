@@ -19,6 +19,7 @@ set(TEST_TARGETS
 	vertex_relaxation
 	iterative_element_agglomeration
 	iterative_vertex_relaxation
+	custom_quality_metric
 	mesh_slicing
 	vemesh_app)
 	

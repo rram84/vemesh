@@ -5,9 +5,7 @@ This tutorial demonstrates using vemesh to agglomerate faces to improve element 
 Element agglomeration merges neighboring faces in a mesh when
 favorable. Specifically, if \f$f,g\f$ are agglomerable neighbors with
 qualities \f$Q(f)\f$ and \f$Q(g)\f$, respectively. Then the
-agglomerated face \f$fg\f$ is
-considered feasible only of $Q(fg)>{\rm qfactor}\times
-\min\{Q(f),Q(g)\}\f$.  
+agglomerated face \f$fg\f$ is considered feasible only of \f$Q(fg)>{\rm qfactor}\times \min\{Q(f),Q(g)\}\f$.  
 The metric used to evaluate face qualities is supplied by the user.  
 Agglomeration changes the topology of the mesh, but leaves the count
 and locations of the mesh vertices unchanged.
