@@ -78,17 +78,5 @@ namespace vm
      * \return Shape quality metric in the range [0,1].
      */
     double geom_shape(const std::vector<pmp::Point>& coords);
-
-     /**
-     * \brief Measure shape quality as the minimum included angle.
-     * 
-     * Computes the smallest internal angle of the polygon in degrees.
-     * Useful as a geometric measure of quality.
-     *
-     * \param coords Polygon vertices in counterclockwise order.
-     * \return Minimum internal angle in degrees (positive-valued).
-     * \ingroup quality
-     */
-    double geom_min_angle(const std::vector<pmp::Point>& coords);
   }
 }

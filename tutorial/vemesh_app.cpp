@@ -21,7 +21,7 @@
 // -n number of iterations to perform
 // -s number of vertex samples in case of vertex relaxations
 // -f quality improvement factor in case of agglomeration
-// -m face quality metric, 1:element stability ratio, 2:shape quality, 3:minimum angle
+// -m face quality metric, "stability" = element stability ratio, "shape" = shape quality
 // -v optional argument to print meshes after successive merges (within each iteration)
 
 #include <vm_mesh_optimizer.h>
@@ -47,7 +47,7 @@ struct CLIConfig
   std::string outdir;
   int    num_iters;
   double qepsilon;
-  int    metric_num;
+  std::string metric;
   
   // operation-specific options
   double qfactor     = 0.;
@@ -80,10 +80,10 @@ int main(int argc, char **argv)
   CLI::App app{"Agglomerate elements and relax vertices in a mesh"};
   app.footer("Sample usage:	   \
     \n=================== \
-    \n(i)   agglomerate elements:  ./vemesh -a -i in_mesh.OFF -o out_dir -n 5 -f 1.2 -m 1 -v iter \
-    \n(ii)  relax vertices:        ./vemesh -r -i in_mesh.OFF -o out_dir -n 5 -s 5 -m 2 \
-    \n(iii) agglomerate and relax: ./vemesh --ar -i in_mesh.OFF -o out_dir -n 5 -f 1.2 -s 5 -m 3 -v detailed \
-    \n(iv)  relax and agglomerate: ./vemesh --ra -i in_mesh.OFF -o out_dir -n 5 -f 1.2 -s 5  -m 1\n");
+    \n(i)   agglomerate elements:  ./vemesh -a -i in_mesh.OFF -o out_dir -n 5 -f 1.2 -m stability -v iter \
+    \n(ii)  relax vertices:        ./vemesh -r -i in_mesh.OFF -o out_dir -n 5 -s 5 -m shape \
+    \n(iii) agglomerate and relax: ./vemesh --ar -i in_mesh.OFF -o out_dir -n 5 -f 1.2 -s 5 -m stability -v detailed \
+    \n(iv)  relax and agglomerate: ./vemesh --ra -i in_mesh.OFF -o out_dir -n 5 -f 1.2 -s 5  -m shape\n");
 
   app.set_help_flag("-h,--help", "Print this help message and exit");
   
@@ -116,9 +116,9 @@ int main(int argc, char **argv)
     ->required()
     ->check(CLI::PositiveNumber);
 
-  app.add_option("-m", cfg.metric_num, "quality metric 1=element stability ratio, 2=shape quality, 3=min angle")
+  app.add_option("-m", cfg.metric, "quality metric \"stability\"=vem_stability_ratio, \"shape\"=geom_shape")
     ->required()
-    ->check(CLI::Range(1,3));
+    ->check(CLI::IsMember({"stability", "shape"}));
   
   auto opt_f = app.add_option("-f", cfg.qfactor, "minimum factor of improvement in element quality for agglomeration")
     ->check(CLI::PositiveNumber);
@@ -139,7 +139,6 @@ int main(int argc, char **argv)
     app.parse(argc, argv);
   } 
   catch (const CLI::CallForHelp &) {
-    //app.help();   // <-- print your full help
     std::cout << app.help() << std::endl;
     return 0;
   } 
@@ -147,9 +146,6 @@ int main(int argc, char **argv)
     return app.exit(e);
   }
   
-  // parse options
-  //app.parse(argc, argv);
-
   int mode_count = opt_a->count() + opt_r->count() + opt_ar->count() + opt_ra->count();
   if(mode_count != 1) {
     throw CLI::ValidationError("Optimization mode", "Exactly one optimization flag must be specified");
@@ -192,13 +188,9 @@ int main(int argc, char **argv)
   const auto& mesh = optimizer.get_mesh();
 
   // Face quality metric
-  static const std::array<vm::FaceQualityFn, 3> all_quality_metrics = {
-    vm::quality::vem_stability_ratio, // VEM element stability ratio
-    vm::quality::geom_shape,          // shape quality metric
-    vm::quality::geom_min_angle       // min included angle
-  };
-  const auto face_quality_metric = all_quality_metrics[cfg.metric_num-1];
-
+  const vm::FaceQualityFn face_quality_metric =
+    (cfg.metric=="stability") ? vm::quality::vem_stability_ratio : vm::quality::geom_shape;
+	    
   // Quality evaluator
   vm::QualityEvaluator QE(face_quality_metric);
   

@@ -21,8 +21,8 @@
   A convenient way of testing out vemesh's capability on your data  
   <br> 
   
-- \subpage tutorial_custom_quality   
-  Specifying a user-defined face quality metric  
+- \subpage tutorial_custom_quality_metric   
+  Iterative vertex relaxation with a user-defined face quality metric  
   <br>
 
 - \subpage tutorial_embed_circular_boundary   

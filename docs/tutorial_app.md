@@ -35,10 +35,9 @@ Choose exactly one optimization mode:
 - `-s <value>` : Number of vertex samples (for vertex relaxation)
 - `-f <value>` : Quality improvement factor (for agglomeration)
 - `-m <value>` : Face quality metric
-  - `1` : Element stability ratio
-  - `2` : Shape quality
-  - `3` : Minimum angle
-- `-v <mode>` : Mesh output mode
+  - `stability` : Element stability ratio
+  - `shape`  : Shape quality
+- `-v <mode>`   : Mesh output mode
   - `none` : no output (default)
   - `iter` : output at the end of each iteration
   - `detailed` : output after each update within iteration
@@ -106,22 +105,22 @@ For example, `mesh-iter-4-r-3.vtk` is the
 
 **Agglomerate elements:**
 ```
-./vemesh -a -i in_mesh.OFF -o out_dir -n 5 -f 1.2 -v
+./vemesh -a -i in_mesh.OFF -o out_dir -n 5 -f 1.2 -m stability -v detailed
 ```
 
 **Relax vertices:**
 ```
-./vemesh -r -i in_mesh.OFF -o out_dir -n 5 -s 5
+./vemesh -r -i in_mesh.OFF -o out_dir -n 5 -s 5 -m shape -v iter
 ```
 
 **Agglomerate and relax:**
 ```
-./vemesh --ar -i in_mesh.OFF -o out_dir -n 5 -f 1.2 -s 5 -v
+./vemesh --ar -i in_mesh.OFF -o out_dir -n 5 -f 1.2 -s 5 -m stability -v iter
 ```
 
 **Relax and agglomerate:**
 ```
-./vemesh --ra -i in_mesh.OFF -o out_dir -n 5 -f 1.2 -s 5
+./vemesh --ra -i in_mesh.OFF -o out_dir -n 5 -f 1.2 -s 5 -m shape -v none
 ```
 
 
