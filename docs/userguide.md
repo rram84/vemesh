@@ -16,3 +16,5 @@
 ### I/O
 
 ### Mesh inspection
+
+### Mesh slicing
