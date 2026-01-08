@@ -1,1 +1,1 @@
-# About VEMesh {#aboutvemesh}
+# About vemesh {#aboutvemesh}

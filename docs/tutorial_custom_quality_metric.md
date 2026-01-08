@@ -10,6 +10,14 @@ interior angle, normalized by the included angle in a regular polygonq.
 
 **Source code:** custom_quality_metric.cpp
 
+**Overview:**  
+- Load a polygonal mesh and select parameters for iterative vertex relaxation.
+- Define a user-specified face quality metric as a function mapping polygon vertex coordinates to a scalar quality value.
+- Instantiate a `vm::QualityEvaluator` using the custom face quality function.
+- Use the custom evaluator to compute face and derived vertex qualities.
+- Iteratively relax vertices whose qualities fall below a prescribed threshold.
+- Update quality measures and save intermediate meshes to assess improvement.
+
 [TOC]
 
 ## Complete example

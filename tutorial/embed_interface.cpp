@@ -1,16 +1,20 @@
 // Sriramajayam
 
 /** \file embed_boundary.cpp
- * \brief Tutorial-style example embedding a circular boundary in a triangle mesh and subsequent mesh improvement with vemesh
+ * \brief Tutorial-style example embedding an interface in a structured quad mesh and subsequent mesh improvement with vemesh
  * \ingroup tutorial
  */
 
 #include <vm_mesh_optimizer.h>
 #include <vm_face_qualities.h>
 #include <vm_io.h>
+#include <vm_tutorial_rectangle_mesh.h>
 #include <vm_tutorial_mesh_slicer.h>
 #include <filesystem>
 #include <CLI/CLI.hpp>
+
+// get a polygonal representation of the interface
+void get_interface(const std::string, vm::boost_polygon_t&, vm::boost_linestring_t&);
 
 // identify candidate faces for agglomeration
 std::set<pmp::Face> identify_candidate_faces(const pmp::SurfaceMesh&,
@@ -22,25 +26,31 @@ std::set<pmp::Vertex> identify_candidate_vertices(const pmp::SurfaceMesh&,
 						  const vm::QualityEvaluator&,
 						  const double);
 
-
 int main()
 {
-  // ---- non-conforming mesh and domain inputs --- 
+  // --- define the interface using sampling provided in file ---
+  const std::string filename_interface_samples = "sample_data/vertices/85909.dat";
 
-  // input triangle mesh over [-1,1] x [-1,1] 
-  const std::string meshfile = "sample_data/tri/bbbb-3.off";
-  pmp::SurfaceMesh tri_mesh = vm::read_off(meshfile);
-  
-  // center and radius of circular domain
-  const double circ_center[] = {0.,0.};
-  const double circ_radius = 1./std::sqrt(3.);
+  vm::boost_linestring_t interface_linestring;  // linestring representation of the interface
+  vm::boost_polygon_t interface_polygon;        // polygon enclosed by the interface
+  get_interface(filename_interface_samples, interface_polygon, interface_linestring);
 
-  // level set function for circular boundary
-  vm::tutorial::LevelSetFn ls_circ =
-    [&circ_center, &circ_radius](const double* X) {
-    double Y[] = {X[0]-circ_center[0], X[1]-circ_center[1]};
-    return std::sqrt(Y[0]*Y[0]+Y[1]*Y[1])-circ_radius;
+  // level set function for the interface
+  vm::tutorial::LevelSetFn ls_interface =
+    [&interface_linestring, &interface_polygon](const double* X) {
+    bool is_inside = vm::bg::within(vm::boost_point_t(X[0],X[1]), interface_polygon);
+    double dist = vm::bg::distance(vm::boost_point_t(X[0],X[1]), interface_linestring);
+    return (is_inside==true) ? -dist : dist;
   };
+
+  
+  // --- generate a structured quad mesh (not conforming to the interface) ---
+  const std::array<double,2> left_cnr{0.,0.}; // bottom left corner
+  const int nx = 15; // #nodes along x
+  const int ny = 15; // #nodes along y
+  const double hx = 1./static_cast<double>(nx-1); // grid size along x
+  const double hy = 1./static_cast<double>(ny-1); // grid size along y
+  auto rect_mesh = vm::tutorial::create_rectangle_mesh(left_cnr, hx, nx, hy, ny);
 
   // --- output directory ---
   const std::string outdir = "output";
@@ -54,15 +64,15 @@ int main()
       fs::remove(e);
   }
 
-  // ---- embed the circular boundary in the triangle mesh ---
+  // ---- embed the interface in the background mesh ---
 
   // perturb mesh nodes away from the zero level set
   const double phi_tol = 1.e-5; 
   const double pert_dist = 10.*phi_tol;
-  vm::tutorial::adjust_mesh_nodes(tri_mesh, phi_tol, pert_dist, ls_circ);
+  vm::tutorial::adjust_mesh_nodes(rect_mesh, phi_tol, pert_dist, ls_interface);
 
-  // embed the circular boundary in the perturbed mesh
-  pmp::SurfaceMesh embedded_mesh = vm::tutorial::clip_mesh(tri_mesh, phi_tol, ls_circ);
+  // embed the interface in the perturbed mesh
+  pmp::SurfaceMesh embedded_mesh = vm::tutorial::embed_interface(rect_mesh, phi_tol, ls_interface);
 
   // --- algorithmic parameters for agglomeration ---
   
@@ -141,8 +151,8 @@ std::set<pmp::Face> identify_candidate_faces(const pmp::SurfaceMesh &mesh,
 	    
 	    double qval = QE(f, mesh); // quality of this face
 	    if(qval<qepsilon)
-	    // this is a candidate face for agglomeration
-	    agg_faces.insert(f);
+	      // this is a candidate face for agglomeration
+	      agg_faces.insert(f);
 	    break;
 	  }
     }
@@ -178,4 +188,29 @@ std::set<pmp::Vertex> identify_candidate_vertices(const pmp::SurfaceMesh &mesh,
       }
   
   return relax_vertices;
+}
+
+
+// get a polygonal representation of the interface
+void get_interface(const std::string filename,
+		   vm::boost_polygon_t &polygon,
+		   vm::boost_linestring_t &linestring)
+{
+  // read the polygon vertices
+  std::ifstream file(filename);
+  if(!file.is_open())
+    throw std::runtime_error("Could not open file to read interface nodes "+filename);
+
+  // create polygon
+  polygon.clear();
+  double x, y;
+  while(file >> x >> y)
+    vm::bg::append(polygon.outer(), vm::boost_point_t(x, y));
+  file.close();
+  vm::bg::correct(polygon);
+  
+  // line string representation of the interface
+  linestring.clear();
+  for(auto& it:polygon.outer())
+    vm::bg::append(linestring, it);
 }

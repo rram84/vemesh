@@ -29,7 +29,7 @@
   Example embedding a circular boundary in a triangle mesh and subsequent mesh improvement  
   <br>
   
-- \subpage tutorial_embed_polygonal_interface   
+- \subpage tutorial_embed_interface   
   Example embedding a complex geometry represented as a polygonal
   chain in a structured quad mesh and subsequent mesh improvement  
   

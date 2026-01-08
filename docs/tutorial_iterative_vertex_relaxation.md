@@ -10,6 +10,18 @@ locations of vertices are adjusted.
 
 **Source code:** iterative_vertex_relaxation.cpp
 
+**Overview:**  
+- Load a polygonal mesh and choose a face-based quality metric.
+- Specify a vertex quality threshold and sampling parameters.
+- Initialize a mesh optimizer with the input mesh.
+- For a fixed number of iterations:
+  - Identify vertices with quality below the prescribed threshold.
+  - Relax eligible vertices by sampling candidate locations.
+  - Update face and vertex quality measures on the modified mesh.
+- Save intermediate meshes and quality vectors to monitor mesh
+  improvement.  
+
+
 [TOC]
 
 ## Complete example

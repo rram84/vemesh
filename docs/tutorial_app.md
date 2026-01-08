@@ -1,8 +1,6 @@
 
 \page tutorial_app Command-line tool: vemesh_app
 
-[TOC] 
-
 `vemesh_app` is a command-line utility to perform *iterative* 
 element agglomeration and vertex relaxation operations on polygonal
 meshes using the vemesh library.  
@@ -13,8 +11,21 @@ metrics, iteration counts, and mesh output.
 
 **Source code:** vemesh_app.cpp
 
- The application uses **CLI11** for command-line parsing. Check the \ref getstarted page for install instructions.
+**Overview:**  
 
+- Specify an input polygonal mesh
+- Select an optimization mode: agglomeration, vertex relaxation, or a combination of both.
+- Specify corresponding algorithmic parameters.
+- Choose a face quality metric.
+- For a prescribed number of iterations:
+  - Apply agglomeration and/or vertex relaxation in the specified order.
+  - Update face and vertex quality measures after each iteration.
+- Write mesh outputs according to the selected verbosity level.
+- Save the final optimized mesh with updated quality annotations.
+
+[TOC] 
+
+ The application uses **CLI11** for command-line parsing. Check the \ref getstarted page for install instructions.
 
 ## Flags
 

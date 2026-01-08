@@ -6,6 +6,15 @@ Vertex relaxation perturbs vertices to more favorable locations by relying on th
 As discussed in @userguide, vertex qualities are defined implicitly in terms of face qualities in the mesh.  
 Vertex relaxation leaves the topology of the mesh unchanged; just the locations of vertices are adjusted.  
 
+**Overview:**  
+- Load a polygonal mesh and identify constrained vertices (boundary or interface).
+- Choose a face-based quality metric and define the corresponding vertex quality.
+- Identify relaxable vertices whose quality falls below a prescribed threshold.
+- Iteratively perturb each candidate vertex by sampling feasible nearby positions:
+  - accept a perturbation only if it improves vertex quality and preserves mesh validity.
+- Update the mesh while keeping the topology unchanged.
+- Output the relaxed mesh and compare input/output quality vectors.
+
 [TOC]
 
 **Source code:** vertex_relaxation.cpp

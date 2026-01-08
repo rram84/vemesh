@@ -6,6 +6,17 @@ in a polygonal mesh using vemesh to improve element quality.
 
 **Source code:** iterative_element_agglomeration.cpp
 
+**Overview:**  
+- Load a polygonal mesh and choose a face-based quality metric.
+- Specify a face quality threshold and agglomeration acceptance factor.
+- Initialize a mesh optimizer with the input mesh.
+- For a fixed number of iterations:
+  - Identify faces with quality below the prescribed threshold.
+  - Agglomerate each candidate face with a suitable neighbor if the merge improves quality.
+  - Update face and vertex quality measures on the modified mesh.
+- Save intermediate meshes and face quality vectors to assess mesh
+  improvement and coarsening.  
+
 [TOC]
 
 ## Complete example

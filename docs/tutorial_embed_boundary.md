@@ -11,6 +11,16 @@ This tutorial demonstrates:
 
 **Source code:** embed_boundary.cpp
 
+**Overview:**  
+- Define a signed distance level set for the boundary.
+- Perturb background mesh nodes to ensure no node lies arbitrarily close to the zero level set.
+- Embed the boundary by clipping intersected elements and tagging boundary vertices (`interface_id`).
+- Iteratively improve the mesh near the boundary:
+  - relax low-quality interior vertices adjacent to the boundary,
+  - agglomerate low-quality faces incident on the boundary.
+- Output the improved embedded mesh; faces/vertices away from the boundary
+  remain unchanged.
+  
 [TOC]
 
 ## Complete example
@@ -102,7 +112,7 @@ set.
 Specifically:  
 - the routine computes approximate intersections of the zero level set
   with edges of the mesh by linearly interpolating the level set
-  function evaluated at the nodes.
+  function evaluated at the nodes of `tri_mesh`.
 - based on intersections computed this way, the  routine then clips intersected
   triangles and discards the subset deemed to belong to the positive
   sub-level set.
@@ -252,6 +262,11 @@ as few modifications to the mesh as possible to improve its quality beyond a spe
   chosen for definiteness. Other combinations and sequences of
   operations are possible as well, and can be easily implemented
   through a minor modification of the code snippet shown.  
+- the relax() and agglomerate() do not take the quality threshold
+ paramater `qepsilon`. This is because the subset of vertices/faces to
+ be examined for relaxation/agglomeration are provided directly. In
+ particular, these methods do no independently identify vertices/faces
+ to improve.  
 
 Monitoring the number of relaxed and agglomerated faces will help
 judge the need of iterations of improvement required.

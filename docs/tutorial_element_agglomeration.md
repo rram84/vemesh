@@ -10,6 +10,16 @@ The metric used to evaluate face qualities is supplied by the user.
 Agglomeration changes the topology of the mesh, but leaves the count
 and locations of the mesh vertices unchanged.
 
+
+**Overview:**  
+- Load a polygonal mesh with domain labels.
+- Choose a face-based quality metric and a quality threshold.
+- Identify low-quality faces whose quality falls below the prescribed threshold.
+- For each candidate face, select an agglomerable neighbor that maximizes quality improvement.
+- Merge neighboring faces only if the agglomerated face satisfies the improvement criterion.
+- Update the mesh topology while preserving vertex locations.
+- Output the agglomerated mesh and compare input/output face quality  vectors.
+  
 [TOC]
 
 **Source code:** element_agglomeration.cpp

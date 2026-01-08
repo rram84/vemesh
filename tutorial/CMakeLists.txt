@@ -22,7 +22,8 @@ set(TEST_TARGETS
 	custom_quality_metric
 	mesh_slicing
 	vemesh_app
-	embed_boundary)
+	embed_boundary
+	embed_interface)
 	
 foreach(TGT IN LISTS TEST_TARGETS)
   add_executable(${TGT} ${TGT}.cpp)
