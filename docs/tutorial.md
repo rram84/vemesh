@@ -25,7 +25,7 @@
   Iterative vertex relaxation with a user-defined face quality metric  
   <br>
 
-- \subpage tutorial_embed_circular_boundary   
+- \subpage tutorial_embed_boundary   
   Example embedding a circular boundary in a triangle mesh and subsequent mesh improvement  
   <br>
   

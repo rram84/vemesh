@@ -141,7 +141,7 @@ make
 The app uses [CLI11](https://github.com/CLIUtils/CLI11) for command
 line parsing. The header is provided in the `app/` folder.
 
-## Link vemesh to Your Project
+## Link vemesh to your project
 
 **Find the package in CMake:**
 ```cmake
