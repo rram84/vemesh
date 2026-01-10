@@ -1,8 +1,9 @@
 # About vemesh {#aboutvemesh}
 
 why the name
-not a general purpose library 
-exploits vem
+not a general purpose library
+not for generic mesh improvement
+exploits vem, relation to vem
 requires polygons
 generalizes operations of agglomeration to beyond triangles and quads
 robust implementations, small overheads
