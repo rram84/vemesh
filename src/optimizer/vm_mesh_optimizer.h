@@ -121,7 +121,7 @@ namespace vm
    * - \ref relax(const pmp::Vertex&, const QualityEvaluator&, int): \n
    * Provides the most granular control. It attempts to relocate a specified vertex to a new location.
    *
-   * - \ref relax(const std::set<pmp::Vertex>&, const QualityEvaluator&, double, int, const ProgressCallback &): \n
+   * - \ref relax(const std::set<pmp::Vertex>&, const QualityEvaluator&, int, const ProgressCallback &): \n
    * Attempts to relax vertices in a specified set, starting from the vertex with the poorest quality.  
    *
    * - \ref relax(const std::set<pmp::Vertex>&, const QualityEvaluator&, double, int, const ProgressCallback &): \n

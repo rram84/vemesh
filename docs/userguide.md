@@ -23,6 +23,9 @@ functionalities of the library.
 
 ### Surface meshes
 
+**Details:** 
+[pmp::SurfaceMesh](https://www.pmp-library.org/classpmp_1_1_surface_mesh.html)  
+
 **vemesh** deals with polygonal meshes. The mesh
 [pmp::SurfaceMesh](https://www.pmp-library.org/classpmp_1_1_surface_mesh.html)
 data structure of the [pmp-library](pmp-library.org) is ideally suited
@@ -115,6 +118,8 @@ which assigns a default value of 0. These properties can be subsequently accesse
 \page ug_quality_metrics Quality metrics  
 
 [TOC]
+
+**Details:** \ref quality
 
 As a mesh improvement tool, vemesh relies on being provided quality
 metrics to discriminate between *good/desirable* and *bad/undesirable*
@@ -255,7 +260,9 @@ by `vm::quality::vem_stability_ratio` serves precisely this purpose.
 
 Element agglomeration is one of the two main operations provided by
 vemesh for mesh improvement. Below, we discuss the rationale for
-agglomeration and the algorithm implemented.
+agglomeration and the algorithm implemented.  
+
+**Details:**  \ref optimizer
 
 [TOC] 
 
@@ -297,7 +304,7 @@ while 𝓟 is not empty do
   f ← pop(𝓟)                 // lowest-quality face
 
   // pick best among all neighbors for merge
-  (found, q_best, g_best) ← find_best_agglomerable_neighbor(f, Q)
+  (found, q_best, nb_best) ← find_best_agglomerable_neighbor(f, Q)
 
   if found = false then
     continue
@@ -307,11 +314,11 @@ while 𝓟 is not empty do
     continue
 
   // accept agglomeration
-  merge f with g_best
+  merge f with nb_best
   nmerged ← nmerged + 1
 
-  if g_best ∈ 𝓟 then
-    remove g_best from 𝓟
+  if nb_best ∈ 𝓟 then
+    remove nb_best from 𝓟
 
   if callback ≠ null then
     flag ← callback(information + status)
@@ -354,49 +361,328 @@ same `domain_id`. This prevents an edge of the mesh along an embedded
 interface from being deleted by merging the two adjacent faces.
 
  In the algorithm outlined above, the search for the optimal neighbor
-to merge a face with incorporates both restrictions of agglomerability.
+in `find_best_agglomerable_neighbor` to merge a face with incorporates
+both restrictions of agglomerability.
 
-## Consequences  
+## What to expect  
 
-consequence of agglomerating elements is 
+Element agglomeration will:  
+- improve the poorest set of element qualities in the mesh with each
+  successful update.  
+- improve poorer elements often at the expense of better quality
+  ones.  
+- improve the mesh quality vector \f${\bf Q}_f\f$ of the mesh.   
+- coarsen the mesh. Each successful agglomeration will reduce the
+  element count by 1.
+- not necessarily be successful, even if an element requires
+  improvement. This may be because merging an element with its
+  agglomerable neighbors may not improve the quality sufficiently.  
+- alter the topology of the mesh.  
+- leave the vertex count and locations unchanged. This
+can be leveraged to preserve the dofs in the VEM.   
+- preserve domain interfaces in the mesh.  
+- not create isolated vertices, i.e., all vertices in the mesh are
+guaranteed to be vertices of polygonal faces in the mesh.  This
+feature implies that updated meshes can be used with a first order
+VEM.  
+- preserve the validity of the mesh, i.e., will not result in
+  degenerate/overlapping elements.  
 
-creates polygons
-cousin of edge deletion
-changes topology
-agglomerable neighbors
-respecting interfaces
-the optimizer class and its overloaded methods
-sequential operation
-risk of over coarsening, dofs unchanged with vem
-mesh validity
+## Usage  
+
+The vm::MeshOptimizer class implements three overloaded methods to
+provided different levels of control over agglomeration operations.   
+
+| Method | Functionality |
+|--------|---------------|
+| `agglomerate(const pmp::Face&, const QualityEvaluator&, double, double)` | Attempts to merge a face with an agglomerable neighbor; provides the most direct control. |
+| `agglomerate(const std::set<pmp::Face>&, const QualityEvaluator&, double, double, const ProgressCallback&)` | Attempts agglomerating faces in a specified subset of faces, starting from the poorest one first. |
+| `agglomerate(const QualityEvaluator&, double, double, const ProgressCallback&)` | Determines the subset of faces to be considered for agglomeration by performing a mesh-wide search to tag faces with quality below the specified threshold \f$\epsilon\f$. Then attempts agglomerating them, starting from the poorest one first. |
 
 \page ug_vertex_relaxation Vertex relaxation  
 
+[TOC] 
 
-## Vertex relaxation
-instance of geometric mesh optimization
-context in triangle and quad meshes
-optimal criterion for mesh. 
-sequential, for vertex
-min-max problem
-ideal scenatio
-mesh validity, visibility polygon, sampling strategy
+The second functionality provided by vemesh for mesh quality
+improvement is vertex relaxation. Specifically, vertices can be
+relocated to more favorable positions to improve element qualities in
+the mesh.   
+
+**Details:**  \ref optimizer
+
+Two main ideas underlie the efficacy of vertex relaxation for mesh
+improvement in vemesh:  
+- the notion of vertex quality, as the minimum over the qualities of
+  faces incident at a vertex, see \ref ug_quality_metrics. This
+  provides a direct relationship between improving vertex qualities
+  and improving qualities of faces in the mesh. In particular,
+  improving vertex quality necessarily improves qualities of faces
+  incident at it.  
+- a vertex is relocated if and only if the quality of a vertex is
+  improved.  Hence, each vertex update guarantees improvement if
+  vertex quality, and consequently, of mesh quality.  
+  
+## Vertex updates   
+
+### Optimization perspective  
+It is appealing to pose the problem of relocating a vertex, say
+\f$v\f$, as an optimization problem:  
+\f[\text{Find}~{\bf x} = \arg\max_{{\bf y}\in {\mathbb R}^2}Q(v({\bf
+y})),\f]  
+where \f$v({\bf y})\f$ denotes the vertex \f$v\f$ when located at
+\f${\bf y}\f$. The challenging in resolving this problem stems from
+our notion of vertex quality. It transforms the optimization problem
+into a the
+max-min problem:  
+\f[\text{Find}~{\bf x} = \arg\max_{{\bf y}\in {\mathbb
+R}^2}\min_{1\leq i\leq n} Q(f_i(v({\bf
+y}))),\f]  
+where \f$\{f_1,\ldots,f_n\}\f$ denote the faces incident at \f$v\f$
+and \f$\{f_1(v({\bf y})),\ldots, f_n(v({\bf y}))\}\f$ denotes their
+realizations with vertex \f$v\f$ positioned at \f${\bf y}\f$. The
+max-min problem is non-smooth in general, make its resolutions
+non-trivial. The choice of the quality metric \f$Q\f$ can render
+identifying the optimal location a complicated task, to say the
+least.  
+
+In vemesh, we adopt the point of view that it is not essential to
+relocate a vertex to an optimal position, since doing so is both an
+algorithmically and a computationally expensive proposition in
+practice. Instead, we restrict the search for the position of \f$v\f$
+to a finite collection of sample points \f${\cal S}(v)\f$. Hence,
+vemesh implements vertex relaxation as:  
+\f[\text{Find}~{\bf x} = \arg\max_{{\bf y}\in {\cal S}(v)}Q(v({\bf
+y})) = \arg\max_{{\bf y}\in {\cal S}(v)}\min_{1\leq i\leq n} Q(f_i(v({\bf
+y}))).\f]  
+In effect, we no longer find an optimal location for \f$v\f$; we find
+a suboptimal one by sampling.   
+
+### Sampling vertex locations  
+vemesh implements a two-pronged strategy to generate the set of
+candidate locations \f${\cal S}(v)\f$. Let \f$2N\f$ denote a
+user-specified count for the number of sample points to inspect.   
+- First, we identify vertices \f$\{v_1,\ldots,v_m\}\f$ in the 1-ring
+  of \f$v\f$ and can consider their convex combinations:  
+\f[ {\bf y} = \left( \sum_{i=1}^m \lambda_i{\bf x}_i\right)\big/
+\sum_{i=1}^m \lambda_i,\f] where \f${\bf x}_j\f$ denotes the location
+of vertex \f$v_j\f$. The set of weighst
+\f$\lambda_1,\ldots,\lambda_m\f$ are sampled randomly from a uniform
+distribution over \f$(0,1)\f$. We populate the set \f${\cal S}_1(v)\f$
+with \f$N\f$ realizations of sample points generated this way.  
+- Second, we construct an axis-aligned bounding box \f${\cal B}(v)\f$
+  covering the faces incident at \f$v\f$. We generate \f$N\f$ random
+  samples contained in \f${\cal B}(v)\f$ to define a second set of
+  candidate locations \f${\cal S}_2(v)\f$ for \f$v\f$.  
+ 
+ Fig \ref XX illustrates the two sets of samples generated this
+ way. We restrict the search for an improved location of \f$v\f$ to
+ the set of \f$2N\f$ sample points contained in \f${\cal S}(v) = {\cal
+ S}_1(v)\cup {\cal S}_2(v)\f$.
+ 
+### Feasibility (visibility)  
+An important caveat of the sampling strategy adopted to identify
+candidate locations is that it does not build in criteria of
+feasibility. It is possible, for instance, that relocating \f$v\f$ to
+a sample point \f${\bf y}\in {\cal S}(v)\f$ results in a mesh with
+overlapping faces. More distressingly, it is not possible to rely on a
+user-defined quality metric \f$Q\f$ to rule out this possibility,
+which is of a geometric nature. That is, it is possible that
+\f$Q(f_i(v({\bf y})))>0\f$ for each face \f$f_i\f$ and yet that
+repositioning \f$v\f$ to \f${\bf y}\f$ results in a tangled mesh. This
+issue is intimately related to the notion of the [visibility
+polygon](https://en.wikipedia.org/wiki/Visibility_polygon). Specifically,
+\f$v\f$ can be relocated to \f${\bf y}\f$ only if \f${\bf y}\f$ is
+*visible* from each vertex \f$\{v_i\}_{i=1}^m\f$ in its 1-ring. Fig
+\ref XX shows an example to this effect, and mesh tangling caused by
+repositioning \f$v\f$ outside the visibility polygon of one of the
+vertices in its 1-ring.  It is prudent therefore, to ensure that the
+set of sample points considered for relocating \f$v\f$ be *visible*
+from each of the vertices \f$v_1,\ldots,v_m\f$.
+
+In practice, the visibility polygon of a point is expensive to
+[compute](https://doc.cgal.org/latest/Visibility_2/index.html). Our
+trials computing visibility polygons of vertices rendered the
+relaxation operation extremely slow. Instead, it is more efficient to
+explicitly verify feasibility of a location \f${\bf y}\f$ for \f$v\f$
+by checking that:  
+- the faces \f$\{f_1(v({\bf y})),\ldots,f_n(v({\bf y}))\}\f$ are all
+  simple and valid polygons, and  
+- pairwise intersections of faces \f$f_i(v({\bf y}))\cap
+  f_j(v({\bf y}))\f$ for \f$i\neq j\f$ has zero area measure.  
+
+We term a position satisfying both these conditions as a *feasible*
+location for \f$v\f$. Fig XX shows examples of infeasible and feasible
+vertex locations.
+
+In summary, vemesh identifies an improved location for \f$v\f$ from
+the \f$2N\f$ samples in \f${\cal S}(v)\f$ as:  
+\f[ \text{Find}~{\bf x} = \arg\max_{{\bf y}\in {\cal S}(v)}\min_{1\leq
+i\leq n} \{Q(f_i(v({\bf y})))\,:\,\text{such that}~{\bf y}~\text{is
+feasible}\}.\f]  
+  
+  
+## Algorithm  
+
+The algorithm implemented for vertex relaxation closely mirrors that
+of element agglomeration.  
+
+```text
+Input:
+  V_cand     : subset of vertices eligible for relaxation
+  QE(·)       : vertex quality evaluator
+  N_samples  : number of candidate relocation samples
+  callback   : optional user-defined function
+
+Output:
+  nrelaxed   : number of successful vertex relaxations
+
+Build priority queue 𝓟 from V_cand,
+  ordered by increasing vertex quality QE(·)
+
+nrelaxed ← 0
+
+while 𝓟 is not empty do
+  (v, q_old) ← pop(𝓟)        // lowest-quality vertex
+
+  if v is on boundary or on an interface then
+    continue
+
+  q_curr ← QE(v)
+
+  // vertex quality may have changed due to neighboring relaxations
+  if |q_curr − q_old| > ε then
+    insert (v, q_curr) into 𝓟
+    continue
+
+  // search for an improved position
+  (found, x_new, q_new) ← find_improved_position(v, N_samples, QE)
+
+  if found = false then
+    continue
+
+  // accept relocation
+  move vertex v to position x_new
+  nrelaxed ← nrelaxed + 1
+
+  if callback ≠ null then
+    flag ← callback(information + status)
+
+    if flag = false then
+      return nrelaxed
+
+end while
+
+return nrelaxed
+```
+
+We highlight a few key points.  
+- The routine `find_improved_position` implements the sampling
+  strategies and feasibility tests.  
+- It is possible that a vertex requires improvement but no feasible
+  sample is found. This can happen because of the sampling strategy
+  adopted does not guarantee feasibility.   
+- A vertex is relaxed at most once. Yet, its quality can be revised
+  multiple times when vertices in its 1-ring are relaxed.
+- The algorithm is only suited for unconstrained vertex
+  relaxation. For this reason, vertices lying on the boundary or on
+  interfaces cannot be relaxed. In particular, only vertices with
+  `interface_id=-1` can be relaxed.  
+
+## What to expect  
+
+Vertex relaxation will:  
+- improve the poorest set of vertex qualities, and hence face
+  qualities, in the mesh with each  successful update.  
+- improve poorer vertices often at the expense of better quality
+  ones.  
+- improve the  quality vector \f${\bf Q}_v\f$ of the mesh.   
+- preverse the element and vertex count.  
+- preserve the topology of the mesh. This can be leveraged to preserve the dofs and matrix data structures in the VEM.     
+- not necessarily be successful, even if a vertex requires
+  improvement. This is because the sampling-based strategy of
+  determining improved vertex locations is not guaranteed to identify
+  either a feasible location, or one with better quality.  
+- preserve domain interfaces in the mesh.  
+- will leave vertices on the boundary of the mesh and along interfaces
+  embedded in the mesh undisturbed. 
+- preserve the validity of the mesh, i.e., will not result in
+  degenerate/overlapping elements.  
+
+## Usage  
+
+The vm::MeshOptimizer class implements three overloaded methods to
+provided different levels of control over relaxation operations.   
+
+| Method | Functionality |
+|--------|---------------|
+| `relax(const pmp::Vertex&, const QualityEvaluator&, int)` | Attempts to relax a vertex; provides the most direct control. |
+| `relax(const std::set<pmp::Vertex>&, const QualityEvaluator&, int, const ProgressCallback&)` | Attempts relaxing vertices in a specified subset of vertices, starting from the poorest one first. |
+| `relax(const QualityEvaluator&, double, int, const ProgressCallback&)` | Determines the subset of vertices to be considered for relaxation by performing a mesh-wide search to tag vertices with quality below the specified threshold \f$\epsilon\f$. Then attempts realxing them, starting from the poorest one first. |
+
+
+
 
 \page ug_utilities Utilities  
 
+[TOC] 
+
+We briefly discuss a few utilities provided as part of vemesh. These
+are not essential functionalities of the library. They are not used in
+the main vm::MeshOptimizer class implementing the
+agglomeration/relaxation functionalities. Nevertheless, these routines
+are invoked in the unit tests and and the tutorial examples.
+
+## I/O  
+
+**Details:** \ref io  
+
+The [pmp-library](https://www.pmp-library.org/group__io.html) provides
+utilties for mesh I/O for a few common formats.  vemesh provides a
+small set of additional read/write functionalities, specifically for
+meshes in OFF and VTK formats:  
+| method | functionality | `domain_id`, `interface_id` | `face_quality`, `vertex_quality` |
+| --- | --- | --- | --- |  
+| vm::read_off | reads vertex coordinates and polygon connectivities from an ascii file in OFF format | not read,  initialized to defaults | not read, not initialized |  
+| vm::write_off | writes a mesh to an ascii file in OFF format | not written | not written |  
+| vm::read_vtk | reads a mesh from an ascii file in legacy VTK format | read if present; otherwise initialized to defaults | not read, not initialized |  
+| vm::write_vtk | writes a mesh to an ascii file in legacy VTK format | written to file | written to file if present |
+
+The VTK format is more informative. It enables incorporating mesh
+partitions into subdomains and specifying embedded interfaces in the
+mesh through the integer-valued cell-based field `domain_id` and
+vertex-based field `interface_id`.  The file format also enables
+visualizing face and vertex qualities stored in the default quality
+tags `face_quality` and `vertex_quality`.
 
 
-## Some utilities
+## Mesh quality vectors  
 
-### I/O
-OFF, VTK
+**Details:** \ref io   
 
-### Mesh quality vectors
-face and vertex qualities
+Mesh I/O in VTK format helps visualize face and vertex qualities. To
+facilitate a direct inspection of the mesh quality vector, vemesh
+provides the routines:  
+| routine | functionality |  
+| --- | --- |
+| `vm::write_face_quality_vector` | writes the mesh quality vector  \f${\bf Q}_f\f$ to an ascii file; 1st column = index, 2nd column =  quality vector component |  
+| `vm::write_vertex_quality_vector` | writes the mesh quality vector \f${\bf Q}_v\f$ to an ascii file; 1st column = index, 2nd column = quality vector component |  
 
-### Mesh inspection
-inspect mesh
 
-### Mesh slicing
+## Mesh inspection  
+
+**Details:** \ref utils   
+
+To help check a polygon mesh's validity, vemesh provides the
+`vm::inspect_mesh` routine. The routine provides three levels of
+checks:  
+| level | check |  
+| --- | --- |  
+| vm::MeshInspection::Basic |  vertex and element counts |  
+| vm::MeshInspection::Face |  degeneracy of faces |  
+| vm::MeshInspection::Adjacency |  pairwise intersections of faces incident at vertices |  
+
+
+
+## Mesh slicing  
 clip mesh
 embed interface

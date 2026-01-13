@@ -33,7 +33,7 @@ namespace vm
    * and face connectivity. 
    *
    * - Initializes face property `domain_id` to 0
-   * - Initialize vertex property `interfac_id` to 0-1
+   * - Initialize vertex property `interface_id` to -1
    * 
    * \param[in] filename The path to the .OFF file to read.
    * \return The pmp::SurfaceMesh object that will be populated with
@@ -70,7 +70,7 @@ namespace vm
    * - Polygonal faces from the \c POLYGONS section
    *
    * The following data are read if present; otherwise default properties are created
-   * - Face scalar property \c domain_id (default = 1)
+   * - Face scalar property \c domain_id (default = 0)
    * - Vertex scalar property \c interface_id (default = -1)
    *
    * The function assumes that the VTK file follows a standard, well-formed
