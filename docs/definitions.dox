@@ -11,8 +11,11 @@
 * \defgroup quality Mesh quality
 * \brief Face/vertex quality metrics and their evaluation
 *
-* \defgroup tutorial
-* \brief Tutorial and demonstration-related utilities
+* \defgroup tutorial Tutorial
+* \brief Tutorial-style examples
+*
+* \defgroup tutorial_utils Tutorial utilities
+* \brief Tutorial- and testing-oriented utilities
 *
 * \defgroup tests Unit tests
 * \brief Unit tests for functions and classes 

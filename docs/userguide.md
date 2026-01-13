@@ -25,7 +25,7 @@ functionalities of the library.
 
 **Details:** 
 [pmp::SurfaceMesh](https://www.pmp-library.org/classpmp_1_1_surface_mesh.html)  
-
+w
 **vemesh** deals with polygonal meshes. The mesh
 [pmp::SurfaceMesh](https://www.pmp-library.org/classpmp_1_1_surface_mesh.html)
 data structure of the [pmp-library](pmp-library.org) is ideally suited
@@ -46,7 +46,7 @@ started:
 | `vertices(pmp::Face)` | circulator of vertices of a face |
 | `halfedges(pmp::Face)` | circulator of halfedges of a face |
 | `face(pmp::Halfedge)` | face to which a halfedge belongs |
-| `is_boundary(pmp::Vertex)` | does a vertex lie on the boudary |
+| `is_boundary(pmp::Vertex)` | does a vertex lie on the boundary |
 | `is_boundary(pmp::Halfedge)`| does a halfedge belong to the boundary |
 | `is_boundary(pmp::Face)`|  does a face have any edge along the boundary |  
 
@@ -136,7 +136,7 @@ When provided `coords`, the sequence of vertex locations, ordered
 counter-clockwise, the oracle returns the quality
 associated with the polygon.  
 We assume that better quality faces are assigned larger values, and
-that valid polygons are assigned positive qualities. It is recommened
+that valid polygons are assigned positive qualities. It is recommended
 that quality metrics be normalized to the interval [0,1], which makes
 it convenient to defined thresholds to identify faces of poor quality
 during mesh improvement iterations.
@@ -162,14 +162,14 @@ can be found in \ref tutorial_custom_quality.
 ### Vertex qualities  
 Based on qualities associated with polygonal faces, vemesh uses a
 notion of vertex quality introduced in \ref XX.   
-If \f$f_1,\ldots, f_n\f$ are faces indicident at a vertex \f$v\f$,
+If \f$f_1,\ldots, f_n\f$ are faces incident at a vertex \f$v\f$,
 then, we set:  
 \f[ Q(v) = \min\{Q(f_1),\ldots,Q(f_n)\}. \f]
 A vertex is hence associated with the poorest quality face incident at
 it. The choice of notation here, using \f$Q\f$ for both face and
 vertex qualities should not cause confusion- the argument provided to
 \f$Q\f$ clarifies this. Moreover, it is useful to retain the same
-notation as a reminder that vertex qualites are defined using the face
+notation as a reminder that vertex qualities are defined using the face
 quality metric. 
 
 The library does not require/permit defining an independent notion of
@@ -185,9 +185,9 @@ and vertices. An instance of the class is instantiated as:
 ```
 
 Overloaded operators of the class implement different interfaces for
-evaluting qualities. For example:  
+evaluating qualities. For example:  
 ```cpp
-   // quality of a polygon given locations of its vertces
+   // quality of a polygon given locations of its vertices
   double q1 = QE(coords);  // coords is of type std::vector<pmp::Point>  
   
   // quality of a face in a mesh
@@ -246,7 +246,7 @@ shaped polygons. Some choice of metrics are also expensive to compute,
 rendering them inefficient for practical use. We refer to \ref XX for
 related discussions.  
 
-One of the main revalations from recent investigation the VEM is the
+One of the main revelations from recent investigation the VEM is the
 poor correlation between polygon shapes and element performance. In
 particular, the often touted relationship between element shapes and
 performance in the conventional finite element methods appears to be
@@ -465,7 +465,7 @@ user-specified count for the number of sample points to inspect.
   of \f$v\f$ and can consider their convex combinations:  
 \f[ {\bf y} = \left( \sum_{i=1}^m \lambda_i{\bf x}_i\right)\big/
 \sum_{i=1}^m \lambda_i,\f] where \f${\bf x}_j\f$ denotes the location
-of vertex \f$v_j\f$. The set of weighst
+of vertex \f$v_j\f$. The set of weights
 \f$\lambda_1,\ldots,\lambda_m\f$ are sampled randomly from a uniform
 distribution over \f$(0,1)\f$. We populate the set \f${\cal S}_1(v)\f$
 with \f$N\f$ realizations of sample points generated this way.  
@@ -617,7 +617,7 @@ provided different levels of control over relaxation operations.
 |--------|---------------|
 | `relax(const pmp::Vertex&, const QualityEvaluator&, int)` | Attempts to relax a vertex; provides the most direct control. |
 | `relax(const std::set<pmp::Vertex>&, const QualityEvaluator&, int, const ProgressCallback&)` | Attempts relaxing vertices in a specified subset of vertices, starting from the poorest one first. |
-| `relax(const QualityEvaluator&, double, int, const ProgressCallback&)` | Determines the subset of vertices to be considered for relaxation by performing a mesh-wide search to tag vertices with quality below the specified threshold \f$\epsilon\f$. Then attempts realxing them, starting from the poorest one first. |
+| `relax(const QualityEvaluator&, double, int, const ProgressCallback&)` | Determines the subset of vertices to be considered for relaxation by performing a mesh-wide search to tag vertices with quality below the specified threshold \f$\epsilon\f$. Then attempts relaxing them, starting from the poorest one first. |
 
 
 
@@ -637,7 +637,7 @@ are invoked in the unit tests and and the tutorial examples.
 **Details:** \ref io  
 
 The [pmp-library](https://www.pmp-library.org/group__io.html) provides
-utilties for mesh I/O for a few common formats.  vemesh provides a
+utilities for mesh I/O for a few common formats.  vemesh provides a
 small set of additional read/write functionalities, specifically for
 meshes in OFF and VTK formats:  
 | method | functionality | `domain_id`, `interface_id` | `face_quality`, `vertex_quality` |
@@ -673,16 +673,50 @@ provides the routines:
 **Details:** \ref utils   
 
 To help check a polygon mesh's validity, vemesh provides the
-`vm::inspect_mesh` routine. The routine provides three levels of
+`vm::inspect_mesh` routine. The routine provides three hierarchical levels of
 checks:  
-| level | check |  
-| --- | --- |  
-| vm::MeshInspection::Basic |  vertex and element counts |  
-| vm::MeshInspection::Face |  degeneracy of faces |  
-| vm::MeshInspection::Adjacency |  pairwise intersections of faces incident at vertices |  
+| level | check | expense |   
+| --- | --- | --- |  
+| vm::MeshInspection::Basic |  vertex and element counts | trivial |   
+| vm::MeshInspection::Face | degeneracy of faces | moderate |   
+| vm::MeshInspection::Adjacency |  pairwise intersections of faces incident at vertices | expensive |  
 
+In case of errors, the routine returns a vector of codes and messages
+as an instance of `vm::MeshInspectionErrors` to help identify
+discrepancies.  
 
+The checks performed by `vm::inspect_mesh` represent necessary
+conditions on the mesh. They are not sufficient, however.   
+
+None of the mesh improvement methods in vemesh internally invoke these
+checks. Nevertheless, it is a good idea to occasionally use these
+checks, for instance, when loading a mesh produced by a non-standard
+source.  
 
 ## Mesh slicing  
-clip mesh
-embed interface
+
+**Details:** \ref tutorial_utils
+
+An important use-case of vemesh lies in improving qualities of
+polygonal meshes resulting from embedding boundaries and interfaces in
+non-conforming meshes. (e.g., structured grids generated by the
+utility `vm::tutorial::create_rectangle_mesh`). By way of enabling
+users test the efficacy of vemesh in this context, the library
+provides two routines:  
+| routine | functionality |  
+| --- | --- |  
+|vm::tutorial::clip_mesh | embed a boundary in a triangle/quad mesh |  
+|vm::tutorial::embed_interface | embed an interface in a triangle/quad mesh |  
+
+We record a few common details:  
+- Both routines use an instance of `vm::tutorial::LevelSetFn` to
+  specify the location of the boundary/interface as the zero level set of a function.  
+- Both routines linearly interpolate values of the level set function
+to approximately determine edge-boundary and edge-interface intersections.  
+- Both routines avoid dealing with corner cases by assuming that
+vertices lie away from the zero level set by a user-specified value.
+The utility `vm::tutorial::adjust_mesh_nodes` implements minor vertex
+perturbations to enforce this condition to achieve a user-defined
+tolerance.  
+- Neither routine is implemented for efficient performance.  
+- Both routines expect a triangle or a quad mesh.  

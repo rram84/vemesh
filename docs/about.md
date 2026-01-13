@@ -15,3 +15,6 @@ primary tools for mesh improvement
 delaunay and voronoi libraries.
 eg collapsing a halfedge only works for triangle meshes
 
+parallelism
+
+sequential nature

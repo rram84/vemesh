@@ -57,7 +57,7 @@ namespace vm
      * \param[in] ny        Number of vertices in the y-direction (must be > 1).
      *
      * \return A \ref pmp::SurfaceMesh representing the rectangular grid.
-     * \ingroup tutorial
+     * \ingroup tutorial_utils
      */
     pmp::SurfaceMesh create_rectangle_mesh(const std::array<double,2> left_cnr,
 					   const double hx, const int nx,

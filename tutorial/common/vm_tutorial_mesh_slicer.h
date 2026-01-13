@@ -17,6 +17,8 @@ namespace vm
      *
      * Negative values indicate the *inner* domain, positive values the *outer*
      * domain.
+     *
+     * \ingroup tutorial_utils
      */
     using LevelSetFn = std::function<double(const double*)>;
 
@@ -56,6 +58,8 @@ namespace vm
      *
      * \note Boundary vertices are treated in the same manner as interior vertices
      *       and may also be perturbed.
+     *
+     * \ingroup tutorial_utils
      */
     void adjust_mesh_nodes(pmp::SurfaceMesh& mesh,
 			   const double phi_eps,
@@ -118,6 +122,8 @@ namespace vm
      *
      * \see adjust_mesh_nodes
      * \see embed_interface
+     *
+     * \ingroup tutorial_utils
      */
     pmp::SurfaceMesh clip_mesh(const pmp::SurfaceMesh &mesh,
 			       const double phi_eps,
@@ -166,6 +172,8 @@ namespace vm
      *
      * \see adjust_mesh_nodes
      * \see clip_mesh
+     *
+     * \ingroup tutorial_utils
      */
     pmp::SurfaceMesh embed_interface(const pmp::SurfaceMesh& mesh,
 				     const double phi_eps,
