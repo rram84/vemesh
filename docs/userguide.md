@@ -1,9 +1,19 @@
 
 # User Guide {#userguide}
 
-We discuss the main concepts and algorithms underlying mesh improvement in vemesh.  
-See the \ref @tutorial for examples demonstrating how to use the
-functionalities of the library.
+It is a good idea to check out one of the \ref tutorial examples
+before getting into the user guide.  
+
+You will see that the examples follow a familiar pattern of:  
+- loading a planar polygonal mesh 
+- picking/defining a quality metric
+- setting up the mesh optimizer
+- combining element agglomeration and vertex relaxation operations to
+  improve the mesh, and 
+- write the result to a file
+
+The user guide follows a similar sequence, while emphasizing the main
+concepts and algorithms underlying mesh improvement.  
 
 [TOC]
 
@@ -17,6 +27,7 @@ functionalities of the library.
 
 \subpage ug_utilities
 
+
 \page ug_polygonal_meshes Polygonal Meshes
 
 [TOC]
@@ -25,8 +36,9 @@ functionalities of the library.
 
 **Details:** 
 [pmp::SurfaceMesh](https://www.pmp-library.org/classpmp_1_1_surface_mesh.html)  
-w
-**vemesh** deals with polygonal meshes. The mesh
+
+
+**vemesh** deals exclusively with *planar polygonal meshes*. The mesh
 [pmp::SurfaceMesh](https://www.pmp-library.org/classpmp_1_1_surface_mesh.html)
 data structure of the [pmp-library](pmp-library.org) is ideally suited
 for this purpose. All meshes in vemesh are hence represented this way,
@@ -82,6 +94,12 @@ and accessed/assigned as:
    interface_ids[v] = 2;  // v is of type pmp::Vertex
 ```  
 
+By convention:
+- `domain_id = 0` denotes a default, single-domain mesh.
+- `interface_id = -1` denotes an unconstrained vertex.
+- a vertex on the boundary of the mesh is considered constrained,
+  irrespective of the `interface_id` assigned to it.
+
 Optionally, face and vertex qualities of a mesh can also be stored as
 properties. The utility provided for saving a mesh in vtk format
 expects:  
@@ -102,7 +120,7 @@ Face/vertex qualities can be added an added as:
   pmp::SurfaceMesh mesh;
   ...
   auto face_qualities = mesh.add_face_property<double>("face_quality_stability_ratio", 0);  
-  auto vertex_qualities = mesh.add_face_property<double>("vertex_quality_shape_ratio", 0);  
+  auto vertex_qualities = mesh.add_vertex_property<double>("vertex_quality_shape_ratio", 0);  
 ```  
 which assigns a default value of 0. These properties can be subsequently accessed and modified:  
 ```cpp
@@ -137,9 +155,9 @@ counter-clockwise, the oracle returns the quality
 associated with the polygon.  
 We assume that better quality faces are assigned larger values, and
 that valid polygons are assigned positive qualities. It is recommended
-that quality metrics be normalized to the interval [0,1], which makes
-it convenient to defined thresholds to identify faces of poor quality
-during mesh improvement iterations.
+that quality metrics be normalized to the interval [0,1]. This
+normalization simplifies the choice of thresholds and acceptance
+factors used in agglomeration and relaxation algorithms.
 
 The library provides two specific examples of such a routine:  
 - `vm::quality::geom_shape`: implements a familiar geometric notion of
@@ -152,7 +170,7 @@ method. This notion of quality provides a shape-agnostic measure, and
 has been demonstrated to be very effective in improving the
 conditioning of the stiffness matrix in the VEM.  
 
-These two routines serves as archetypes of polygon face quality, and
+These two routines serve as archetypes of polygon face quality, and
 are used in the tests and tutorial examples in the
 library. User-defined quality metrics are conveniently accommodated by
 simply implementing a routine of type `vm::FaceQualityFn`. An example
@@ -205,7 +223,7 @@ with the **vector-valued** quality:
 \f[{\bf Q}_f = {\rm asc}(Q(f_1),\ldots,Q(f_n)),\f]  
 where \f${\rm asc}\f$ refers to an ascending sort operation. Hence,
 the mesh quality vector lists the qualities of faces in order,
-starting from the poorest first.
+starting from the poorest first. 
 
 The vector \f${\bf Q}_f\f$ defines the mesh quality by enumerating face
 qualities. Vertex qualities can also be used. If
@@ -230,8 +248,8 @@ When interpreted in the context of mesh quality vectors over the
 sequence of mesh updates, the ordering relation lets us examine mesh
 improvement. Specifically, an update operation (e.g., a vertex
 perturbation) improves the mesh quality if the quality vector is
-*larger*. The ordering relation is meaningful over mesh quality
-vectors because it prioritizes the poorest face/vertex qualities.
+*larger*. Intuitively, this ordering compares meshes by prioritizing
+improvements in their poorest-quality elements/vertices. 
 
 
 ### Remarks  
@@ -267,7 +285,7 @@ agglomeration and the algorithm implemented.
 [TOC] 
 
 ## Rationale  
-Element agglomerate implemented by vemesh generalizes the well-known
+Element agglomeration implemented by vemesh generalizes the well-known
 operation of merging triangles to create quad faces.  
 
 The purpose of agglomeration as a means of mesh improvement is
@@ -283,20 +301,22 @@ Agglomeration this way is especially meaningful is either of the faces
 
 ## Algorithm  
 The pseudocode below concisely summarizes the implementation of
-agglomeration in vemesh.  
+agglomeration in vemesh. Therein, the face qualities are evaluated
+using a *quality evaluator* labeled QE, rather than directly using the
+quality metric \f$Q\f$. This reflects the implementation more closely.
 
 ```text
 Input:
   F_cand    : subset of mesh faces eligible for agglomeration
-  α         : quality acceptance factor
-  Q(·)      : quality evaluator 
+  α         : quality acceptance factor ≥ 1
+  QE(·)      : quality evaluator 
   callback  : optional user-defined function
 
 Output:
   nmerged   : number of successful agglomerations
 
 Build priority queue 𝓟 from F_cand,
-  ordered by increasing face quality Q(·)
+  ordered by increasing face quality QE(·)
 
 nmerged ← 0
 
@@ -304,13 +324,13 @@ while 𝓟 is not empty do
   f ← pop(𝓟)                 // lowest-quality face
 
   // pick best among all neighbors for merge
-  (found, q_best, nb_best) ← find_best_agglomerable_neighbor(f, Q)
+  (found, q_best, nb_best) ← find_best_agglomerable_neighbor(f, QE)
 
   if found = false then
     continue
 
   // merge criterion
-  if q_best < α · Q(f) then
+  if q_best < α · QE(f) then
     continue
 
   // accept agglomeration
@@ -331,9 +351,10 @@ end while
 return nmerged
 ```
 
-The `find_best_agglomerable_neighbor` routine examines each
-neighboring face and determines the quality of the merged result. It
-then identifies the best neighbor to agglomerate a face with.  
+The routine `find_best_agglomerable_neighbor` returns the neighboring
+face whose agglomeration with the current face yields the highest
+resulting face quality, subject to agglomerability constraints. 
+
 
 ## Agglomerability  
 An important consideration during agglomeration is that merging
@@ -406,9 +427,10 @@ provided different levels of control over agglomeration operations.
 The second functionality provided by vemesh for mesh quality
 improvement is vertex relaxation. Specifically, vertices can be
 relocated to more favorable positions to improve element qualities in
-the mesh.   
+the mesh. Only unconstrained vertices not lying on the boundary of the
+mesh and having `interface_id = -1` are eligible for relaxation.  
 
-**Details:**  \ref optimizer
+**Details:** \ref optimizer
 
 Two main ideas underlie the efficacy of vertex relaxation for mesh
 improvement in vemesh:  
@@ -512,7 +534,8 @@ by checking that:
 
 We term a position satisfying both these conditions as a *feasible*
 location for \f$v\f$. Fig XX shows examples of infeasible and feasible
-vertex locations.
+vertex locations. Only feasible locations are considered when
+evaluating vertex quality.
 
 In summary, vemesh identifies an improved location for \f$v\f$ from
 the \f$2N\f$ samples in \f${\cal S}(v)\f$ as:  
@@ -529,7 +552,7 @@ of element agglomeration.
 ```text
 Input:
   V_cand     : subset of vertices eligible for relaxation
-  QE(·)       : vertex quality evaluator
+  QE(·)       : vertex quality evaluator, an instance of vm::QualityEvaluator
   N_samples  : number of candidate relocation samples
   callback   : optional user-defined function
 

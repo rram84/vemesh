@@ -1,5 +1,6 @@
 # About vemesh {#aboutvemesh}
 
+planar only
 why the name
 not a general purpose library
 not for generic mesh improvement
