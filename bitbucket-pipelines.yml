@@ -9,30 +9,19 @@ pipelines:
           - cmake
           - pmp
         script:
-          # System dependencies
           - apt-get update -q
-          - apt-get install -y -q --no-install-recommends \
-              build-essential \
-              cmake \
-              git \
-              libeigen3-dev \
-              libboost-all-dev \
-              libomp-dev
+          - apt-get install -y -q --no-install-recommends build-essential cmake git libeigen3-dev libboost-all-dev libomp-dev
 
-          # Build and install PMP (cached)
           - |
             if [ ! -d "$HOME/pmp/install" ]; then
               git clone --depth 1 https://github.com/pmp-library/pmp-library.git $HOME/pmp
               mkdir -p $HOME/pmp/build
               cd $HOME/pmp/build
-              cmake .. \
-                -DCMAKE_BUILD_TYPE=Release \
-                -DCMAKE_INSTALL_PREFIX=$HOME/pmp/install
+              cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$HOME/pmp/install
               make -j $(nproc)
               make install
             fi
 
-          # Build VEMesh
           - mkdir -p build
           - cd build
           - cmake .. \
