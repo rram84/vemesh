@@ -1,24 +1,24 @@
-image: ubuntu:22.04
+image: ghcr.io/cpp-dev/ubuntu:22.04
 
 pipelines:
   default:
     - step:
-        name: Build VEMesh
+        name: Build VEMesh (Linux)
         caches:
           - pmp
           - build
         script:
-          # Update package list
-          - apt-get update -q
-          # Install only missing packages
-          - DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-              libeigen3-dev \
-              libboost-all-dev \
-              libomp-dev \
-              unzip \
-              pkg-config
+          # -------------------------------------------------
+          # Confirm environment
+          # -------------------------------------------------
+          - echo "Using image: $(cat /etc/os-release | grep PRETTY_NAME)"
+          - git --version
+          - cmake --version
+          - g++ --version
 
-          # PMP build
+          # -------------------------------------------------
+          # Build PMP headless if not cached
+          # -------------------------------------------------
           - |
             if [ ! -d "$HOME/pmp/install" ]; then
               echo "Building PMP headless..."
@@ -38,7 +38,9 @@ pipelines:
               echo "Using cached PMP"
             fi
 
-          # VEMesh build
+          # -------------------------------------------------
+          # Build VEMesh
+          # -------------------------------------------------
           - mkdir -p $HOME/vemesh/build
           - cd $HOME/vemesh/build
           - cmake .. \
@@ -48,5 +50,7 @@ pipelines:
 
 definitions:
   caches:
+    # Cache PMP install to avoid rebuilding
     pmp: $HOME/pmp
+    # Cache VEMesh build directory
     build: $HOME/vemesh/build
