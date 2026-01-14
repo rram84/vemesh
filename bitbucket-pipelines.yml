@@ -13,7 +13,7 @@ pipelines:
           # System setup
           # -------------------------------------------------
           - apt-get update -q
-          - apt-get install -y --no-install-recommends \
+          - DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
               ca-certificates \
               build-essential \
               cmake \
@@ -23,7 +23,9 @@ pipelines:
               libomp-dev \
               wget \
               unzip \
-              pkg-config
+              pkg-config \
+              sudo \
+              software-properties-common
 
           # -------------------------------------------------
           # Build and cache PMP (headless)
