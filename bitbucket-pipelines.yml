@@ -8,13 +8,12 @@ pipelines:
           - pmp
           - build
         script:
-          # -------------------------------------------------
-          # Confirm environment
-          # -------------------------------------------------
-          - echo "Using image: $(grep PRETTY_NAME /etc/os-release)"
-          - git --version
-          - cmake --version
-          - g++ --version
+          - |
+            echo "Confirming environment..."
+            grep PRETTY_NAME /etc/os-release
+            git --version
+            cmake --version
+            g++ --version
 
           # -------------------------------------------------
           # Build or download PMP headless
@@ -53,7 +52,5 @@ pipelines:
 
 definitions:
   caches:
-    # Cache PMP install to avoid rebuilding
     pmp: $HOME/pmp
-    # Cache VEMesh build folder
     build: $HOME/vemesh/build
