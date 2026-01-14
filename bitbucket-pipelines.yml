@@ -1,37 +1,49 @@
-# bitbucket-pipelines.yml
 image: ubuntu:22.04
 
 pipelines:
   default:
     - step:
-        name: Build and Test VEMesh
+        name: Build VEMesh (Linux)
         caches:
+          - apt
           - cmake
           - pmp
-          - build
         script:
-          - apt-get update && apt-get install -y git build-essential cmake ninja-build libeigen3-dev libboost-all-dev
-          
-          # Set up build directories
-          - mkdir -p /opt/pmp
-          - mkdir -p build
-          
-          # Clone and build PMP library if not cached
-          - if [ ! -d "/opt/pmp/build" ]; then \
-              git clone https://github.com/pmp-library/pmp-library.git /opt/pmp; \
-              mkdir -p /opt/pmp/build && cd /opt/pmp/build; \
-              cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_POSITION_INDEPENDENT_CODE=ON; \
-              make -j $(nproc) install; \
+          # System dependencies
+          - apt-get update -q
+          - apt-get install -y -q --no-install-recommends \
+              build-essential \
+              cmake \
+              git \
+              libeigen3-dev \
+              libboost-all-dev \
+              libomp-dev
+
+          # Build and install PMP (cached)
+          - |
+            if [ ! -d "$HOME/pmp/install" ]; then
+              git clone --depth 1 https://github.com/pmp-library/pmp-library.git $HOME/pmp
+              mkdir -p $HOME/pmp/build
+              cd $HOME/pmp/build
+              cmake .. \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DCMAKE_INSTALL_PREFIX=$HOME/pmp/install
+              make -j $(nproc)
+              make install
             fi
-          
-          # Go to project build directory
+
+          # Build VEMesh
+          - mkdir -p build
           - cd build
-          
-          # Configure VEMesh
-          - cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=/opt/pmp
-          
-          # Build VEMesh with all cores
+          - cmake .. \
+              -DCMAKE_BUILD_TYPE=Release \
+              -DCMAKE_PREFIX_PATH=$HOME/pmp/install \
+              -DBUILD_TESTS=OFF \
+              -DBUILD_DOCS=OFF
           - make -j $(nproc)
-          
-          # Optional: run tests if you enable BUILD_TESTS
-          #- ctest --output-on-failure
+
+definitions:
+  caches:
+    apt: /var/cache/apt
+    cmake: ~/.cache/cmake
+    pmp: ~/pmp
