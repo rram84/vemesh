@@ -3,36 +3,55 @@ image: ubuntu:22.04
 pipelines:
   default:
     - step:
-        name: Build VEMesh (Linux)
+        name: Build vemesh (Linux)
         caches:
           - apt
-          - cmake
           - pmp
+          - build
         script:
+          # -------------------------------------------------
+          # System setup
+          # -------------------------------------------------
           - apt-get update -q
-          - apt-get install -y -q --no-install-recommends build-essential cmake git libeigen3-dev libboost-all-dev libomp-dev
+          - apt-get install -y -q --no-install-recommends \
+              ca-certificates \
+              build-essential \
+              cmake \
+              git \
+              libeigen3-dev \
+              libboost-all-dev \
+              libomp-dev
 
+          # -------------------------------------------------
+          # Build and cache PMP
+          # -------------------------------------------------
           - |
             if [ ! -d "$HOME/pmp/install" ]; then
+              echo "Building PMP..."
               git clone --depth 1 https://github.com/pmp-library/pmp-library.git $HOME/pmp
               mkdir -p $HOME/pmp/build
               cd $HOME/pmp/build
-              cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$HOME/pmp/install
-              make -j $(nproc)
+              cmake .. \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DCMAKE_INSTALL_PREFIX=$HOME/pmp/install
+              make -j$(nproc)
               make install
+            else
+              echo "Using cached PMP"
             fi
 
+          # -------------------------------------------------
+          # Build vemesh
+          # -------------------------------------------------
           - mkdir -p build
           - cd build
           - cmake .. \
               -DCMAKE_BUILD_TYPE=Release \
-              -DCMAKE_PREFIX_PATH=$HOME/pmp/install \
-              -DBUILD_TESTS=OFF \
-              -DBUILD_DOCS=OFF
-          - make -j $(nproc)
+              -DCMAKE_PREFIX_PATH="$HOME/pmp/install"
+          - make -j$(nproc)
 
 definitions:
   caches:
     apt: /var/cache/apt
-    cmake: ~/.cache/cmake
-    pmp: ~/pmp
+    pmp: $HOME/pmp
+    build: build
