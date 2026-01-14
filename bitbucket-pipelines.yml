@@ -1,4 +1,4 @@
-image: ghcr.io/cpp-dev/ubuntu:22.04
+image: ubuntu:22.04
 
 pipelines:
   default:
@@ -8,26 +8,45 @@ pipelines:
           - pmp
           - build
         script:
+          # -------------------------------------------------
+          # Prepare Ubuntu repos (needed for apt in minimal images)
+          # -------------------------------------------------
+          - echo "deb http://archive.ubuntu.com/ubuntu jammy main universe multiverse restricted" > /etc/apt/sources.list
+          - echo "deb http://archive.ubuntu.com/ubuntu jammy-updates main universe multiverse restricted" >> /etc/apt/sources.list
+          - echo "deb http://archive.ubuntu.com/ubuntu jammy-security main universe multiverse restricted" >> /etc/apt/sources.list
+          - apt-get update -q
+          - DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+              build-essential \
+              cmake \
+              git \
+              libeigen3-dev \
+              libboost-all-dev \
+              libomp-dev \
+              wget \
+              unzip \
+              pkg-config \
+              ca-certificates
+
+          # -------------------------------------------------
+          # Confirm environment
+          # -------------------------------------------------
           - |
-            echo "Confirming environment..."
+            echo "Environment info:"
             grep PRETTY_NAME /etc/os-release
             git --version
             cmake --version
             g++ --version
 
           # -------------------------------------------------
-          # Build or download PMP headless
+          # Build PMP headless
           # -------------------------------------------------
           - |
             if [ ! -d "$HOME/pmp/install" ]; then
-              echo "Downloading prebuilt PMP release..."
-              mkdir -p $HOME/pmp
-              cd $HOME/pmp
-              wget -q https://github.com/pmp-library/pmp-library/releases/latest/download/pmp-library.tar.gz -O pmp-library.tar.gz
-              tar -xzf pmp-library.tar.gz
-              mkdir -p build
-              cd build
-              cmake ../pmp-library \
+              echo "Building PMP headless..."
+              git clone --depth 1 https://github.com/pmp-library/pmp-library.git $HOME/pmp
+              mkdir -p $HOME/pmp/build
+              cd $HOME/pmp/build
+              cmake .. \
                 -DCMAKE_BUILD_TYPE=Release \
                 -DCMAKE_INSTALL_PREFIX=$HOME/pmp/install \
                 -DBUILD_EXAMPLES=OFF \
