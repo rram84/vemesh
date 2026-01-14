@@ -3,7 +3,7 @@ image: ghcr.io/cpp-dev/ubuntu:22.04
 pipelines:
   default:
     - step:
-        name: Build VEMesh (Linux)
+        name: Build VEMesh
         caches:
           - pmp
           - build
@@ -11,21 +11,24 @@ pipelines:
           # -------------------------------------------------
           # Confirm environment
           # -------------------------------------------------
-          - echo "Using image: $(cat /etc/os-release | grep PRETTY_NAME)"
+          - echo "Using image: $(grep PRETTY_NAME /etc/os-release)"
           - git --version
           - cmake --version
           - g++ --version
 
           # -------------------------------------------------
-          # Build PMP headless if not cached
+          # Build or download PMP headless
           # -------------------------------------------------
           - |
             if [ ! -d "$HOME/pmp/install" ]; then
-              echo "Building PMP headless..."
-              git clone --depth 1 https://github.com/pmp-library/pmp-library.git $HOME/pmp
-              mkdir -p $HOME/pmp/build
-              cd $HOME/pmp/build
-              cmake .. \
+              echo "Downloading prebuilt PMP release..."
+              mkdir -p $HOME/pmp
+              cd $HOME/pmp
+              wget -q https://github.com/pmp-library/pmp-library/releases/latest/download/pmp-library.tar.gz -O pmp-library.tar.gz
+              tar -xzf pmp-library.tar.gz
+              mkdir -p build
+              cd build
+              cmake ../pmp-library \
                 -DCMAKE_BUILD_TYPE=Release \
                 -DCMAKE_INSTALL_PREFIX=$HOME/pmp/install \
                 -DBUILD_EXAMPLES=OFF \
@@ -52,5 +55,5 @@ definitions:
   caches:
     # Cache PMP install to avoid rebuilding
     pmp: $HOME/pmp
-    # Cache VEMesh build directory
+    # Cache VEMesh build folder
     build: $HOME/vemesh/build
