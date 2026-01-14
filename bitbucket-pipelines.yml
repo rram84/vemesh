@@ -5,67 +5,60 @@ pipelines:
     - step:
         name: Build VEMesh (Linux)
         caches:
-          - apt-cache
+          - apt
           - pmp
           - build
         script:
           # -------------------------------------------------
-          # System setup (cached)
+          # System setup
           # -------------------------------------------------
-          - >
-            if [ ! -f "$HOME/.apt-installed" ]; then
-              echo "Installing system dependencies...";
-              apt-get update -q;
-              apt-get install -y --no-install-recommends \
-                ca-certificates \
-                build-essential \
-                cmake \
-                git \
-                libeigen3-dev \
-                libboost-all-dev \
-                libomp-dev \
-                wget \
-                unzip;
-              touch $HOME/.apt-installed;
-            else
-              echo "Using cached system dependencies";
-            fi
+          - apt-get update -q
+          - apt-get install -y --no-install-recommends \
+              ca-certificates \
+              build-essential \
+              cmake \
+              git \
+              libeigen3-dev \
+              libboost-all-dev \
+              libomp-dev \
+              wget \
+              unzip \
+              pkg-config
 
           # -------------------------------------------------
-          # Build PMP (headless: no visualization, no tests/examples)
+          # Build and cache PMP (headless)
           # -------------------------------------------------
-          - >
+          - |
             if [ ! -d "$HOME/pmp/install" ]; then
-              echo "Building PMP headless...";
-              git clone --depth 1 https://github.com/pmp-library/pmp-library.git $HOME/pmp;
-              mkdir -p $HOME/pmp/build;
-              cd $HOME/pmp/build;
+              echo "Building PMP headless..."
+              git clone --depth 1 https://github.com/pmp-library/pmp-library.git $HOME/pmp
+              mkdir -p $HOME/pmp/build
+              cd $HOME/pmp/build
               cmake .. \
                 -DCMAKE_BUILD_TYPE=Release \
                 -DCMAKE_INSTALL_PREFIX=$HOME/pmp/install \
                 -DBUILD_EXAMPLES=OFF \
                 -DBUILD_TESTING=OFF \
                 -DBUILD_DOCS=OFF \
-                -DGLFW_BUILD_DOCS=OFF \
-                -DGLFW_BUILD_EXAMPLES=OFF \
-                -DGLFW_BUILD_TESTS=OFF \
-                -DGLFW_INSTALL=OFF;
-              cmake --build . --parallel;
-              cmake --install .;
+                -DPMP_USE_GLFW=OFF
+              make -j$(nproc)
+              make install
             else
-              echo "Using cached PMP";
+              echo "Using cached PMP"
             fi
 
           # -------------------------------------------------
           # Build VEMesh
           # -------------------------------------------------
-          - mkdir -p build
-          - cd build
-          - cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$HOME/pmp/install"
-          - cmake --build . --parallel
+          - mkdir -p $HOME/vemesh/build
+          - cd $HOME/vemesh/build
+          - cmake .. \
+              -DCMAKE_BUILD_TYPE=Release \
+              -DCMAKE_PREFIX_PATH="$HOME/pmp/install"
+          - make -j$(nproc)
 
 definitions:
   caches:
-    apt-cache: $HOME/.apt-installed
+    apt: /var/cache/apt
     pmp: $HOME/pmp
-    build: build
+    build: $HOME/vemesh/build
