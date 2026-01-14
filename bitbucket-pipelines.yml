@@ -1,4 +1,4 @@
-image: ubuntu:22.04
+image: circleci/gcc:12.3.0
 
 pipelines:
   default:
@@ -9,36 +9,16 @@ pipelines:
           - build
         script:
           # -------------------------------------------------
-          # Prepare Ubuntu repos (needed for apt in minimal images)
-          # -------------------------------------------------
-          - echo "deb http://archive.ubuntu.com/ubuntu jammy main universe multiverse restricted" > /etc/apt/sources.list
-          - echo "deb http://archive.ubuntu.com/ubuntu jammy-updates main universe multiverse restricted" >> /etc/apt/sources.list
-          - echo "deb http://archive.ubuntu.com/ubuntu jammy-security main universe multiverse restricted" >> /etc/apt/sources.list
-          - apt-get update -q
-          - DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-              build-essential \
-              cmake \
-              git \
-              libeigen3-dev \
-              libboost-all-dev \
-              libomp-dev \
-              wget \
-              unzip \
-              pkg-config \
-              ca-certificates
-
-          # -------------------------------------------------
           # Confirm environment
           # -------------------------------------------------
-          - |
-            echo "Environment info:"
-            grep PRETTY_NAME /etc/os-release
-            git --version
-            cmake --version
-            g++ --version
+          - echo "Environment info:"
+          - cat /etc/os-release
+          - git --version
+          - cmake --version
+          - g++ --version
 
           # -------------------------------------------------
-          # Build PMP headless
+          # Build PMP headless if not cached
           # -------------------------------------------------
           - |
             if [ ! -d "$HOME/pmp/install" ]; then
