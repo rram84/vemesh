@@ -9,8 +9,10 @@ project(vemesh
  
 # Set runtime path (for Linux)
 include(GNUInstallDirs)
-set(CMAKE_INSTALL_RPATH "$ORIGIN/../${PROJECT_NAME}/${CMAKE_INSTALL_LIBDIR}")
-set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+if(UNIX AND NOT APPLE)
+  set(CMAKE_INSTALL_RPATH "$ORIGIN/../${PROJECT_NAME}/${CMAKE_INSTALL_LIBDIR}")
+  set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+endif()
 
 # Build options
 option(BUILD_DOCS "Build documentation" OFF)
@@ -18,7 +20,7 @@ option(BUILD_TESTS "Run unit tests" OFF)
 
 # Dependencies
 find_package(Eigen3 REQUIRED)
-find_package(Boost CONFIG REQUIRED)
+find_package(Boost REQUIRED)
 find_package(OpenMP)                        # optional
 find_package(pmp REQUIRED)
 if(BUILD_DOCS)

@@ -1,0 +1,37 @@
+# bitbucket-pipelines.yml
+image: ubuntu:22.04
+
+pipelines:
+  default:
+    - step:
+        name: Build and Test VEMesh
+        caches:
+          - cmake
+          - pmp
+          - build
+        script:
+          - apt-get update && apt-get install -y git build-essential cmake ninja-build libeigen3-dev libboost-all-dev
+          
+          # Set up build directories
+          - mkdir -p /opt/pmp
+          - mkdir -p build
+          
+          # Clone and build PMP library if not cached
+          - if [ ! -d "/opt/pmp/build" ]; then \
+              git clone https://github.com/pmp-library/pmp-library.git /opt/pmp; \
+              mkdir -p /opt/pmp/build && cd /opt/pmp/build; \
+              cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_POSITION_INDEPENDENT_CODE=ON; \
+              make -j $(nproc) install; \
+            fi
+          
+          # Go to project build directory
+          - cd build
+          
+          # Configure VEMesh
+          - cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=/opt/pmp
+          
+          # Build VEMesh with all cores
+          - make -j $(nproc)
+          
+          # Optional: run tests if you enable BUILD_TESTS
+          #- ctest --output-on-failure
