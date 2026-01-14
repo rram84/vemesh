@@ -38,10 +38,10 @@ concepts and algorithms underlying mesh improvement.
 [pmp::SurfaceMesh](https://www.pmp-library.org/classpmp_1_1_surface_mesh.html)  
 
 
-**vemesh** deals exclusively with *planar polygonal meshes*. The mesh
+**VEMesh** deals exclusively with *planar polygonal meshes*. The mesh
 [pmp::SurfaceMesh](https://www.pmp-library.org/classpmp_1_1_surface_mesh.html)
 data structure of the [pmp-library](pmp-library.org) is ideally suited
-for this purpose. All meshes in vemesh are hence represented this way,
+for this purpose. All meshes in VEMesh are hence represented this way,
 with the implicit understanding that the z-coordinate is ignored.   
 
 We refer to the documentation pages for details, but note a few
@@ -62,8 +62,8 @@ started:
 | `is_boundary(pmp::Halfedge)`| does a halfedge belong to the boundary |
 | `is_boundary(pmp::Face)`|  does a face have any edge along the boundary |  
 
-vemesh's dependence on the pmp is limited to using the mesh and
-related data structures. In particular vemesh does not rely on
+VEMesh's dependence on the pmp is limited to using the mesh and
+related data structures. In particular VEMesh does not rely on
 algorithms implemented therein.  
 
 ### Face/vertex properties  
@@ -77,7 +77,7 @@ this to:
   property `interface_id` to vertices in the mesh. This is useful to
   demarcate vertices lying on boundaries and interfaces in the mesh.  
 
-All meshes in vemesh are required to have the `domain_id` and
+All meshes in VEMesh are required to have the `domain_id` and
 `interface_id` property. These can be added as:  
 ```cpp
    pmp::SurfaceMesh mesh;
@@ -139,7 +139,7 @@ which assigns a default value of 0. These properties can be subsequently accesse
 
 **Details:** \ref quality
 
-As a mesh improvement tool, vemesh relies on being provided quality
+As a mesh improvement tool, VEMesh relies on being provided quality
 metrics to discriminate between *good/desirable* and *bad/undesirable*
 faces. 
 
@@ -178,7 +178,7 @@ can be found in \ref tutorial_custom_quality.
 
 
 ### Vertex qualities  
-Based on qualities associated with polygonal faces, vemesh uses a
+Based on qualities associated with polygonal faces, VEMesh uses a
 notion of vertex quality introduced in \ref XX.   
 If \f$f_1,\ldots, f_n\f$ are faces incident at a vertex \f$v\f$,
 then, we set:  
@@ -215,7 +215,7 @@ evaluating qualities. For example:
   double q2 = QE(v, mesh); // v of type pmp::Vertex belongs to mesh of type pmp::Surface  
 ```  
 
-### Mesh quality   
+### Mesh quality {#ug_mesh_quality}  
 Face qualities can in turn be used to define a notion of
 mesh quality. Based on the work of \ref XX, a mesh with faces
 \f$f_1,\ldots,f_n\f$ is associated
@@ -232,9 +232,9 @@ qualities. Vertex qualities can also be used. If
 defines the mesh quality as a sorted list of vertex qualities.  
 
 
-vemesh does not directly use these vector-valued mesh quality vectors
+VEMesh does not directly use these vector-valued mesh quality vectors
 \f${\bf Q}_f\f$ or \f${\bf Q}_v\f$. Nevertheless, they are useful
-because they reveal the sense in which vemesh achieves mesh
+because they reveal the sense in which VEMesh achieves mesh
 improvement. In particular, we note from \ref XX that it is possible
 to introduce an ordering relation over vectors
 with components in sorted order. Consider a pair of vectors  
@@ -277,7 +277,7 @@ by `vm::quality::vem_stability_ratio` serves precisely this purpose.
 \page ug_element_agglomeration Element agglomeration  
 
 Element agglomeration is one of the two main operations provided by
-vemesh for mesh improvement. Below, we discuss the rationale for
+VEMesh for mesh improvement. Below, we discuss the rationale for
 agglomeration and the algorithm implemented.  
 
 **Details:**  \ref optimizer
@@ -285,7 +285,7 @@ agglomeration and the algorithm implemented.
 [TOC] 
 
 ## Rationale  
-Element agglomeration implemented by vemesh generalizes the well-known
+Element agglomeration implemented by VEMesh generalizes the well-known
 operation of merging triangles to create quad faces.  
 
 The purpose of agglomeration as a means of mesh improvement is
@@ -301,7 +301,7 @@ Agglomeration this way is especially meaningful is either of the faces
 
 ## Algorithm  
 The pseudocode below concisely summarizes the implementation of
-agglomeration in vemesh. Therein, the face qualities are evaluated
+agglomeration in VEMesh. Therein, the face qualities are evaluated
 using a *quality evaluator* labeled QE, rather than directly using the
 quality metric \f$Q\f$. This reflects the implementation more closely.
 
@@ -359,7 +359,7 @@ resulting face quality, subject to agglomerability constraints.
 ## Agglomerability  
 An important consideration during agglomeration is that merging
 adjacent faces can result in isolated vertices. Fig shows an example
-in which this happens. While this may be acceptable, vemesh does
+in which this happens. While this may be acceptable, VEMesh does
 permit this possibility. To this end, we introduce a notion of
 **agglomerability** of faces.
 
@@ -375,7 +375,7 @@ vertices, essentially by definition.
 A second criterion that restricts agglomerability of neighboring faces
 is a consideration of respecting embedded interfaces in the mesh. This
 is precisely where the `domain_id` property stored in the mesh is
-useful. vemesh interprets the `domain_id` as a label distinguishing
+useful. VEMesh interprets the `domain_id` as a label distinguishing
 faces belonging to distinct subdomains. Therefore, neighbors \f$f\f$
 and \f$g\f$ are considered to be agglomerable only if they have the
 same `domain_id`. This prevents an edge of the mesh along an embedded
@@ -424,7 +424,7 @@ provided different levels of control over agglomeration operations.
 
 [TOC] 
 
-The second functionality provided by vemesh for mesh quality
+The second functionality provided by VEMesh for mesh quality
 improvement is vertex relaxation. Specifically, vertices can be
 relocated to more favorable positions to improve element qualities in
 the mesh. Only unconstrained vertices not lying on the boundary of the
@@ -433,7 +433,7 @@ mesh and having `interface_id = -1` are eligible for relaxation.
 **Details:** \ref optimizer
 
 Two main ideas underlie the efficacy of vertex relaxation for mesh
-improvement in vemesh:  
+improvement in VEMesh:  
 - the notion of vertex quality, as the minimum over the qualities of
   faces incident at a vertex, see \ref ug_quality_metrics. This
   provides a direct relationship between improving vertex qualities
@@ -467,12 +467,12 @@ non-trivial. The choice of the quality metric \f$Q\f$ can render
 identifying the optimal location a complicated task, to say the
 least.  
 
-In vemesh, we adopt the point of view that it is not essential to
+In VEMesh, we adopt the point of view that it is not essential to
 relocate a vertex to an optimal position, since doing so is both an
 algorithmically and a computationally expensive proposition in
 practice. Instead, we restrict the search for the position of \f$v\f$
 to a finite collection of sample points \f${\cal S}(v)\f$. Hence,
-vemesh implements vertex relaxation as:  
+VEMesh implements vertex relaxation as:  
 \f[\text{Find}~{\bf x} = \arg\max_{{\bf y}\in {\cal S}(v)}Q(v({\bf
 y})) = \arg\max_{{\bf y}\in {\cal S}(v)}\min_{1\leq i\leq n} Q(f_i(v({\bf
 y}))).\f]  
@@ -480,7 +480,7 @@ In effect, we no longer find an optimal location for \f$v\f$; we find
 a suboptimal one by sampling.   
 
 ### Sampling vertex locations  
-vemesh implements a two-pronged strategy to generate the set of
+VEMesh implements a two-pronged strategy to generate the set of
 candidate locations \f${\cal S}(v)\f$. Let \f$2N\f$ denote a
 user-specified count for the number of sample points to inspect.   
 - First, we identify vertices \f$\{v_1,\ldots,v_m\}\f$ in the 1-ring
@@ -537,7 +537,7 @@ location for \f$v\f$. Fig XX shows examples of infeasible and feasible
 vertex locations. Only feasible locations are considered when
 evaluating vertex quality.
 
-In summary, vemesh identifies an improved location for \f$v\f$ from
+In summary, VEMesh identifies an improved location for \f$v\f$ from
 the \f$2N\f$ samples in \f${\cal S}(v)\f$ as:  
 \f[ \text{Find}~{\bf x} = \arg\max_{{\bf y}\in {\cal S}(v)}\min_{1\leq
 i\leq n} \{Q(f_i(v({\bf y})))\,:\,\text{such that}~{\bf y}~\text{is
@@ -649,7 +649,7 @@ provided different levels of control over relaxation operations.
 
 [TOC] 
 
-We briefly discuss a few utilities provided as part of vemesh. These
+We briefly discuss a few utilities provided as part of VEMesh. These
 are not essential functionalities of the library. They are not used in
 the main vm::MeshOptimizer class implementing the
 agglomeration/relaxation functionalities. Nevertheless, these routines
@@ -660,7 +660,7 @@ are invoked in the unit tests and and the tutorial examples.
 **Details:** \ref io  
 
 The [pmp-library](https://www.pmp-library.org/group__io.html) provides
-utilities for mesh I/O for a few common formats.  vemesh provides a
+utilities for mesh I/O for a few common formats.  VEMesh provides a
 small set of additional read/write functionalities, specifically for
 meshes in OFF and VTK formats:  
 | method | functionality | `domain_id`, `interface_id` | `face_quality`, `vertex_quality` |
@@ -683,7 +683,7 @@ tags `face_quality` and `vertex_quality`.
 **Details:** \ref io   
 
 Mesh I/O in VTK format helps visualize face and vertex qualities. To
-facilitate a direct inspection of the mesh quality vector, vemesh
+facilitate a direct inspection of the mesh quality vector, VEMesh
 provides the routines:  
 | routine | functionality |  
 | --- | --- |
@@ -695,7 +695,7 @@ provides the routines:
 
 **Details:** \ref utils   
 
-To help check a polygon mesh's validity, vemesh provides the
+To help check a polygon mesh's validity, VEMesh provides the
 `vm::inspect_mesh` routine. The routine provides three hierarchical levels of
 checks:  
 | level | check | expense |   
@@ -711,7 +711,7 @@ discrepancies.
 The checks performed by `vm::inspect_mesh` represent necessary
 conditions on the mesh. They are not sufficient, however.   
 
-None of the mesh improvement methods in vemesh internally invoke these
+None of the mesh improvement methods in VEMesh internally invoke these
 checks. Nevertheless, it is a good idea to occasionally use these
 checks, for instance, when loading a mesh produced by a non-standard
 source.  
@@ -720,11 +720,11 @@ source.
 
 **Details:** \ref tutorial_utils
 
-An important use-case of vemesh lies in improving qualities of
+An important use-case of VEMesh lies in improving qualities of
 polygonal meshes resulting from embedding boundaries and interfaces in
 non-conforming meshes. (e.g., structured grids generated by the
 utility `vm::tutorial::create_rectangle_mesh`). By way of enabling
-users test the efficacy of vemesh in this context, the library
+users test the efficacy of VEMesh in this context, the library
 provides two routines:  
 | routine | functionality |  
 | --- | --- |  
