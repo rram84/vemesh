@@ -5,13 +5,17 @@ pipelines:
     - step:
         name: Build VEMesh (Linux)
         caches:
-          - apt
           - pmp
           - build
         script:
           # -------------------------------------------------
-          # System setup
+          # Set up Ubuntu repositories (needed in minimal images)
           # -------------------------------------------------
+          - echo "deb http://archive.ubuntu.com/ubuntu jammy main universe multiverse restricted" > /etc/apt/sources.list
+          - echo "deb http://archive.ubuntu.com/ubuntu jammy-updates main universe multiverse restricted" >> /etc/apt/sources.list
+          - echo "deb http://archive.ubuntu.com/ubuntu jammy-security main universe multiverse restricted" >> /etc/apt/sources.list
+          
+          # Update and install system dependencies
           - apt-get update -q
           - DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
               ca-certificates \
@@ -23,12 +27,10 @@ pipelines:
               libomp-dev \
               wget \
               unzip \
-              pkg-config \
-              sudo \
-              software-properties-common
+              pkg-config
 
           # -------------------------------------------------
-          # Build and cache PMP (headless)
+          # Build PMP (headless) if not cached
           # -------------------------------------------------
           - |
             if [ ! -d "$HOME/pmp/install" ]; then
@@ -61,6 +63,7 @@ pipelines:
 
 definitions:
   caches:
-    apt: /var/cache/apt
+    # PMP build and install
     pmp: $HOME/pmp
+    # VEMesh build folder
     build: $HOME/vemesh/build
