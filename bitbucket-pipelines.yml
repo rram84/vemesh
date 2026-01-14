@@ -3,49 +3,55 @@ image: ubuntu:22.04
 pipelines:
   default:
     - step:
-        name: Build vemesh (Linux)
+        name: Build VEMesh (Linux)
         caches:
-          - apt
           - pmp
         script:
+          # -------------------------------------------------
+          # System setup
+          # -------------------------------------------------
+          - apt-get update
+          - apt-get install -y --no-install-recommends \
+              ca-certificates \
+              build-essential \
+              cmake \
+              git \
+              libeigen3-dev \
+              libboost-all-dev \
+              libomp-dev
+
+          # -------------------------------------------------
+          # Build and cache PMP (core only)
+          # -------------------------------------------------
           - |
-              set -e
-
-              echo "=== System setup ==="
-              apt-get update -q
-              apt-get install -y --no-install-recommends \
-                ca-certificates \
-                build-essential \
-                cmake \
-                git \
-                libeigen3-dev \
-                libboost-all-dev \
-                libomp-dev
-
-              echo "=== Build PMP (cached) ==="
-              if [ ! -d "$HOME/pmp/install" ]; then
-                git clone --depth 1 https://github.com/pmp-library/pmp-library.git "$HOME/pmp"
-                mkdir -p "$HOME/pmp/build"
-                cd "$HOME/pmp/build"
-                cmake .. \
-                  -DCMAKE_BUILD_TYPE=Release \
-                  -DCMAKE_INSTALL_PREFIX="$HOME/pmp/install"
-                make -j"$(nproc)"
-                make install
-              else
-                echo "Using cached PMP"
-              fi
-
-              echo "=== Build vemesh ==="
-              cd "$BITBUCKET_CLONE_DIR"
-              mkdir -p build
-              cd build
+            if [ ! -d "$HOME/pmp/install" ]; then
+              echo "Building PMP..."
+              git clone --depth 1 https://github.com/pmp-library/pmp-library.git $HOME/pmp
+              mkdir -p $HOME/pmp/build
+              cd $HOME/pmp/build
               cmake .. \
                 -DCMAKE_BUILD_TYPE=Release \
-                -DCMAKE_PREFIX_PATH="$HOME/pmp/install"
+                -DCMAKE_INSTALL_PREFIX="$HOME/pmp/install" \
+                -DPMP_BUILD_VIS=OFF \
+                -DPMP_BUILD_TESTS=OFF \
+                -DPMP_BUILD_EXAMPLES=OFF
               make -j"$(nproc)"
+              make install
+            else
+              echo "Using cached PMP"
+            fi
+
+          # -------------------------------------------------
+          # Build vemesh
+          # -------------------------------------------------
+          - cd $BITBUCKET_CLONE_DIR
+          - mkdir -p build
+          - cd build
+          - cmake .. \
+              -DCMAKE_BUILD_TYPE=Release \
+              -DCMAKE_PREFIX_PATH="$HOME/pmp/install"
+          - make -j"$(nproc)"
 
 definitions:
   caches:
-    apt: /var/cache/apt
     pmp: $HOME/pmp
