@@ -7,27 +7,20 @@ pipelines:
         caches:
           - apt
           - pmp
-          - build
         script:
-          # -------------------------------------------------
+          # -------------------------------
           # System setup
-          # -------------------------------------------------
+          # -------------------------------
           - apt-get update -q
-          - apt-get install -y -q --no-install-recommends \
-              ca-certificates \
-              build-essential \
-              cmake \
-              git \
-              libeigen3-dev \
-              libboost-all-dev \
-              libomp-dev
+          - apt-get install -y --no-install-recommends \
+              ca-certificates build-essential cmake git \
+              libeigen3-dev libboost-all-dev libomp-dev
 
-          # -------------------------------------------------
+          # -------------------------------
           # Build and cache PMP
-          # -------------------------------------------------
+          # -------------------------------
           - |
             if [ ! -d "$HOME/pmp/install" ]; then
-              echo "Building PMP..."
               git clone --depth 1 https://github.com/pmp-library/pmp-library.git $HOME/pmp
               mkdir -p $HOME/pmp/build
               cd $HOME/pmp/build
@@ -36,13 +29,11 @@ pipelines:
                 -DCMAKE_INSTALL_PREFIX=$HOME/pmp/install
               make -j$(nproc)
               make install
-            else
-              echo "Using cached PMP"
             fi
 
-          # -------------------------------------------------
+          # -------------------------------
           # Build vemesh
-          # -------------------------------------------------
+          # -------------------------------
           - mkdir -p build
           - cd build
           - cmake .. \
@@ -54,4 +45,3 @@ definitions:
   caches:
     apt: /var/cache/apt
     pmp: $HOME/pmp
-    build: build
