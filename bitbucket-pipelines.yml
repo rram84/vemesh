@@ -3,35 +3,22 @@ image: ubuntu:22.04
 pipelines:
   default:
     - step:
-        name: Build VEMesh (Linux)
+        name: Build VEMesh
         caches:
           - pmp
           - build
         script:
-          # -------------------------------------------------
-          # Set up Ubuntu repositories (needed in minimal images)
-          # -------------------------------------------------
-          - echo "deb http://archive.ubuntu.com/ubuntu jammy main universe multiverse restricted" > /etc/apt/sources.list
-          - echo "deb http://archive.ubuntu.com/ubuntu jammy-updates main universe multiverse restricted" >> /etc/apt/sources.list
-          - echo "deb http://archive.ubuntu.com/ubuntu jammy-security main universe multiverse restricted" >> /etc/apt/sources.list
-          
-          # Update and install system dependencies
+          # Update package list
           - apt-get update -q
+          # Install only missing packages
           - DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-              ca-certificates \
-              build-essential \
-              cmake \
-              git \
               libeigen3-dev \
               libboost-all-dev \
               libomp-dev \
-              wget \
               unzip \
               pkg-config
 
-          # -------------------------------------------------
-          # Build PMP (headless) if not cached
-          # -------------------------------------------------
+          # PMP build
           - |
             if [ ! -d "$HOME/pmp/install" ]; then
               echo "Building PMP headless..."
@@ -51,9 +38,7 @@ pipelines:
               echo "Using cached PMP"
             fi
 
-          # -------------------------------------------------
-          # Build VEMesh
-          # -------------------------------------------------
+          # VEMesh build
           - mkdir -p $HOME/vemesh/build
           - cd $HOME/vemesh/build
           - cmake .. \
@@ -63,7 +48,5 @@ pipelines:
 
 definitions:
   caches:
-    # PMP build and install
     pmp: $HOME/pmp
-    # VEMesh build folder
     build: $HOME/vemesh/build
