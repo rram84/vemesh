@@ -3,12 +3,6 @@
 [TOC] 
 
 *A quality-driven mesh improvement library for planar polygonal meshes*
-
-**Author:**  
-Ramsharan Rangarajan  
-Associate Professor of Mechanical Engineering  
-Indian Institute of Science (IISc), Bengaluru, India
-
 ## Overview  
 
 **VEMesh** is a C++ library for improving the quality of planar
@@ -55,7 +49,7 @@ It is also important to note what the library is **not meant for**. VEMesh:
 - is not parallelized and may not be thread-safe.
 - is restricted to planar meshes.
 
-## Getting started  
+## Next steps  
 - Check out a simple \ref tutorial_element_agglomeration "tutorial-style example"
   showing how the library works and how it can be used.
 - \ref getstarted "Get the dependencies and install VEMesh."  
