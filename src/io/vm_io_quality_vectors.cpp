@@ -53,10 +53,10 @@ namespace vm
   void write_vertex_quality_vector(const pmp::SurfaceMesh &mesh,
 				   const std::string filename)
   {
-    if(!mesh.has_face_property(Vertex_Quality_Tag))
+    if(!mesh.has_vertex_property(Vertex_Quality_Tag))
       throw std::runtime_error("write_vertex_quality_vector: mesh does not have vertex_quality property");
 
-    auto vertex_quality = mesh.get_vertex_property<double>(Face_Quality_Tag);
+    auto vertex_quality = mesh.get_vertex_property<double>(Vertex_Quality_Tag);
     auto v_circulator = mesh.vertices();
     std::vector<double> qvec{};
     qvec.reserve(mesh.n_vertices());
