@@ -88,9 +88,8 @@ namespace vm
  * | FaceGeometry| Basic + face validity, simplicity, positive area |
  * | Adjacency   | FaceGeometry + overlap checks between adjacent faces |
  *
- * If an error list is provided, all requested checks are executed and
- * all detected issues are reported. Otherwise, the inspection exits
- * early on the first failure.
+ * The inspection exits early on the first failure, regardless of whether
+ * an error list is provided.
  *
  * \param[in] mesh   Surface mesh to inspect
  * \param[in] level  Inspection level (hierarchical)
