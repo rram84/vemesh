@@ -1,7 +1,7 @@
 // Sriramajayam
 
 /** \file test_geom_qualities.cpp
- * \brief Unit tests for utility routines vm::quality:geom_shape and vm::quality::geom_min_angle defined in vm_face_qualities.h
+ * \brief Unit tests for utility routines vm::quality:geom_shape defined in vm_face_qualities.h
  * \ingroup tests
  * \author Ramsharan Rangarajan
  */

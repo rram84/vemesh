@@ -26,9 +26,6 @@ namespace vm
    * - vm::quality::geom_shape defines the face quality in a geometric sense 
    * in terms of the area and perimeter of the polygon
    * 
-   * - vm::quality::geom_min_angle defines the face quality in a geometric sense 
-   * as the smallest included angle of the polygon
-   *
    * \sa vm::QualityEvaluator
    */
   namespace quality

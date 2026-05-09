@@ -110,8 +110,7 @@ int main(int argc, char **argv)
   // Face quality metric
   static const std::array<vm::FaceQualityFn, 3> all_quality_metrics = {
     vm::quality::vem_stability_ratio, // VEM element stability ratio
-    vm::quality::geom_shape_ratio,   // shape quality metric
-    vm::quality::geom_min_angle       // min included angle
+    vm::quality::geom_shape_ratio   // shape quality metric
   };
   const auto face_quality_metric = all_quality_metrics[cfg.metric_num-1];
 
