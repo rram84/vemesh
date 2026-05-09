@@ -22,12 +22,27 @@ namespace vm
       const int nvals = eigvals.rows();
       auto* eigarray = eigvals.data();
       std::sort(eigarray, eigarray+nvals);
-      
-      // first value should be approximately zero, subsequent should be positive
-      assert(eigarray[1]>eigarray[0]);
-      
-      // return the second eigenvalue
-      return eigarray[1]/eigarray[nvals-1];
+
+      // max eigen value, should be positive
+      const double lambda_max = eigarray[nvals - 1];
+      if (lambda_max <= 0.)
+	throw std::runtime_error("vem_stability_ratio: VEM stiffness matrix has non-positive largest eigenvalue; polygon is degenerate");
+
+      // scaled tolerance for zero eigenvalue
+      const double tol = 1.e-8 * lambda_max;
+
+      // First eigenvalue: expect 0 for null mode, ignore it.
+      if (eigarray[0] < -tol)
+	throw std::runtime_error("vem_stability_ratio: VEM stiffness matrix has a negative eigenvalue beyond numerical tolerance");
+
+      // Second eigenvalue should be >= 0
+      // in case of a very small value, clamp it to zero
+      if (eigarray[1] < -tol)
+	throw std::runtime_error("vem_stability_ratio: second eigenvalue is negative beyond numerical tolerance");
+      const double lambda_min = std::max(0., eigarray[1]);
+
+      // return the ratio
+      return lambda_min/lambda_max;
     }
 
     
