@@ -6,26 +6,46 @@
 namespace vm
 {
   void erase_nonmanifold_edges(std::vector<pmp::Vertex>& vec) {
-
-    if (static_cast<int>(vec.size()) < 3) return; // No operation if there are fewer than 3 elements
-
-    // lambdas for circular listing
-    auto circular_previous = [&vec](auto it) { return it == vec.begin() ? vec.end() - 1 : it - 1; };
-    auto circular_next = [&vec](auto it) { return it == vec.end() - 1 ? vec.begin() : it + 1;};
-
-    for (auto it = vec.begin(); it != vec.end(); ) {
-      auto prev = circular_previous(it);
-      auto next = circular_next(it);
-
-      if (*prev == *next) {
-	it = vec.erase(it);
-	it = vec.erase(circular_previous(it)); // Erase the previous element
-	if (it == vec.end()) it = vec.begin(); // Adjust iterator for circularity
-      } else {
-	++it;
+    bool changed = true;
+    while (changed && vec.size() >= 3) {
+      changed = false;
+      const int n = static_cast<int>(vec.size());
+      for (int i = 0; i < n; ++i) {
+	int prev = (i - 1 + n) % n;
+	int next = (i + 1) % n;
+	if (vec[prev] == vec[next]) {
+	  // remove indices i and prev (in descending order to keep indices valid)
+	  int hi = std::max(i, prev), lo = std::min(i, prev);
+	  vec.erase(vec.begin() + hi);
+	  vec.erase(vec.begin() + lo);
+	  changed = true;
+	  break;  // restart the scan
+	}
       }
     }
   }
+  
+  // void erase_nonmanifold_edges(std::vector<pmp::Vertex>& vec) {
+
+  //   if (static_cast<int>(vec.size()) < 3) return; // No operation if there are fewer than 3 elements
+
+  //   // lambdas for circular listing
+  //   auto circular_previous = [&vec](auto it) { return it == vec.begin() ? vec.end() - 1 : it - 1; };
+  //   auto circular_next = [&vec](auto it) { return it == vec.end() - 1 ? vec.begin() : it + 1;};
+
+  //   for (auto it = vec.begin(); it != vec.end(); ) {
+  //     auto prev = circular_previous(it);
+  //     auto next = circular_next(it);
+
+  //     if (*prev == *next) {
+  // 	it = vec.erase(it);
+  // 	it = vec.erase(circular_previous(it)); // Erase the previous element
+  // 	if (it == vec.end()) it = vec.begin(); // Adjust iterator for circularity
+  //     } else {
+  // 	++it;
+  //     }
+  //   }
+  // }
 
 
   

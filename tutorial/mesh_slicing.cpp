@@ -48,7 +48,7 @@ int main()
   vm::write_vtk(embedded_mesh, "rect-embedded.vtk");
 
   // ---- random triangle mesh --- //
-  auto tri_mesh = vm::read_off("sample_data/random_triangles.OFF");
+  auto tri_mesh = vm::read_off("sample_data/tri/random_triangles.OFF");
 
   // adjust nodes away from zero level set
   vm::tutorial::adjust_mesh_nodes(tri_mesh, phi_eps, pert_eps, lsfunc);
