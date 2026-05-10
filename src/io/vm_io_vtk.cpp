@@ -12,24 +12,20 @@
 namespace vm
 {
   namespace {
-    bool seek_to_keyword(std::istream& file, const std::string& word)
+    
+    // Find the next line containing `word` (substring match, like before).
+    // Returns the matched line via `out_line`.
+    // On success, the stream is positioned at the start of the next line.
+    bool find_line_with(std::istream& file,
+			const std::string& word,
+			std::string& out_line)
     {
-      std::string line;
-      while (std::getline(file, line))
-	{
-	  std::size_t pos = line.find(word);
-	  if (pos != std::string::npos)
-	    {
-	      // Move the stream to just after the keyword in this line
-	      file.clear(); // clear any eof/fail bits
-	      file.seekg(file.tellg() - static_cast<std::streamoff>(line.size()) + static_cast<std::streamoff>(pos + word.size()));
-	      return true;
-	    }
-	}
+      while (std::getline(file, out_line))
+	if (out_line.find(word) != std::string::npos)
+	  return true;
       return false;
     }
   }
-  
     
   // read a vtk file
   pmp::SurfaceMesh read_vtk(const std::string filename)
@@ -44,18 +40,21 @@ namespace vm
     assert(file.good() && file.is_open());
     
     // read # nodes
-    if(!seek_to_keyword(file, "POINTS"))
-      throw std::runtime_error("Could not find keyword POINTS");
-    
     int nNodes;
-    std::string datatype;
-    if(!(file >> nNodes >> datatype))
-      throw std::runtime_error("Failed to read POINTS count");
+    {
+      std::string line;
+      if (!find_line_with(file, "POINTS", line))
+	throw std::runtime_error("Could not find keyword POINTS");
+      
+      std::istringstream iss(line);
+      std::string kw, datatype;
+      
+      if (!(iss >> kw >> nNodes >> datatype))
+	throw std::runtime_error("Could not read #nodes");
+    }
     
     // read coordinates
     double xyz[3];
-    std::string line;
-    std::getline(file, line);
     std::vector<pmp::Vertex> vertices{};
     for(int n=0; n<nNodes; ++n)
       {
@@ -64,13 +63,18 @@ namespace vm
       }
 
     // read cells
+    int nCells;
     std::vector<pmp::Face> faces{};
-    if(!seek_to_keyword(file, "POLYGONS"))
-      throw std::runtime_error("Could not find keyword POLYGONS");
-    
-    int nCells, cell_size;  // cell_size is unused
-    if(!(file >> nCells >> cell_size))
-      throw std::runtime_error("Could not read number of cells and cellsize");
+    {
+      std::string line;
+      if (!find_line_with(file, "POLYGONS", line))
+	throw std::runtime_error("Could not find keyword POLYGONS");
+
+      std::istringstream iss(line);
+      std::string kw;
+      if (!(iss >> kw >> nCells))
+	throw std::runtime_error("Could not reads #cells");
+    }
     
     for(int e=0; e<nCells; ++e)
       {
@@ -98,37 +102,41 @@ namespace vm
       }
 
     // domain ids of cells
-    // default domain id = 1
+    // default domain id = 0
     auto domain_ids = mesh.add_face_property<int>("domain_id", 0);
-    if(seek_to_keyword(file, "domain_id"))
-      {
-	std::getline(file, line); // skip SCALARS line
-	std::getline(file, line); // skip LOOKUP_TABLE line
-	for(auto f:faces)
-	  {
-	    int val;
-	    if(!(file >> val))
-	      throw std::runtime_error("Failed to read domain_id");
-	    domain_ids[f] = val;
-	  }
-      }
+    {
+      std::string line;
+      if (find_line_with(file, "domain_id", line))
+	{
+	  std::getline(file, line);          // skip LOOKUP_TABLE line
+	  for (auto f : faces)
+	    {
+	      int val;
+	      if (!(file >> val))
+		throw std::runtime_error("Failed to read domain_id");
+	      domain_ids[f] = val;
+	    }
+	}
+    }
     
     // vertices on interfaces, default interface id = -1
     auto interface_id = mesh.add_vertex_property<int>("interface_id", -1);
-    file.clear();
-    file.seekg(0, std::ios::beg);
-    if(seek_to_keyword(file, "interface_id"))
-      {
-	std::getline(file, line); // skip SCALARS line
-	std::getline(file, line); // skip LOOKUP_TABLE line
-	for(auto v:vertices)
-	  {
-	    int val;
-	    if(!(file >> val))
-	      throw std::runtime_error("Failed to read interface_id");
-	    interface_id[v] = val;
-	  }
-      }
+    {
+      file.clear();
+      file.seekg(0, std::ios::beg);
+      std::string line;
+      if (find_line_with(file, "interface_id", line))
+	{
+	  std::getline(file, line);          // skip LOOKUP_TABLE line
+	  for (auto v : vertices)
+	    {
+	      int val;
+	      if (!(file >> val))
+		throw std::runtime_error("Failed to read interface_id");
+	      interface_id[v] = val;
+	    }
+	}
+    }
     
     // don't bother reading face/vertex qualities
     file.close();

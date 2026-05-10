@@ -129,10 +129,30 @@ void test_vtk_io()
     }
 }
 
+void test_vtk_fixture()
+{
+  auto mesh = vm::read_vtk("fixtures/sample.vtk");
+  assert(mesh.n_vertices() == 6);
+  assert(mesh.n_faces()    == 4);
+
+  auto dom = mesh.get_face_property<int>("domain_id");
+  std::vector<int> dom_expected = {0, 0, 0, 1};
+  int i = 0;
+  for (auto f : mesh.faces())
+    assert(dom[f] == dom_expected[i++]);
+
+  auto iid = mesh.get_vertex_property<int>("interface_id");
+  std::vector<int> iid_expected = {-1, 2, 2, -1, -1, -1};
+  i = 0;
+  for (auto v : mesh.vertices())
+    assert(iid[v] == iid_expected[i++]);
+}
+
 int main()
 {
   test_off_io(); 
   test_vtk_io();
+  test_vtk_fixture();
 
   // clean up
   std::filesystem::remove("test.off");
