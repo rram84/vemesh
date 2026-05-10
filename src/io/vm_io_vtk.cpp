@@ -8,6 +8,7 @@
 #include <vm_io.h>
 #include <filesystem>
 #include <fstream>
+#include <limits>
 
 namespace vm
 {
@@ -177,7 +178,7 @@ namespace vm
     // keep track of the minimum cell vertex
     int cell_size = 0;
     auto f_circulator = mesh.faces();
-    int min_vert_indx = 2;
+    int min_vert_indx = std::numeric_limits<int>::max();
     for(auto f:f_circulator)
       {
 	cell_size += mesh.valence(f)+1;
@@ -186,8 +187,13 @@ namespace vm
 	  if(v.idx()<min_vert_indx)
 	    min_vert_indx = v.idx();
       }
-    assert((min_vert_indx==0 || min_vert_indx==1) && "Expected vertex indexing to start from 0 or 1");
 
+    // empty mesh? otherwise check for 0/1 based indexing
+    if (mesh.n_faces() == 0)
+      min_vert_indx = 0;
+    else if (min_vert_indx != 0 && min_vert_indx != 1)
+      throw std::runtime_error("write_vtk: expected 0/1 based vertex indexing, got " + std::to_string(min_vert_indx));
+    
     out << "POLYGONS " << mesh.n_faces() << " " << cell_size << std::endl;
     for(auto f:f_circulator)
       {
