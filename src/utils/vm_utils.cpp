@@ -13,7 +13,8 @@ namespace vm
   // create a boost polygon from a set of vertices
   boost_polygon_t make_polygon(const std::vector<pmp::Point>& coords)
   {
-    assert(static_cast<int>(coords.size())>=3);
+    if(static_cast<int>(coords.size())<3)
+      throw std::runtime_error("make_polygon: polygon should have at least 3 vertices");
     
     // boost polygon representation
     boost_polygon_t poly;

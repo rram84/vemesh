@@ -59,7 +59,8 @@ namespace vm
 			   int num_samples,
 			   const ProgressCallback &callback)
   {
-    assert(num_samples>=1);
+    if (num_samples < 1)
+      throw std::invalid_argument("relax: num_samples must be >= 1");
     
     // tolerance for comparing qualities
     const double qeps = 1.e-8;
@@ -130,8 +131,11 @@ namespace vm
 			   int num_samples,
 			   const ProgressCallback &callback)
   {
-    assert(qmin>0. && num_samples>=1);
-
+    if (qmin <= 0.)
+      throw std::invalid_argument("relax: qmin must be > 0");
+    if (num_samples < 1)
+      throw std::invalid_argument("relax: num_samples must be >= 1");
+    
     // all vertices
     auto v_container = mesh.vertices();
     

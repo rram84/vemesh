@@ -16,8 +16,11 @@ namespace vm
     :mesh(in_mesh)
   {
     // sanity checks
-    assert(mesh.has_face_property("domain_id")==true);
-    assert(mesh.has_vertex_property("interface_id")==true);
+    if (!mesh.has_face_property("domain_id"))
+      throw std::invalid_argument("MeshOptimizer: input mesh must have face property domain_id");
+    
+    if (!mesh.has_vertex_property("interface_id"))
+      throw std::invalid_argument("MeshOptimizer: input mesh must have vertex property interface_id");
   }
 
   // visualize mesh along with face qualities
@@ -45,7 +48,8 @@ namespace vm
 						std::string vertex_quality_tag)
   {
     // must have face quality tag
-    assert(mesh.has_face_property(face_quality_tag)==true);
+    if (!mesh.has_face_property(face_quality_tag))
+      throw std::invalid_argument("evaluate_vertex_qualities: mesh should have face property " + face_quality_tag);
     
     // add vertex quality tag
     if(mesh.has_vertex_property(vertex_quality_tag)==false)

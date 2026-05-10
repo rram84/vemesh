@@ -21,9 +21,13 @@ namespace vm
 			     const QualityEvaluator &QE,
 			     double qfactor)
   {
-    assert(qfactor>1.);
-    assert(mesh.is_valid(face) && !mesh.is_deleted(face));
+    // sanity checks
+    if (qfactor <= 1.)
+      throw std::invalid_argument("MeshOptimizer::agglomerate: qfactor must be > 1");
     
+    if (!mesh.is_valid(face) || mesh.is_deleted(face))
+      throw std::invalid_argument("MeshOptimizer::agglomerate: face is invalid or deleted");
+
     // current quality
     const double curr_quality = QE(face, mesh);
     
@@ -64,7 +68,8 @@ namespace vm
 				 double qfactor,
 				 const ProgressCallback &callback)
   {
-    assert(qfactor>=1.);
+    if (qfactor < 1.)
+      throw std::invalid_argument("MeshOptimizer::agglomerate: qfactor must be >= 1");
     
     // tolerance for comparing qualities
     const double qeps = 1.e-6;
@@ -135,7 +140,13 @@ namespace vm
 				 double qfactor,
 				 const ProgressCallback &callback)
   {
-    assert(qmin>0. && qfactor>1.);
+    // sanity checks
+    if (qmin <= 0.)
+      throw std::invalid_argument("MeshOptimizer::agglomerate: qmin must be > 0");
+
+    if (qfactor <= 1.)
+      throw std::invalid_argument("MeshOptimizer::agglomerate: qfactor must be > 1");
+    
     std::set<pmp::Face> faceset{};
     auto f_container = mesh.faces();
     for(auto f:f_container)

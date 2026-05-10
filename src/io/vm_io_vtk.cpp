@@ -33,12 +33,20 @@ namespace vm
   {
     // Mesh to return
     pmp::SurfaceMesh mesh;
-    
-    assert(std::string(std::filesystem::path(filename).extension())==".vtk");
 
+    // sanity check on extension
+    {
+      std::string ext = std::filesystem::path(filename).extension().string();
+      std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+      if (ext != ".vtk")
+	throw std::runtime_error("Unexpected file extension: " + filename);
+    }
+
+    // open file for read
     std::ifstream file;
     file.open(filename);
-    assert(file.good() && file.is_open());
+    if (!file.is_open() || !file.good())
+      throw std::runtime_error("Could not open VTK file: " + filename);
     
     // read # nodes
     int nNodes;
@@ -152,11 +160,19 @@ namespace vm
   // filename [in] : name of the file
   void write_vtk(const pmp::SurfaceMesh& mesh, const std::string filename)
   {
-    assert(std::string(std::filesystem::path(filename).extension())==".vtk");
+    // sanity check on file extension
+    {
+      std::string ext = std::filesystem::path(filename).extension().string();
+      std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+      if (ext != ".vtk")
+	throw std::runtime_error("Unexpected file extension: " + filename);
+    }
 
+    // open file for write
     std::fstream out;
     out.open(filename, std::ios::out);
-    assert(out.good() && out.is_open());
+    if (!out.is_open() || !out.good())
+      throw std::runtime_error("Could not open VTK file: " + filename);
 
     // Headers
     out << "# vtk DataFile Version 3.0" << std::endl;
@@ -207,7 +223,9 @@ namespace vm
     out << "CELL_DATA " << mesh.n_faces() << std::endl;
 
     // material ids
-    assert(mesh.has_face_property("domain_id")==true);
+    if(!mesh.has_face_property("domain_id"))
+      throw std::runtime_error("write_vtk: mesh should have property domain_id");
+    
     auto dom_id = mesh.get_face_property<int>("domain_id");
     out << "SCALARS domain_id int" << std::endl
 	<< "LOOKUP_TABLE default" << std::endl;
@@ -231,7 +249,9 @@ namespace vm
     out << "POINT_DATA " << mesh.n_vertices() << std::endl;
 
     // interface id
-    assert(mesh.has_vertex_property("interface_id")==true);
+    if(!mesh.has_vertex_property("interface_id"))
+      throw std::runtime_error("write_vtk: mesh should have interface_id property");
+    
     out << "SCALARS interface_id int" << std::endl
 	<< "LOOKUP_TABLE default" << std::endl;
     auto interface_id = mesh.get_vertex_property<int>("interface_id");
