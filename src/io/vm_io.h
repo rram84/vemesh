@@ -32,6 +32,8 @@ namespace vm
    * This function parses a standard OFF file containing vertex coordinates
    * and face connectivity. 
    *
+   * Expects vertex ordering in faces to be CCW.
+   *
    * - Initializes face property `domain_id` to 0
    * - Initialize vertex property `interface_id` to -1
    * 
@@ -48,6 +50,8 @@ namespace vm
    * It writes vertex coordinates followed by face connectivity.
    * The output file can be read by read_off, or other standard OFF readers.
    * 
+   * Expects vertex ordering in faces to be CCW.
+   *
    * \param[in] mesh The SurfaceMesh object containing vertices and faces to write.
    * \param[in] filename The path to the .OFF file to create.
    * 
@@ -83,6 +87,8 @@ namespace vm
    *
    * Other point or cell data are ignored.
    *
+   * Expects vertex ordering in faces to be CCW.
+   *
    * \param[in]  filename Path to the input .vtk file
    * \return Populated surface mesh populated
    *
@@ -112,6 +118,9 @@ namespace vm
    *
    * Vertex indices in the output file are assumed to start from
    * either 0 or 1, depending on the internal indexing of the mesh.
+   *
+   *
+   * Expects vertex ordering in faces to be CCW.
    *
    * \note
    * This function writes only ASCII legacy VTK files and does not

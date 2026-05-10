@@ -66,6 +66,20 @@ VEMesh's dependence on the pmp is limited to using the mesh and
 related data structures. In particular VEMesh does not rely on
 algorithms implemented therein.  
 
+
+### Vertex ordering convention
+
+VEMesh assumes that all polygonal faces are oriented consistently, with
+vertices listed in **counter-clockwise (CCW) order** in the (x,y) plane.
+This convention is required by the underlying quality metrics — `geom_shape`
+relies on signed area, and the VEM stiffness matrix construction in
+`vem_stability_ratio` uses CCW-oriented edge normals.
+
+The mesh readers `vm::read_off` and `vm::read_vtk` expect this
+convention.  In debug builds, internal asserts catch CCW violations at
+critical locations. In release builds, behavior is undefined for
+CW-oriented input.
+
 ### Face/vertex properties  
 A convenient feature of the mesh class used is the possibility of
 storing vertex- and face-based data. We use

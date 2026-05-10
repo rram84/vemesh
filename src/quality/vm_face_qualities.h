@@ -36,7 +36,7 @@ namespace vm
      * The stiffness matrix corresponds to the scalar Poisson problem
      * discretized using the Virtual Element Method (VEM).
      *
-     * \param coords Coordinates of polygon vertices (in counterclockwise order).
+     * \param coords Coordinates of polygon vertices in counterclockwise order.
      * \param stabilization Optional stabilization factor (default = 1.0).
      * \return Stiffness matrix (Eigen::MatrixXd).
      * \sa  vm::vem_stability_ratio
@@ -58,7 +58,9 @@ namespace vm
      *
      * A small ratio indicates potential for poor conditioning.
      *
-     * \param coords Coordinates of polygon vertices.
+     * \param coords Coordinates of polygon vertices in CCW order.
+     * \throws runtime error if the polygon is degenerate or the stiffness
+     *         matrix violates positive semi-definiteness beyond numerical tolerance.
      * \return Stability ratio in the range [0,1].
      * \sa vm::vem_stiffness_matrix
      * \ingroup quality

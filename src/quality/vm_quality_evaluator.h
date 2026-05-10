@@ -54,7 +54,8 @@ namespace vm
 
     /**
      * \brief Evaluate the quality of a polygon given its vertex coordinates.
-     * \param[in] pts Vector of points representing the polygon vertices.
+     * \param[in] pts Vector of points representing the polygon vertices in CCW order.
+     * \pre \p pts lists the polygon vertices in counter-clockwise order.
      * \return Quality value as computed by the provided face-quality function.
      */
     double operator()(const std::vector<pmp::Point>& pts) const;
@@ -63,6 +64,7 @@ namespace vm
      * \brief Evaluate the quality of a face in a pmp::SurfaceMesh.
      * \param[in] face The face whose quality is to be evaluated using the given metric.
      * \param[in] mesh The SurfaceMesh containing the face.
+     * \pre Faces in \p mesh have vertices listed in counter-clockwise order.
      * \return Evaluated quality of the face
      */
     double operator()(const pmp::Face& face, const pmp::SurfaceMesh& mesh) const;
@@ -75,6 +77,7 @@ namespace vm
      * 
      * \param[in] vertex The vertex whose quality is to be evaluated.
      * \param[in] mesh The pmp::SurfaceMesh object containing the vertex.
+     * \pre Faces in \p mesh have vertices listed in counter-clockwise order.
      * \return Evaluated quality of the vertex
      */
     double operator()(const pmp::Vertex& vertex, const pmp::SurfaceMesh& mesh) const;

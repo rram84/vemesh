@@ -62,6 +62,7 @@ namespace vm
    * **The Mesh**: \n
    * The class maintains a persistent copy of the underlying mesh. \n
    * The mesh is represented as an instance of pmp::SurfaceMesh. No other types are supported.\n
+   * Face vertices in the mesh are assumed to be ordered in a counter-clockwise sense.
    * The mesh is required to have the following  properties:
    *
    * | Property  | Attribute | Data type | Notes    |
@@ -146,7 +147,8 @@ namespace vm
   public:
     //! \brief Constructor, with mesh copied from a given instance
     //!
-    //! Assumes that the mesh has the vertex property `interface_id` and face property `domain_id` defined
+    //! Assumes that the mesh has the vertex property `interface_id` and face property `domain_id` defined,
+    //! and that all faces list their vertices in counter-clockwise order.
     //! \param[in] in_mesh Input mesh, copied
     MeshOptimizer(const pmp::SurfaceMesh& in_mesh);
     

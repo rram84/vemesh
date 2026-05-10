@@ -106,7 +106,7 @@ namespace vm
    *
    * Checks that the polygon defining the face is simple and valid
    *
-   * \param[in] coords Ordered list of face vertex coordinates
+   * \param[in] coords Ordered list of face vertex coordinates in CCW order
    * \return True if the face polygon is valid and simple, false otherwise
    *
    * \note Does not check face orientation or area sign.

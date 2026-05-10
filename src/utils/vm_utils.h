@@ -82,7 +82,7 @@ namespace vm
    * \return A Boost.Geometry polygon whose outer ring corresponds to
    *         the input vertex sequence.
    *
-   * \note Does not check is the resulting polygon is valid, simple, or correctly oriented.
+   * \note Does not check is the resulting polygon is valid, simple, or correctly oriented (CCW).
    * \ingroup utils
    */
   boost_polygon_t make_polygon(const std::vector<pmp::Point>& coords);
