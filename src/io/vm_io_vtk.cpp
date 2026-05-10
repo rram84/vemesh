@@ -99,7 +99,7 @@ namespace vm
 
     // domain ids of cells
     // default domain id = 1
-    auto domain_ids = mesh.add_face_property<int>("domain_id", 1);
+    auto domain_ids = mesh.add_face_property<int>("domain_id", 0);
     if(seek_to_keyword(file, "domain_id"))
       {
 	std::getline(file, line); // skip SCALARS line

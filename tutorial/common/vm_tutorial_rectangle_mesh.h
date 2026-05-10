@@ -46,7 +46,7 @@ namespace vm
      * Vertices are generated row-by-row starting from the lower-left corner,
      * and faces are added as rectangles with consistent orientation.
      *
-     * All faces are assigned the same \p domain_id of 1, and all vertices are
+     * All faces are assigned the same \p domain_id of 0, and all vertices are
      * initialized with \c interface_id = -1.
      *
      *

@@ -15,7 +15,7 @@ namespace vm
 	throw std::runtime_error("create_rectangle_mesh: nx and ny must be > 1");
 
       pmp::SurfaceMesh mesh;
-      const int domain_id = 1;
+      const int domain_id = 0;
       
       // add vertices row-by-row
       std::vector<pmp::Vertex> vertices(nx*ny);

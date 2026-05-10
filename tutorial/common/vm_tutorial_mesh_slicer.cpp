@@ -291,7 +291,7 @@ namespace vm
 			       const LevelSetFn& lsfunc)
     {
       pmp::SurfaceMesh mesh = in_mesh;
-      const std::pair<int,  int> in_out_domain_id{1, 0}; // in=1, out=0
+      const std::pair<int,  int> in_out_domain_id{0, -1}; // in=0, out=-1
       const int boundary_id = 1;
       
       // cut edges -> new vertex map
@@ -332,7 +332,7 @@ namespace vm
 				     const LevelSetFn& lsfunc)
     {
       pmp::SurfaceMesh mesh = in_mesh;
-      const std::pair<int,  int> domain_id {1,2}; // in=1, out=2
+      const std::pair<int,  int> domain_id {0,1}; // in=0, out=1
       const int interface_id = 1; // rest = -1
       
       // cut edges -> new vertex map
@@ -836,7 +836,7 @@ namespace {
     assert(mesh.n_faces()==renum_mesh.n_faces());
 
     // material id
-    renum_mesh.add_face_property<int>("domain_id", 1);
+    renum_mesh.add_face_property<int>("domain_id", 0);
       
     // transfer interface ids from the old mesh
     auto renum_interface_id = renum_mesh.add_vertex_property<int>("interface_id", -1);

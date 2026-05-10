@@ -86,7 +86,7 @@ namespace vm
      * - Slices intersected triangular and quadrilateral faces
      * - Deletes faces lying completely in the outer region
      * - Rebuilds the mesh to remove deleted entities and renumber vertices
-     * - Assigns domain_id=1 to all faces in the mesh
+     * - Assigns domain_id=0 to all faces in the mesh
      * - Assigns interface_id=1 to boundary nodes, and -1 to remaining nodes
      *
      *
@@ -142,7 +142,7 @@ namespace vm
      * - Identifies faces intersected by the zero level set
      * - Inserts new vertices along cut edges
      * - Slices intersected triangular and quadrilateral faces
-     * - Assigns domain_id=1 to faces with |phi|<0, and 2 to faces with |phi|>0
+     * - Assigns domain_id=0 to faces with |phi|<0, and 1 to faces with |phi|>0
      * - Assigns interface_id=1 to interface nodes, and -1 to remaining nodes
      
      * \param[in] mesh The input mesh of triangles/quads to be modified. Faces intersecting the interface
