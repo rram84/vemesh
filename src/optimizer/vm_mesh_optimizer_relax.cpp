@@ -312,19 +312,24 @@ namespace vm
     // convex combinations of connected vertices not including "vertex" itself
     std::uniform_real_distribution<> lambda_dis(0.,1.);
     const int nconn = static_cast<int>(connected_verts.size());
+    if(nconn==0)
+      throw std::runtime_error("MeshOptimizer::compute_feasible_vertex_positions: found 0 1-ring neighbors");
+    
     std::vector<double> wts(nconn);
     double wsum;
     double pt[2];
     for(int iter=0; iter<num_samples; ++iter) {
 
       // weights
-      wsum = 0.;
-      for(int i=0; i<nconn; ++i)
-	{
-	  wts[i] = lambda_dis(gen);
-	  wsum += wts[i];
-	}
-
+      do {
+	wsum = 0.;
+	for(int i=0; i<nconn; ++i)
+	  {
+	    wts[i] = lambda_dis(gen);
+	    wsum += wts[i];
+	  }
+      } while(wsum<=1.e-6);
+      
       // normalize
       for(int i=0; i<nconn; ++i)
 	wts[i] /= wsum;
