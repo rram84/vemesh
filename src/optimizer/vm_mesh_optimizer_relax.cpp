@@ -234,7 +234,8 @@ namespace vm
 	  boost_linestring_t seg;
 	  bg::append(seg, sample);
 	  bg::append(seg, boost_point_t(EPS*bg::get<0>(sample)+(1.-EPS)*Y[0],
-					EPS*bg::get<1>(sample)+(1.-EPS)*Y[1])); // boundary vertex moved inward
+					EPS*bg::get<1>(sample)+(1.-EPS)*Y[1]));
+	  
 	  if(bg::within(seg, poly)==false)
 	    return false;
 	}

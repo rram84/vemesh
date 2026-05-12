@@ -36,27 +36,30 @@ namespace
   // If three consecutive vertices satisfy v[i-1] == v[i+1], the current and previous
   // vertices are removed to eliminate the non-manifold condition.
   void erase_nonmanifold_edges(std::vector<pmp::Vertex>& vec) {
+    std::size_t prev_size;
+    do {
+      prev_size = vec.size();
+      if (vec.size() < 3) return;   // re-checked on every restart
 
-    if (static_cast<int>(vec.size()) < 3) return; // No operation if there are fewer than 3 elements
-    
-    // lambdas for circular listing
-    auto circular_previous = [&vec](auto it) { return it == vec.begin() ? vec.end() - 1 : it - 1; };
-    auto circular_next = [&vec](auto it) { return it == vec.end() - 1 ? vec.begin() : it + 1;};
+      auto circular_previous = [&vec](auto it) { return it == vec.begin() ? vec.end() - 1 : it - 1; };
+      auto circular_next     = [&vec](auto it) { return it == vec.end() - 1 ? vec.begin() : it + 1; };
 
-    for (auto it = vec.begin(); it != vec.end(); ) {
-      auto prev = circular_previous(it);
-      auto next = circular_next(it);
-
-      if (*prev == *next) {
-	it = vec.erase(it);
-	it = vec.erase(circular_previous(it)); // Erase the previous element
-	if (it == vec.end()) it = vec.begin(); // Adjust iterator for circularity
-      } else {
-	++it;
+      for (auto it = vec.begin(); it != vec.end(); ) {
+	auto prev = circular_previous(it);
+	auto next = circular_next(it);
+	if (*prev == *next) {
+	  it = vec.erase(it);
+	  it = vec.erase(circular_previous(it));
+	  if (it == vec.end()) it = vec.begin();
+	} else {
+	  ++it;
+	}
       }
-    }
+    } while (vec.size() != prev_size && vec.size() >= 3);
   }
 }
+
+   
 
 namespace vm
 {
