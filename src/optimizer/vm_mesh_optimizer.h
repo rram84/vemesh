@@ -125,7 +125,7 @@ namespace vm
    * - \ref relax(const std::set<pmp::Vertex>&, const QualityEvaluator&, int, const ProgressCallback &): \n
    * Attempts to relax vertices in a specified set, starting from the vertex with the poorest quality.  
    *
-   * - \ref relax(const std::set<pmp::Vertex>&, const QualityEvaluator&, double, int, const ProgressCallback &): \n
+   * - \ref relax(const QualityEvaluator&, double, int, const ProgressCallback &): \n
    * First determines the subset of vertices to be considered for relaxation by performing a mesh-wide search to tag non-interface and non-boundary vertices
    * with quality below the specified threshold \f$\epsilon\f$.Then, attempts relaxing them, starting from the poorest one first.
    * 
@@ -165,9 +165,9 @@ namespace vm
     { return mesh; }
     
     //! \brief Agglomerate a face with a feasible neighbor
-    //! \param[in] f The face to agglomerate. Considered only if its current quality is lower than qmin
+    //! \param[in] f The face to agglomerate. 
     //! \param[in] QE Reference to an instance of QualityEvaluator, used to evaluate face qualities
-    //! \param[in] qfactor Lower bound for factor of improvement in face quality, assumed to be greater than of equal to 1.
+    //! \param[in] qfactor Lower bound for factor of improvement in face quality, assumed to be greater than 1.
     //! \return A triplet `result` such that:
     //! - `std::get<0>(result)`: true if the face was agglomerated, and false otherwise
     //! - `std::get<1>(result)`: quality of the agglomerated face in case of success, of the existing face otherwise
@@ -178,10 +178,9 @@ namespace vm
 
     //! \brief Agglomerate a given set of faces
     //! \param[in] subset Given subset of faces in the mesh.
-    //!                   Among these, faces with qualities lower than qmin are considered for agglomeration
     //! \param[in] QE Reference to an instance of QualityEvaluator, used to evaluate face qualities
     //! \param[in] qfactor Lower bound for factor of improvement in face quality,
-    //!                    assumed to be greater than of equal to 1.
+    //!                    assumed to be greater than 1.
     //! \param[in] callback Callback function invoked after each successful agglomeration attempt
     //! \return Number of aglomerated faces. Can help decide if another iteration of agglomeration is warranted
     int agglomerate(const std::set<pmp::Face>& subset,
@@ -193,7 +192,7 @@ namespace vm
     //! Attempts merging all faces satisfying \f$Q(f)\leq \epsilon\f$ for the given quality threshold \f$\epsilon\f$.
     //! \param[in] QE Reference to an instance of QualityEvaluator, used to evaluate face qualities
     //! \param[in] qmin Acceptable positive lower bound for quality
-    //! \param[in] qfactor Lower bound for factor of improvement in face quality, assumed to be greater than of equal to 1.
+    //! \param[in] qfactor Lower bound for factor of improvement in face quality, assumed to be greater than 1.
     //! \param[in] callback Callback function invoked after each successful agglomeration attempt
     //! \return Number of agglomerated faces.  Can help decide if another iteration of agglomeration is warranted
     int agglomerate(const QualityEvaluator& QE,
@@ -237,7 +236,6 @@ namespace vm
     //! \param[in] num_samples Number of sample points to generate for *each* vertex, per strategy:
     //!                         (i) within a bounding rectangle enclosing the faces incident at the vertex.
     //!                        (ii) as convex combinations of the vertex and its 1-ring of vertices
-    //! \param[in] num_samples Number of sample points to generate for *each* vertex
     //! \param[in] QE Reference to an instance of QualityEvaluator, used to evaluate face qualities incident at a vertex
     //! \param[in] qmin Positive lower bound for quality used to identify vertices to relax
     //! \param[in] callback Callback function invoked after each successful vertex relaxation

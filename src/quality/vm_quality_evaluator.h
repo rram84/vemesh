@@ -1,16 +1,11 @@
 // Sriramajayam
 
 /** \file vm_quality_evaluator.h
- * \brief Definition of the class vm::QualityEvaluator 
+ * \brief Definition of the class vm::QualityEvaluator for face/vertex quality evaluations
  * \author Ramsharan Rangarajan
  */
 
 #pragma once
-
-/** \file vm_quality_evaluator.h
- * \brief Defines the class vm::QualityEvaluator for face/vertex quality evaluations
- * \author Ramsharan Rangarajan
- */
 
 #include <pmp/surface_mesh.h>
 #include <utility>

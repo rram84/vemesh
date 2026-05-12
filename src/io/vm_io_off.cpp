@@ -136,7 +136,7 @@ namespace vm
   void write_off(const pmp::SurfaceMesh& mesh, const std::string filename)
   {
     // extension check
-    std::string ext = std::filesystem::path(filename).extension();
+    std::string ext = std::filesystem::path(filename).extension().string();
     std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
     if(!(ext == ".off"))
       throw std::runtime_error("Unexpected file extension: " + filename);

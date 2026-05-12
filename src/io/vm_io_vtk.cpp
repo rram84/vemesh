@@ -176,7 +176,7 @@ namespace vm
 
     // Headers
     out << "# vtk DataFile Version 3.0" << std::endl;
-    out << "Polygon mesh " << std::filesystem::path(filename).stem() << std::endl;
+    out << "Polygon mesh " << std::filesystem::path(filename).stem().string() << std::endl;
     out << "ASCII" << std::endl;
     out << "DATASET POLYDATA" << std::endl;
 
@@ -231,7 +231,7 @@ namespace vm
 	<< "LOOKUP_TABLE default" << std::endl;
     for(auto f:f_circulator)
       {
-	out << static_cast<int>(dom_id[f]) << std::endl;
+	out << dom_id[f] << std::endl;
       }
     
     // face qualities

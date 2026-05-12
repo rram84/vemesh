@@ -1,6 +1,6 @@
 // Sriramajayam
 
-/** \file vm_io_qualit_vectors.cpp
+/** \file vm_io_quality_vectors.cpp
  * \brief Implementation of routines to save mesh quality vectors to file
  * \author Ramsharan Rangarajan
  */

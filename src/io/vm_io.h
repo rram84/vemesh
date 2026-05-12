@@ -134,7 +134,7 @@ namespace vm
    * \param[in] mesh     Polygonal surface mesh to be written.
    * \param[in] filename Output filename (must have \c .vtk extension).
    *
-   * \pre \c mesh.has_face_property("material_id") == true
+   * \pre \c mesh.has_face_property("domain_id") == true
    * \pre \c mesh.has_vertex_property("interface_id") == true
    * \ingroup io
    */

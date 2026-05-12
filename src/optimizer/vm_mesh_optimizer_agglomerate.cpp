@@ -68,7 +68,7 @@ namespace vm
 				 double qfactor,
 				 const ProgressCallback &callback)
   {
-    if (qfactor < 1.)
+    if (qfactor <= 1.)
       throw std::invalid_argument("MeshOptimizer::agglomerate: qfactor must be >= 1");
     
     // tolerance for comparing qualities

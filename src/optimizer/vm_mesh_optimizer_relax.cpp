@@ -224,7 +224,10 @@ namespace vm
 			    const boost_point_t   &sample,
 			    const std::vector<pmp::Point> &connected_verts)
     {
-      // do the segments joining this point to the connected vertices lie within the polygon?
+      // do the segments joining this point to the connected vertices
+      // lie within the polygon?
+      // Each Y is on the polygon boundary. nudge the segment's Y endpoint inward
+      // by a small fraction (EPS) to make bg::within accept it.
       const double EPS = 0.01;
       for(auto& Y:connected_verts)
 	{
