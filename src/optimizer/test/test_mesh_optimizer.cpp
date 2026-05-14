@@ -26,6 +26,9 @@ void test_relax_2(const pmp::SurfaceMesh&, const vm::QualityEvaluator&);
 // test relax() overload 3
 void test_relax_3(const pmp::SurfaceMesh&, const vm::QualityEvaluator&);
 
+// test RNG reproducibility under seeded relax calls
+void test_relax_reproducible(const pmp::SurfaceMesh&, const vm::QualityEvaluator&);
+
 // test agglomerate() overload 1
 void test_agglomerate_1(const pmp::SurfaceMesh&, const vm::QualityEvaluator&);
 
@@ -57,6 +60,9 @@ int main()
 
   // overload 3 for relaxation
   test_relax_3(mesh, QE);
+
+  // reproducibility under seeded relaxation
+  test_relax_reproducible(mesh, QE);
 
   // test agglomerate() overload 1
   test_agglomerate_1(mesh, QE);
@@ -360,6 +366,47 @@ void test_relax_3(const pmp::SurfaceMesh& in_mesh,
       std::exit(EXIT_FAILURE);
     }
 
+}
+
+
+
+// ---- Reproducibility test: same seed → identical post-relax vertex positions ---- //
+void test_relax_reproducible(const pmp::SurfaceMesh& mesh,
+			     const vm::QualityEvaluator& QE)
+{
+  const unsigned int seed = 42;
+  const int num_samples   = 32;
+  const double qmin       = 0.1;
+
+  // Two optimizers from the same mesh. Their RNGs start in DIFFERENT
+  // non-deterministic states, but the seeded relax call resets them.
+  vm::MeshOptimizer opt_a(mesh);
+  vm::MeshOptimizer opt_b(mesh);
+  
+  const int relaxed_a = opt_a.relax(QE, qmin, num_samples, nullptr, seed);
+  const int relaxed_b = opt_b.relax(QE, qmin, num_samples, nullptr, seed);
+  
+  if (relaxed_a != relaxed_b) {
+    std::cerr << "\ntest_relax_reproducibility: relax count differs ("
+              << relaxed_a << " vs " << relaxed_b << ")\n" << std::flush;
+    std::exit(EXIT_FAILURE);
+  }
+  
+  const auto& m_a = opt_a.get_mesh();
+  const auto& m_b = opt_b.get_mesh();
+  const double tol = 1.e-8;  // tolerance for equality of two points
+  for (auto v : m_a.vertices()) {
+    const pmp::Point& pa = m_a.position(v);
+    const pmp::Point& pb = m_b.position(pmp::Vertex(v.idx()));
+    for (int k = 0; k < 3; ++k) {
+      if (std::abs(pa[k] - pb[k]) > tol) {
+        std::cerr << "\ntest_relax_reproducibility: position mismatch at vertex "
+                  << v.idx() << " (component " << k << ", |Δ|="
+                  << std::abs(pa[k] - pb[k]) << ")\n" << std::flush;
+        std::exit(EXIT_FAILURE);
+      }
+    }
+  }
 }
 
 

@@ -13,6 +13,8 @@
 #include <tuple>
 #include <set>
 #include <map>
+#include <random>
+#include <optional>
 
 namespace vm
 {
@@ -206,6 +208,8 @@ namespace vm
     //!                        (i) within a bounding rectangle enclosing the faces incident at the vertex.
     //!                        (ii) as convex combinations of the vertex and its 1-ring of vertices
     //! \param[in] QE Reference to an instance of QualityEvaluator, used to evaluate face qualities incident at a vertex
+    //! \param[in] seed Optional RNG seed. When supplied, the internal RNG is re-seeded with this value at the start of the call,
+    //!                 making the result reproducible across invocations. Omit (the default) for nondeterministic behavior.
     //!
     //! \return A pair `result`. The boolean `result->first` indicates if the relaxation was successful.
     //! The double `result->second` returns the quality of the vertex at its new location if the relaxation was successful, and
@@ -214,7 +218,8 @@ namespace vm
     //! In general, only a (small) fraction of these sample points will be *feasible*.
     std::pair<bool,double> relax(const pmp::Vertex& vertex,
 				 const QualityEvaluator& QE,
-				 int num_samples);
+				 int num_samples,
+				 std::optional<unsigned int> seed = std::nullopt);
 
     //! \brief Relaxes a specified subset of vertices to more favorable positions.
     //! \param[in] subset Set of vertices to consider relaxing
@@ -223,13 +228,17 @@ namespace vm
     //!                        (ii) as convex combinations of the vertex and its 1-ring of vertices
     //! \param[in] QE Reference to an instance of QualityEvaluator, used to evaluate face qualities incident at a vertex
     //! \param[in] callback Callback function invoked after each successful vertex relaxation
+    //! \param[in] seed Optional RNG seed. When supplied, the internal RNG is re-seeded with this value at the start of the call,
+    //!                 making the result reproducible across invocations. Omit (the default) for nondeterministic behavior.
+    //!
     //! \return Number of relaxed vertices. Can help decide if another iteration of vertex relaxations is warranted
     //! \note A total of 2*num_samples sample points are generated per vertex. 
     //! In general, only a (small) fraction of these sample points will be *feasible*.
     int relax(const std::set<pmp::Vertex>& subset,
 	      const QualityEvaluator& QE,
 	      int num_samples,
-	      const ProgressCallback &callback=nullptr);
+	      const ProgressCallback &callback=nullptr,
+	      std::optional<unsigned int> seed = std::nullopt);
 
     //! \brief Relaxes vertices of poor quality to more favorable positions.
     //! Attempts relaxing all vertices with quality less than a given tolerance.
@@ -239,13 +248,17 @@ namespace vm
     //! \param[in] QE Reference to an instance of QualityEvaluator, used to evaluate face qualities incident at a vertex
     //! \param[in] qmin Positive lower bound for quality used to identify vertices to relax
     //! \param[in] callback Callback function invoked after each successful vertex relaxation
+    //! \param[in] seed Optional RNG seed. When supplied, the internal RNG is re-seeded with this value at the start of the call,
+    //!                 making the result reproducible across invocations. Omit (the default) for nondeterministic behavior.
+    //!
     //! \return Number of relaxed vertices. Can help decide if another iteration of vertex relaxations is warranted
     //! \note A total of 2*num_samples sample points are generated per vertex. 
     //! In general, only a (small) fraction of these sample points will be *feasible*.
     int relax(const QualityEvaluator& QE,
 	      double qmin,
 	      int num_samples,
-	      const ProgressCallback &callback=nullptr);
+	      const ProgressCallback &callback=nullptr,
+	      std::optional<unsigned int> seed = std::nullopt);
     
     //! \brief Evaluates the qualities of all faces in the mesh and saves it as a face property in the mesh
     //! \param[in] QE Reference to an instance of QualityEvaluator, used to evaluate face qualities
@@ -306,8 +319,16 @@ namespace vm
 				       const int              num_samples,
 				       const QualityEvaluator& QE);
 
-   
     
     pmp::SurfaceMesh mesh; //!< Persistent mesh
+
+  private:
+    //! \brief Persistent RNG used for vertex-relaxation sampling.
+    //!
+    //! Seeded nondeterministically by the constructor. Public relax methods
+    //! re-seed it on entry when their optional `seed` argument is supplied.
+    //! Marked `mutable` so it can advance from inside the `const` helper
+    //! `compute_feasible_vertex_positions`.
+    mutable std::mt19937 rng;
   };
 }

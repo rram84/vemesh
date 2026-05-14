@@ -13,7 +13,7 @@ namespace vm
 {
   // Constructor
   MeshOptimizer::MeshOptimizer(const pmp::SurfaceMesh& in_mesh)
-    :mesh(in_mesh)
+    :mesh(in_mesh), rng(std::random_device{}())
   {
     // sanity checks
     if (!mesh.has_face_property("domain_id"))

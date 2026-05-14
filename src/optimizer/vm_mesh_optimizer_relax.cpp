@@ -18,10 +18,14 @@ namespace vm
   std::pair<bool, double>
   MeshOptimizer::relax(const pmp::Vertex& vertex,
 		       const QualityEvaluator &QE,
-		       int num_samples)
+		       int num_samples,
+		       std::optional<unsigned int> seed)
   {
     const double curr_quality = QE(vertex, mesh);
 
+    // update seed for random num generator if provided
+    if (seed) rng.seed(*seed);
+    
     // cannot move boundary vertices
     if(mesh.is_boundary(vertex)==true)
       return {false, curr_quality};
@@ -57,10 +61,14 @@ namespace vm
   int MeshOptimizer::relax(const std::set<pmp::Vertex>& subset,
 			   const QualityEvaluator& QE,
 			   int num_samples,
-			   const ProgressCallback &callback)
+			   const ProgressCallback &callback,
+			   std::optional<unsigned int> seed)
   {
     if (num_samples < 1)
       throw std::invalid_argument("relax: num_samples must be >= 1");
+
+    // update seed for random num generator if provided
+    if (seed) rng.seed(*seed);
     
     // tolerance for comparing qualities
     const double qeps = 1.e-8;
@@ -100,7 +108,7 @@ namespace vm
 	  }
 
 	// this vertex is the current priority
-	auto result = this->relax(v, QE, num_samples);
+	auto result = this->relax(v, QE, num_samples); // if a seed was provided, rng was already reseeded
 	auto success = result.first;
 	if(success==true)
 	  {
@@ -129,12 +137,16 @@ namespace vm
   int MeshOptimizer::relax(const QualityEvaluator &QE,
 			   double qmin,
 			   int num_samples,
-			   const ProgressCallback &callback)
+			   const ProgressCallback &callback,
+			   std::optional<unsigned int> seed)
   {
     if (qmin <= 0.)
       throw std::invalid_argument("relax: qmin must be > 0");
     if (num_samples < 1)
       throw std::invalid_argument("relax: num_samples must be >= 1");
+
+    // update random number generator seed if provided
+    if(seed) rng.seed(*seed);
     
     // all vertices
     auto v_container = mesh.vertices();
@@ -153,7 +165,7 @@ namespace vm
 	}
 
     // agglomerate
-    return relax(vertex_set, QE, num_samples, callback);
+    return relax(vertex_set, QE, num_samples, callback); // if a seed was provided, rng was already reseeded
   }
   
   // ------ optimal relocation point calculation -------- //
@@ -299,10 +311,6 @@ namespace vm
     // connected vertices
     const std::vector<pmp::Point> connected_verts = get_connected_vertices(vertex, mesh);
 
-    // Random generator
-    std::random_device rd; 
-    std::mt19937 gen(rd());
-
     // all samples
     std::vector<boost_point_t> samples{};
     samples.reserve(2*num_samples);
@@ -311,7 +319,7 @@ namespace vm
     std::uniform_real_distribution<> xdis(bg::get<0>(min_corner), bg::get<0>(max_corner));
     std::uniform_real_distribution<> ydis(bg::get<1>(min_corner), bg::get<1>(max_corner));
     for(int iter=0; iter<num_samples; ++iter)
-      samples.push_back(boost_point_t(xdis(gen), ydis(gen)));
+      samples.push_back(boost_point_t(xdis(rng), ydis(rng)));
 
     // convex combinations of connected vertices not including "vertex" itself
     std::uniform_real_distribution<> lambda_dis(0.,1.);
@@ -329,7 +337,7 @@ namespace vm
 	wsum = 0.;
 	for(int i=0; i<nconn; ++i)
 	  {
-	    wts[i] = lambda_dis(gen);
+	    wts[i] = lambda_dis(rng);
 	    wsum += wts[i];
 	  }
       } while(wsum<=1.e-6);
