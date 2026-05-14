@@ -15,6 +15,9 @@ void test_environment_vertices(const pmp::SurfaceMesh&);
 // test the environment polygon
 void test_environment_polygon(const pmp::SurfaceMesh&);
 
+// test erase non manifold edges 
+void test_erase_nonmanifold_edges();
+  
 int main()
 {
   // read a sample mesh
@@ -26,6 +29,9 @@ int main()
 
   // test the environment polygon
   test_environment_polygon(mesh);
+
+  // test erase non manifold edges
+  test_erase_nonmanifold_edges();
     
   return EXIT_SUCCESS;
 }
@@ -123,4 +129,80 @@ void test_environment_polygon(const pmp::SurfaceMesh& mesh)
 	    std::exit(EXIT_FAILURE);
 	  }
       }
+}
+
+
+// ---------  test erase non manifold edges -------- //
+void test_erase_nonmanifold_edges()
+{
+  using pmp::Vertex;
+  using pmp::Point;
+  using vm::erase_nonmanifold_edges;
+
+  // Five vertices with real 3D coordinates. actual geometry is unimportant
+  pmp::SurfaceMesh m;
+  const Vertex A = m.add_vertex(Point(0.0,  0.0, 0.0));
+  const Vertex B = m.add_vertex(Point(1.0,  0.0, 0.0));
+  const Vertex C = m.add_vertex(Point(1.0,  1.0, 0.0));
+  const Vertex D = m.add_vertex(Point(0.0,  1.0, 0.0));
+  const Vertex E = m.add_vertex(Point(-1.0, 0.5, 0.0));
+
+  auto fail = [](const char* tag) {
+    std::cerr << "\ntest_erase_nonmanifold_edges[" << tag << "] failed\n" << std::flush;
+    std::exit(EXIT_FAILURE);
+  };
+
+  auto check_equal = [&](std::vector<Vertex> got,
+                         const std::vector<Vertex>& expected,
+                         const char* tag) {
+    if (got.size() != expected.size()) fail(tag);
+    for (std::size_t i = 0; i < got.size(); ++i)
+      if (got[i].idx() != expected[i].idx()) fail(tag);
+  };
+
+  auto check_throws = [&](std::vector<Vertex> input, const char* tag) {
+    bool threw = false;
+    try { erase_nonmanifold_edges(input); }
+    catch (const std::runtime_error&) { threw = true; }
+    if (!threw) fail(tag);
+  };
+
+  // (1) Manifold ring — untouched
+  {
+    std::vector<Vertex> v{A, B, C, D};
+    erase_nonmanifold_edges(v);
+    check_equal(v, {A, B, C, D}, "manifold-4");
+  }
+
+  // (2) Interior non-manifold: [A,B,C,B,D,E] -> [A,B,D,E]
+  //     v[1]==v[3] both B; match detected at it=C(2),
+  //     erases C(2) and prev B(1), leaving the later B at original index 3.
+  {
+    std::vector<Vertex> v{A, B, C, B, D, E};
+    erase_nonmanifold_edges(v);
+    check_equal(v, {A, B, D, E}, "interior-pair");
+  }
+ 
+  // (3) Wrap-around detected at it=begin: [A,B,C,D,E,B] -> [B,C,D,E]
+  //     v[0]==A, v[1]==v[5]==B; circular_previous(begin)=v[5], next=v[1].
+  {
+    std::vector<Vertex> v{A, B, C, D, E, B};
+    erase_nonmanifold_edges(v);
+    check_equal(v, {B, C, D, E}, "wrap-around");
+  }
+
+  // (4) Cascading non-manifolds: [A,B,C,B,A,D,E] -> [A,D,E]
+  //     pass 1 erases C+B (it=C), leaving [A,B,A,D,E];
+  //     pass 2 erases B+A,        leaving [A,D,E].
+  {
+    std::vector<Vertex> v{A, B, C, B, A, D, E};
+    erase_nonmanifold_edges(v);
+    check_equal(v, {A, D, E}, "cascade");
+  }
+
+  // (5) Degenerate ring throws: [A,B,A] reduces to size 1
+  check_throws({A, B, A},    "degenerate-3");
+
+  // (6) Degenerate ring throws: [A,B,A,B] reduces to size 2
+  check_throws({A, B, A, B}, "degenerate-4");
 }

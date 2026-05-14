@@ -143,5 +143,37 @@ namespace vm
    */
   std::vector<pmp::Point> get_connected_vertices(const pmp::Vertex &v,
 						 const pmp::SurfaceMesh& mesh);
-  
+
+
+  /**
+   * \brief Remove non-manifold edges from a circular sequence of vertices.
+   *
+   * The input \p vec is interpreted as a closed (circular) sequence of vertices —
+   * the last element is treated as adjacent to the first. A *non-manifold edge*
+   * is identified by the pattern `vec[i-1] == vec[i+1]` (indices taken modulo
+   * `vec.size()`), which corresponds to a vertex appearing twice around the ring
+   * with only one vertex in between; geometrically this means two incident faces
+   * share an edge on both sides of the central vertex rather than meeting along
+   * a single edge.
+   *
+   * When such a pattern is detected at index \c i, the routine erases
+   * `vec[i]` and `vec[i-1]` (taken cyclically). Note the asymmetry: of the
+   * two occurrences of the duplicated vertex (`vec[i-1]` and `vec[i+1]`), only
+   * `vec[i-1]` is removed; `vec[i+1]` is retained. The scan then continues from
+   * the position immediately after the removed pair, and the outer pass restarts
+   * whenever the size changes so that cascading non-manifold patterns are
+   * resolved across multiple passes.
+   *
+   * \param[in,out] vec Circular sequence of vertices, modified in place.
+   *
+   * \throws std::runtime_error If \p vec contains fewer than 3 vertices on entry,
+   *         or if the erasure pass reduces it below 3 vertices
+   *
+   * \note This routine is intended for internal use by
+   *       vm::get_environment_vertices.
+   *       It is exposed in this header only to enable direct unit testing.
+   *
+   * \ingroup utils
+   */
+  void erase_nonmanifold_edges(std::vector<pmp::Vertex>& vec);
 }

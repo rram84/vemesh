@@ -28,7 +28,7 @@ namespace vm
 }
 
 // ---- Compute the ring around an interior vertex in a mesh --- //
-namespace
+namespace vm
 {
   // Remove consecutive duplicate vertices that would create non-manifold edges.
   //
@@ -50,6 +50,8 @@ namespace
 	if (*prev == *next) {
 	  it = vec.erase(it);
 	  it = vec.erase(circular_previous(it));
+	  if (vec.size() < 3)
+            throw std::runtime_error("erase_nonmanifold_edges: vertex ring reduced below 3 vertices");
 	  if (it == vec.end()) it = vec.begin();
 	} else {
 	  ++it;
