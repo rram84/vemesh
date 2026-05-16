@@ -1,3 +1,6 @@
+clone:
+  depth: 1
+  
 image: rram84/vemesh-ci:latest
 
 pipelines:
@@ -8,5 +11,5 @@ pipelines:
           - cmake --version
           - g++ --version
           - cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON
-          - cmake --build build -j 2
-          - ctest --test-dir build --output-on-failure
+          - cmake --build build -j
+          - ctest --test-dir build --output-on-failure -j
