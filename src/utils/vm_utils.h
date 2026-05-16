@@ -9,6 +9,7 @@
 
 #include <pmp/surface_mesh.h>
 #include <functional>
+#include <optional>
 
 // boost polygon utilities
 #include <boost/geometry/geometry.hpp>

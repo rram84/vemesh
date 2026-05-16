@@ -50,6 +50,11 @@ Thumbs.db
 
 # Build
 build/
+build-ci/
 
 # meshes
-*.tec  
+*.tec
+
+# Claude Code local settings (per-developer)
+.claude/settings.local.json
+.claude/worktrees/

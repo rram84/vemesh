@@ -1,55 +1,12 @@
-image: circleci/gcc:12.3.0
+image: rram84/vemesh-ci:latest
 
 pipelines:
   default:
     - step:
-        name: Build VEMesh
-        caches:
-          - pmp
-          - build
+        name: Build and test VEMesh
         script:
-          # -------------------------------------------------
-          # Confirm environment
-          # -------------------------------------------------
-          - echo "Environment info:"
-          - cat /etc/os-release
-          - git --version
           - cmake --version
           - g++ --version
-
-          # -------------------------------------------------
-          # Build PMP headless if not cached
-          # -------------------------------------------------
-          - |
-            if [ ! -d "$HOME/pmp/install" ]; then
-              echo "Building PMP headless..."
-              git clone --depth 1 https://github.com/pmp-library/pmp-library.git $HOME/pmp
-              mkdir -p $HOME/pmp/build
-              cd $HOME/pmp/build
-              cmake .. \
-                -DCMAKE_BUILD_TYPE=Release \
-                -DCMAKE_INSTALL_PREFIX=$HOME/pmp/install \
-                -DBUILD_EXAMPLES=OFF \
-                -DBUILD_TESTING=OFF \
-                -DBUILD_DOCS=OFF \
-                -DPMP_USE_GLFW=OFF
-              make -j$(nproc)
-              make install
-            else
-              echo "Using cached PMP"
-            fi
-
-          # -------------------------------------------------
-          # Build VEMesh
-          # -------------------------------------------------
-          - mkdir -p $HOME/vemesh/build
-          - cd $HOME/vemesh/build
-          - cmake .. \
-              -DCMAKE_BUILD_TYPE=Release \
-              -DCMAKE_PREFIX_PATH="$HOME/pmp/install"
-          - make -j$(nproc)
-
-definitions:
-  caches:
-    pmp: $HOME/pmp
-    build: $HOME/vemesh/build
+          - cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON
+          - cmake --build build -j 2
+          - ctest --test-dir build --output-on-failure

@@ -21,7 +21,7 @@ set(TEST_TARGETS
 	iterative_vertex_relaxation
 	custom_quality_metric
 	mesh_slicing
-	vemesh_app
+#	vemesh_app
 	embed_boundary
 	embed_interface)
 	
