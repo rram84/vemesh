@@ -1,45 +1,107 @@
-**Edit a file, create a new file, and clone from Bitbucket in under 2 minutes**
+# VEMesh
 
-When you're done, you can delete the content in this README and update the file with details for others getting started with your repository.
+*A quality-driven mesh improvement library for planar polygonal
+meshes*
 
-*We recommend that you open this README in another tab as you perform the tasks below. You can [watch our video](https://youtu.be/0ocf7u76WSo) for a full demo of all the steps in this tutorial. Open the video in a new tab to avoid leaving Bitbucket.*
+<!-- badges: build status, docs, license, JOSS DOI go here once available -->
 
----
+VEMesh improves planar polygonal meshes through **local, atomic, quality-driven
+updates**. It provides two mesh-modification primitives — **element
+agglomeration** and **vertex relaxation** — that are accepted only when they
+provably improve a user-supplied quality metric. Poorer-quality entities are
+prioritised, so computational effort is focused where it matters most.
 
-## Edit a file
+The library is named for its primary application: improving the robustness and
+performance of the **Virtual Element Method (VEM)**, which is naturally suited
+to polygonal discretisations. It is also useful as a general-purpose polygonal
+mesh-improvement tool. See the [rationale][rationale] for the motivation
+behind the library.
 
-You’ll start by editing this README file to learn how to edit a file in Bitbucket.
+## Highlights
 
-1. Click **Source** on the left side.
-2. Click the README.md link from the list of files.
-3. Click the **Edit** button.
-4. Delete the following text: *Delete this line to make a change to the README from Bitbucket.*
-5. After making your change, click **Commit** and then **Commit** again in the dialog. The commit page will open and you’ll see the change you just made.
-6. Go back to the **Source** page.
+- Operates on `pmp::SurfaceMesh` from the [pmp-library][pmp].
+- User-defined polygon quality metrics are easy to plug in.
+- Two atomic operations with overloaded interfaces for full control over scope and sequencing.
+- Preserves mesh validity, boundary, subdomains, and embedded interfaces.
+- Callbacks for monitoring and visualising updates.
+- Reads/writes OFF and VTK.
 
----
+VEMesh is **not** a mesh generator or repair tool, is not parallelised, and is
+restricted to planar meshes. The full feature list and non-features are on the
+[About][about] page.
 
-## Create a file
+## Dependencies
 
-Next, you’ll add a new file to this repository.
+Required:
 
-1. Click the **New file** button at the top of the **Source** page.
-2. Give the file a filename of **contributors.txt**.
-3. Enter your name in the empty file space.
-4. Click **Commit** and then **Commit** again in the dialog.
-5. Go back to the **Source** page.
+- C++20 compiler (GCC ≥ 11.4 or AppleClang ≥ 14)
+- [CMake][cmake] ≥ 3.17
+- [Boost][boost] ≥ 1.87
+- [Eigen][eigen]
+- [PMP][pmp] 3.0
 
-Before you move on, go ahead and explore the repository. You've already seen the **Source** page, but check out the **Commits**, **Branches**, and **Settings** pages.
+Optional:
 
----
+- [CLI11][cli11] — required only by the command-line app
+- [Doxygen][doxygen] (with Graphviz) — required only to build the documentation
 
-## Clone a repository
+Platform-specific install commands are listed on the [Get Started][getstarted] page.
 
-Use these steps to clone from SourceTree, our client for using the repository command-line free. Cloning allows you to work on your files locally. If you don't yet have SourceTree, [download and install first](https://www.sourcetreeapp.com/). If you prefer to clone from the command line, see [Clone a repository](https://confluence.atlassian.com/x/4whODQ).
+## Installation
 
-1. You’ll see the clone button under the **Source** heading. Click that button.
-2. Now click **Check out in SourceTree**. You may need to create a SourceTree account or log in.
-3. When you see the **Clone New** dialog in SourceTree, update the destination path and name if you’d like to and then click **Clone**.
-4. Open the directory you just created to see your repository’s files.
+```sh
+git clone <github-url>/vemesh.git
+cd vemesh
+cmake -S . -B build -DBUILD_TESTS=ON
+cmake --build build -j
+ctest --test-dir build -j
+sudo cmake --install build
+```
 
-Now that you're more familiar with your Bitbucket repository, go ahead and add a new file locally. You can [push your change back to Bitbucket with SourceTree](https://confluence.atlassian.com/x/iqyBMg), or you can [add, commit,](https://confluence.atlassian.com/x/8QhODQ) and [push from the command line](https://confluence.atlassian.com/x/NQ0zDQ).
+To link from your own CMake project:
+
+```cmake
+find_package(VEMesh REQUIRED)
+target_link_libraries(your_target PUBLIC vemesh::vemesh)
+```
+
+## Getting started
+
+- [Tutorials][tutorials] walk through each operation with runnable examples in [`tutorial/`](tutorial/).
+- The [command-line app](tutorial/vemesh_app.cpp) lets you try VEMesh on your own mesh without writing code.
+- The [User Guide][userguide] covers quality metrics, conventions, and algorithmic details.
+
+## Documentation
+
+Full documentation is generated with Doxygen (`cmake -DBUILD_DOCS=ON && make docs`)
+and hosted at **[\<docs-url\>][docs]**. Main entry points:
+
+- [About][about] — overview and feature list
+- [Rationale][rationale] — design philosophy and motivation
+- [Get Started][getstarted] — dependencies, build, and install
+- [User Guide][userguide] — quality metrics, conventions, and algorithmic details
+- [Tutorials][tutorials] — worked examples for each operation
+
+## Contributing
+
+Bug reports, feature requests, and pull requests are welcome via the
+[issue tracker](<github-url>/vemesh/issues). Please run `ctest` locally before
+submitting a PR.
+
+## License and citation
+
+VEMesh is released under the MIT License; see [`LICENSE.txt`](LICENSE.txt).
+If you use VEMesh in academic work, please cite *(JOSS paper / DOI to be added)*.
+
+[docs]:       https://<docs-host>/vemesh/
+[about]:      https://<docs-host>/vemesh/aboutvemesh.html
+[rationale]:  https://<docs-host>/vemesh/rationale.html
+[getstarted]: https://<docs-host>/vemesh/getstarted.html
+[userguide]:  https://<docs-host>/vemesh/userguide.html
+[tutorials]:  https://<docs-host>/vemesh/tutorial.html
+[cmake]:      https://cmake.org
+[boost]:      https://www.boost.org
+[eigen]:      https://libeigen.gitlab.io
+[pmp]:        https://www.pmp-library.org
+[cli11]:      https://github.com/CLIUtils/CLI11
+[doxygen]:    https://www.doxygen.nl
