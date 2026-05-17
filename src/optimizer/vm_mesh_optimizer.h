@@ -91,10 +91,10 @@ namespace vm
    * Faces of better quality are compromised to improve the qualities of poorer faces.
    *
    * The class provides three overloaded methods for element agglomeration:
-   * - \ref agglomerate(const pmp::Face&, const QualityEvaluator&, double, double): \n
+   * - \ref agglomerate(const pmp::Face&, const QualityEvaluator&, double): \n
    * Attempts to agglomerate a specified face. It provides the most granular control.
    *
-   * - \ref agglomerate(const std::set<pmp::Face>&, const QualityEvaluator& QE, double, double, const ProgressCallback &): \n
+   * - \ref agglomerate(const std::set<pmp::Face>&, const QualityEvaluator& QE, double, const ProgressCallback &): \n
    * Attempts agglomerating faces in a specified subset of faces, starting from the poorest one first.
    *
    * - \ref  agglomerate(const QualityEvaluator&, double, double, const ProgressCallback &): \n
@@ -121,13 +121,13 @@ namespace vm
    * In addition, the midpoint of each edge incident at the vertex is also sampled.
    *
    * The class provides three overloaded methods for vertex relaxation:
-   * - \ref relax(const pmp::Vertex&, const QualityEvaluator&, int): \n
+   * - \ref relax(const pmp::Vertex&, const QualityEvaluator&, int, std::optional<unsigned int>): \n
    * Provides the most granular control. It attempts to relocate a specified vertex to a new location.
    *
-   * - \ref relax(const std::set<pmp::Vertex>&, const QualityEvaluator&, int, const ProgressCallback &): \n
+   * - \ref relax(const std::set<pmp::Vertex>&, const QualityEvaluator&, int, const ProgressCallback &, std::optional<unsigned int>): \n
    * Attempts to relax vertices in a specified set, starting from the vertex with the poorest quality.  
    *
-   * - \ref relax(const QualityEvaluator&, double, int, const ProgressCallback &): \n
+   * - \ref relax(const QualityEvaluator&, double, int, const ProgressCallback &, std::optional<unsigned int>): \n
    * First determines the subset of vertices to be considered for relaxation by performing a mesh-wide search to tag non-interface and non-boundary vertices
    * with quality below the specified threshold \f$\epsilon\f$.Then, attempts relaxing them, starting from the poorest one first.
    * 
