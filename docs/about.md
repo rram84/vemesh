@@ -1,59 +1,50 @@
 # VEMesh {#aboutvemesh}
-
-[TOC] 
-
 *A quality-driven mesh improvement library for planar polygonal meshes*
-## Overview  
+
+[TOC]
+
+## Overview
 
 **VEMesh** is a C++ library for improving the quality of planar
-polygonal meshes through **quality-driven local updates**.  
+polygonal meshes through small, local, quality-driven updates. It
+applies two primitives — **element agglomeration** and **vertex
+relaxation** — accepting each only when it strictly improves a
+user-supplied quality metric. Poorer-quality faces and vertices are
+prioritised.
 
-The library provides two mesh modification operations— **element
-agglomeration** and **vertex relaxation** —both of which are accepted
-only when they provably improve a user-supplied quality metric.  Both
-operations prioritize poorer elements and vertices to systematically
-improve mesh quality while avoiding ad hoc
-modifications and expensive non-local optimization.  
+VEMesh is named for its primary target - the **Virtual Element
+Method** - but works as a general-purpose polygonal mesh improver.
+See \ref rationale "the rationale" for design motivation.
 
-Though effective as a general-purpose tool for improving polygonal
-meshes, the library is named for its intended purpose— improving the
-robustness and performance of the **Virtual Element
-Method (VEM)**.  
 
-For the motivation behind the library, see \ref rationale "the rationale for VEMesh".
+## Features
 
-## Features (and non-features)  
-We highlight a few key features of the library. VEMesh:  
-- leverages the widely-used pmp::SurfaceMesh data structure from the
-  [pmp-library](pmp-library.org) for representing meshes.  
-- is agnostic to the quality metric employed.   
-- enables convenient implementation of user-defined face quality
-  metrics. 
-- provides simple overloaded interfaces for agglomeration and relaxation
-  operations that enable complete control over the purpose and
-  sequence of operations.  
-- implements local mesh updates. The atomic operations provided consider one
-  face or one vertex at a time. Updates are hence fast and efficient.  
-- implements callbacks to monitor and visualize mesh updates.  
-- preserves mesh validity. Mesh improvement operations
-  never result in degenerate or tangled faces.  
-- preserves the mesh boundary, subdomains, and embedded
-  interfaces.   
+VEMesh:
+- uses `pmp::SurfaceMesh` from the
+  [pmp-library](https://www.pmp-library.org/) as its mesh data
+  structure.
+- is metric-agnostic; user-defined face quality metrics plug in easily.
+- exposes overloaded interfaces giving complete control over scope and
+  sequencing of updates.
+- applies atomic local updates — one face or one vertex at a time.
+- offers callbacks to monitor and visualise updates.
+- preserves mesh validity, boundary, subdomains, and embedded interfaces.
 
-It is also important to note what the library is **not meant for**. VEMesh:  
-- is not a polygonal mesh generator.  
-- is not a tool for mesh repair. It only improves valid meshes.  
-- does not guarantee mesh improvement, although it generally
-  achieves significant improvement.  
-- does not include a GUI for visualization/interactivity.
-- is not parallelized and may not be thread-safe.
+## Non-features
+
+VEMesh:
+- is not a polygonal mesh generator.
+- does not repair invalid meshes — it only improves valid ones.
+- has no GUI for visualisation or interactivity.
+- is not parallelised and may not be thread-safe.
 - is restricted to planar meshes.
 
-## Next steps  
-- Check out a simple \ref tutorial_element_agglomeration "tutorial-style example"
-  showing how the library works and how it can be used.
-- \ref getstarted "Get the dependencies and install VEMesh."  
-- Test VEMesh on your mesh from the \ref tutorial_app "command-line".  
-- Read the \ref userguide "user guide".  
 
+
+## Next steps
+
+- \ref getstarted "Install VEMesh" — dependencies and build.
+- \ref tutorial "Tutorials" — worked examples explaining each operation and the key concepts behind them.
+- \ref tutorial_app "Command-line app" — try VEMesh on your own mesh without writing code.
+- \ref userguide "User guide" — quality metrics, meshes, and algorithmic details.
 
