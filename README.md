@@ -68,7 +68,7 @@ target_link_libraries(your_target PUBLIC vemesh::vemesh)
 ## Getting started
 
 - [Tutorials][tutorials] walk through each operation with runnable examples in [`tutorial/`](tutorial/).
-- The [command-line app](tutorial/vemesh_app.cpp) lets you try VEMesh on your own mesh without writing code.
+- The [command-line app](app/vemesh_app.cpp) lets you try VEMesh on your own mesh without writing code.
 - The [User Guide][userguide] covers quality metrics, conventions, and algorithmic details.
 
 ## Documentation

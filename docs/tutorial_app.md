@@ -9,7 +9,11 @@ vemesh library with user data.
 It supports OFF and VTK mesh formats, and provides options for quality
 metrics, iteration counts, and mesh output.
 
-**Source code:** vemesh_app.cpp
+**Source code:** app/vemesh_app.cpp
+
+\note `vemesh_app` is built as a **standalone CMake project** under `app/`, separate from the
+main library and the tutorial examples. Build it after installing `vemesh` and CLI11 — see the
+\ref getstarted page.
 
 **Overview:**  
 
@@ -110,7 +114,7 @@ Additional mesh outputs depend on the selected output mode (`-v`):
   Number of completed internal updates within the current operation
   (as reported by `vm::ProgressInfo::num_completed`).  
 
-For example, `mesh-iter-4-r-3.vtk` is the
+For example, `mesh-iter-4-r-3.vtk` is the mesh written during the relaxation (`r`) step of iteration 4, after its 3rd internal update.
 
 ## Examples
 

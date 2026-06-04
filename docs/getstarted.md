@@ -3,7 +3,7 @@
 [TOC]
 
 ## Dependencies
-- **C++20 compiler** (≥ GCC 11.4.0, ≥ AppleClang 14.0.0)
+- **C++17 compiler** (≥ GCC 11.4.0, ≥ AppleClang 14.0.0)
 
 - [CMake](https://cmake.org) ≥ 3.17
 ```bash
@@ -49,7 +49,7 @@ brew install doxygen
 sudo apt-get install doxygen graphviz
 ```
 
-- **[CLI11](https://github.com/CLIUtils/CLI11)** (optional, required by \ref app "vemesh_app" for command-line parsing)
+- **[CLI11](https://github.com/CLIUtils/CLI11)** (optional, required by \ref tutorial_app "vemesh_app" for command-line parsing)
 ```bash
 # macOS (Homebrew)
 brew install cli11

@@ -105,7 +105,7 @@ The routine is provided for convenience. The rectangle mesh used can be replaced
   pmp::SurfaceMesh embedded_mesh = vm::tutorial::clip_mesh(rect_mesh, phi_tol, ls_interface);
 ```  
 
-Embedding an interface in the mesh closely follows the steps discussed in \ref tutorial_embed_interfaces. Hence, we first ensure that nodes of the background mesh `rect_mesh` are away from the zero level set by a specified tolerance `phi_tol` by possibly perturbing nodes. The routine `vm::tutorial::adjust_mesh_nodes` achieves this.  
+Embedding an interface in the mesh closely follows the steps discussed in \ref tutorial_embed_boundary. Hence, we first ensure that nodes of the background mesh `rect_mesh` are away from the zero level set by a specified tolerance `phi_tol` by possibly perturbing nodes. The routine `vm::tutorial::adjust_mesh_nodes` achieves this.  
 
 Then, the utility `vm::tutorial::embed_interface` embeds the interface in `rect_mesh`.  Specifically:  
 - the routine computes approximate intersections of the zero level set

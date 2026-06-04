@@ -1,7 +1,7 @@
 // Sriramajayam
 
-/** \file embed_boundary.cpp
- * \brief Tutorial-style example embedding an interface in a structured quad mesh and subsequent mesh improvement with vemesh
+/** \file embed_interface.cpp
+ * \brief Tutorial-style example embedding an interface (polygonal chain) in a structured quad mesh and subsequent mesh improvement with vemesh
  * \ingroup tutorial
  */
 
