@@ -106,17 +106,17 @@ make docs
 ```
 
 ## Tutorial 
-Tutorial-style examples discussed in the @ref tutorial page are provided in the `tutorial/` folder of the repository. 
-The tutorial is built as an independent project.
+Tutorial-style examples discussed in the @ref tutorial page are provided in the `tutorial/` folder of the repository.
 
-Build and use these examples **after** installing `vemesh`:
-```sh
-cd tutorial && mkdir build && cd build && cmake ../ 
-make -j
-```
+These examples are built **as part of the main build** when `BUILD_TESTS=ON` (the default), and
+they double as part of the test suite (`ctest`). No separate configuration or installation step
+is needed — building `vemesh` above also builds the tutorials.
 
-Run the examples (each tutorial builds its own executable):
+Each tutorial produces its own executable (`element_agglomeration`, `vertex_relaxation`,
+`custom_quality_metric`, …) under `build/tutorial/`, alongside the sample input meshes copied
+to `build/tutorial/sample_data/`. Run one from there, for example:
 ```sh
+cd build/tutorial
 ./element_agglomeration
 ```
 
