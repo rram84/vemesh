@@ -2,7 +2,7 @@
 
 /** \file vemesh_app.cpp
  * \brief Command-line tool for vemesh
- * For detailed usage instructions, see the \ref app "Command-line tool" page.
+ * For detailed usage instructions, see the \ref tutorial_app "Command-line tool" page.
  * \author Ramsharan Rangarajan
  */
 
