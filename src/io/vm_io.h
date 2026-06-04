@@ -127,15 +127,15 @@ namespace vm
    * support XML-based VTK formats (\c .vtp).
    *
    * \note
-   * The mesh is assumed to have valid \c domain_id face properties
-   * and \c interface_id vertex properties. Their absence will trigger
-   * assertions.
+   * The mesh must have a \c domain_id face property and an \c interface_id
+   * vertex property; their absence throws \c std::runtime_error.
    *
    * \param[in] mesh     Polygonal surface mesh to be written.
    * \param[in] filename Output filename (must have \c .vtk extension).
    *
-   * \pre \c mesh.has_face_property("domain_id") == true
-   * \pre \c mesh.has_vertex_property("interface_id") == true
+   * \throws std::runtime_error if the \c domain_id or \c interface_id property
+   *         is missing, or if \p filename does not end in .vtk.
+   *
    * \ingroup io
    */
   void write_vtk(const pmp::SurfaceMesh& mesh,

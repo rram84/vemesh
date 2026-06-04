@@ -18,7 +18,7 @@ namespace vm
    *
    * This namespace collects quality measures for polygonal faces.
    *
-   * The library provides three instances of these:
+   * The library provides two instances of these:
    *
    * - vm::quality::vem_stability_ratio defines the quality of a face using the
    *  the stability ratio of the element stiffness matrix in the VEM.

@@ -61,7 +61,7 @@ sudo cmake --install build
 To link from your own CMake project:
 
 ```cmake
-find_package(VEMesh REQUIRED)
+find_package(vemesh REQUIRED)
 target_link_libraries(your_target PUBLIC vemesh::vemesh)
 ```
 
