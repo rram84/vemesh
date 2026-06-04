@@ -263,14 +263,14 @@ namespace vm
     //! \brief Evaluates the qualities of all faces in the mesh and saves it as a face property in the mesh
     //! \param[in] QE Reference to an instance of QualityEvaluator, used to evaluate face qualities
     //! \param[in] face_quality_tag Tag under which to save evaluated qualities. If the property already exists, values are overwritten.
-    void evaluate_face_qualities(const QualityEvaluator& QE, std::string face_quality_tag);
+    void evaluate_face_qualities(const QualityEvaluator& QE, const std::string& face_quality_tag);
 
     //! \brief Evaluates the qualities of all vertices in the mesh and saves it as a vertex property in the mesh
     //! Specifically, the quality at a vertex is the minimum among the qualities of faces incident at it. The latter
     //! are accessed as a face property of the mesh using the given property tag.
     //! \param[in] face_quality_tag Tag of an *existing* face property, storing qualities of all faces in the mesh
     //! \param[in] vertex_quality_tag Tag under which vertex qualities are saved. If the property already exists, values are overwritten.
-    void evaluate_vertex_qualities(std::string face_quality_tag, std::string vertex_quality_tag);
+    void evaluate_vertex_qualities(const std::string& face_quality_tag, const std::string& vertex_quality_tag);
     
   protected:
     //! \brief Helper method to determine agglomerable neighbors of a face along a given halfedge

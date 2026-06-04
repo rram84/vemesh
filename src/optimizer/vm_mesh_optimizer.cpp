@@ -24,7 +24,7 @@ namespace vm
   }
 
   // visualize mesh along with face qualities
-  void MeshOptimizer::evaluate_face_qualities(const QualityEvaluator& QE, std::string property_tag)
+  void MeshOptimizer::evaluate_face_qualities(const QualityEvaluator& QE, const std::string& property_tag)
   {
     // face quality property
     if(mesh.has_face_property(property_tag)==false)
@@ -44,8 +44,8 @@ namespace vm
   
   
   // visualize mesh along with vertex qualities
-  void MeshOptimizer::evaluate_vertex_qualities(std::string face_quality_tag,
-						std::string vertex_quality_tag)
+  void MeshOptimizer::evaluate_vertex_qualities(const std::string& face_quality_tag,
+						const std::string& vertex_quality_tag)
   {
     // must have face quality tag
     if (!mesh.has_face_property(face_quality_tag))

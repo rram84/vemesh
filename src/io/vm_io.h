@@ -42,7 +42,7 @@ namespace vm
    *                  vertices and faces from the file.
    * \ingroup io
    */
-  pmp::SurfaceMesh read_off(const std::string filename);
+  pmp::SurfaceMesh read_off(const std::string& filename);
 
   /** \brief Writes a polygonal mesh to a .OFF file.
    * 
@@ -60,7 +60,7 @@ namespace vm
    * \ingroup io
    */
   void write_off(const pmp::SurfaceMesh& mesh,
-		 const std::string filename);
+		 const std::string& filename);
   
   
   /** \brief Read a polygonal surface mesh from an ASCII VTK (.vtk) file.
@@ -99,7 +99,7 @@ namespace vm
    * \pre \p filename has extension .vtk
    * \ingroup io
    */
-  pmp::SurfaceMesh read_vtk(const std::string filename);
+  pmp::SurfaceMesh read_vtk(const std::string& filename);
 
   /** \brief Write a polygonal surface mesh to an ASCII VTK file.
    *
@@ -139,7 +139,7 @@ namespace vm
    * \ingroup io
    */
   void write_vtk(const pmp::SurfaceMesh& mesh,
-		 const std::string filename);
+		 const std::string& filename);
 
 
    /** \brief Write the sorted face quality values of a mesh to a file.
@@ -161,7 +161,7 @@ namespace vm
    * \ingroup io
    */
   void write_face_quality_vector(const pmp::SurfaceMesh &mesh,
-				 const std::string filename);
+				 const std::string& filename);
 
   /** \brief Write the sorted vertex quality values of a mesh to a file.
    *
@@ -183,5 +183,5 @@ namespace vm
    * \ingroup io
    */
   void write_vertex_quality_vector(const pmp::SurfaceMesh &mesh,
-				   const std::string filename);
+				   const std::string& filename);
 }

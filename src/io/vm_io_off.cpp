@@ -40,7 +40,7 @@ namespace vm
   }
 
   // Reads a .OFF mesh
-  pmp::SurfaceMesh read_off(const std::string filename)
+  pmp::SurfaceMesh read_off(const std::string& filename)
   {
     // Mesh
     pmp::SurfaceMesh mesh;
@@ -133,7 +133,7 @@ namespace vm
 
 
   // Writes a mesh in .off format
-  void write_off(const pmp::SurfaceMesh& mesh, const std::string filename)
+  void write_off(const pmp::SurfaceMesh& mesh, const std::string& filename)
   {
     // extension check
     std::string ext = std::filesystem::path(filename).extension().string();

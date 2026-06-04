@@ -15,7 +15,7 @@ namespace vm
   namespace
   {
     void write_vector(std::vector<double> &vec,
-		      const std::string filename)
+		      const std::string& filename)
     {
       // sort the vector in ascending order
       std::sort(vec.begin(), vec.end());
@@ -35,7 +35,7 @@ namespace vm
 
 
   void write_face_quality_vector(const pmp::SurfaceMesh &mesh,
-				 const std::string filename)
+				 const std::string& filename)
   {
     if(!mesh.has_face_property(Face_Quality_Tag))
       throw std::runtime_error("write_face_quality_vector: mesh does not have face_quality property");
@@ -51,7 +51,7 @@ namespace vm
   }
 
   void write_vertex_quality_vector(const pmp::SurfaceMesh &mesh,
-				   const std::string filename)
+				   const std::string& filename)
   {
     if(!mesh.has_vertex_property(Vertex_Quality_Tag))
       throw std::runtime_error("write_vertex_quality_vector: mesh does not have vertex_quality property");

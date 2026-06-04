@@ -29,7 +29,7 @@ namespace vm
   }
     
   // read a vtk file
-  pmp::SurfaceMesh read_vtk(const std::string filename)
+  pmp::SurfaceMesh read_vtk(const std::string& filename)
   {
     // Mesh to return
     pmp::SurfaceMesh mesh;
@@ -158,7 +158,7 @@ namespace vm
   // Write a polygonal mesh in vtk file format
   // mesh [in]     : polygonal mesh
   // filename [in] : name of the file
-  void write_vtk(const pmp::SurfaceMesh& mesh, const std::string filename)
+  void write_vtk(const pmp::SurfaceMesh& mesh, const std::string& filename)
   {
     // sanity check on file extension
     {

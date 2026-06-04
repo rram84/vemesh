@@ -11,6 +11,7 @@
 #include <vm_tutorial_rectangle_mesh.h>
 #include <vm_tutorial_mesh_slicer.h>
 #include <filesystem>
+#include <fstream>
 
 // get a polygonal representation of the interface
 void get_interface(const std::string, vm::boost_polygon_t&, vm::boost_linestring_t&);
