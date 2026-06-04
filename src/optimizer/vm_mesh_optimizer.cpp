@@ -34,9 +34,13 @@ namespace vm
 
     // compute
     auto quality = mesh.get_face_property<double>(property_tag);
-    auto f_circulator = mesh.faces();
-    for(auto f:f_circulator)
-      quality[f]= QE(f, mesh);
+    const int nf = static_cast<int>(mesh.faces_size());
+#pragma omp parallel for schedule(dynamic)
+    for(int i=0; i<nf; ++i)
+      {
+	const pmp::Face f(static_cast<pmp::IndexType>(i));
+	quality[f]= QE(f, mesh);
+      }
 
     // done
     return;
@@ -60,17 +64,18 @@ namespace vm
     auto vertex_qualities = mesh.get_vertex_property<double>(vertex_quality_tag);
     
     // compute vertex qualities
-    auto v_circulator = mesh.vertices();
-    double q, min_q;
-    for(auto v:v_circulator)
+    const int nv = static_cast<int>(mesh.vertices_size());
+#pragma omp parallel for schedule(dynamic)
+    for(int i=0; i<nv; ++i)
       {
-	min_q = std::numeric_limits<double>::max();
+	const pmp::Vertex v(static_cast<pmp::IndexType>(i));
+	double min_q = std::numeric_limits<double>::max();
 	
 	// faces incident at this vertex
 	auto f_circulator = mesh.faces(v);
 	for(auto f:f_circulator)
 	  {
-	    q = face_qualities[f];
+	    const double q = face_qualities[f];
 	    if(q < min_q)
 	      min_q = q;
 	  }

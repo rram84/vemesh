@@ -18,6 +18,11 @@ target_link_libraries(vm_optimizer PUBLIC
 			     vemesh::vm_io
 			     vemesh::vm_quality)
 
+# Optional OpenMP to parallelize quality-evaluation loops 
+if(OpenMP_FOUND)
+  target_link_libraries(vm_optimizer PRIVATE OpenMP::OpenMP_CXX)
+endif()
+
 # Add required flags
 target_compile_features(vm_optimizer PUBLIC ${VM_COMPILE_FEATURES})
 
