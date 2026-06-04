@@ -9,7 +9,6 @@
 #include <vm_face_qualities.h>
 #include <vm_io.h>
 #include <filesystem>
-#include <CLI/CLI.hpp>
 
 int main()
 {

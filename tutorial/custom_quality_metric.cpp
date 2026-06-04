@@ -8,7 +8,6 @@
 #include <vm_mesh_optimizer.h>
 #include <vm_io.h>
 #include <filesystem>
-#include <CLI/CLI.hpp>
 
 // custom quality metric =  normalized min included angle of polygon
 double min_angle_metric(const std::vector<pmp::Point>&);

@@ -10,7 +10,6 @@
 #include <vm_io.h>
 #include <vm_tutorial_mesh_slicer.h>
 #include <filesystem>
-#include <CLI/CLI.hpp>
 
 // identify candidate faces for agglomeration
 std::set<pmp::Face> identify_candidate_faces(const pmp::SurfaceMesh&,
