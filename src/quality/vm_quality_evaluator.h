@@ -9,14 +9,15 @@
 
 #include <pmp/surface_mesh.h>
 #include <utility>
+#include <functional>
 
 namespace vm
 {
-  //! \brief Function pointer type for evaluating the quality of a polygon
-  //! \sa vm::quality::vem_stability_ratio, vm::quality::geom_shape
-  //! \ingroup quality
-  using FaceQualityFn = double(*)(const std::vector<pmp::Point>&);
-
+  //! \brief Callable type for evaluating the quality of a polygon.
+  //! Accepts any callable (function pointer, lambda, or functor) with the signature
+  //! `double(const std::vector<pmp::Point>&)`.
+  using FaceQualityFn = std::function<double(const std::vector<pmp::Point>&)>;
+ 
   /**
    * \brief Evaluator for polygonal mesh quality.
    * 
@@ -36,7 +37,7 @@ namespace vm
   public:
     /**
      * \brief Construct a QualityEvaluator with a face quality function.
-     * \param[in] fq Function pointer that computes quality given a polygon's vertex coordinates. Copied.
+     * \param[in] fq Callable to compute quality given a polygon's vertex coordinates. Copied.
      */
     inline QualityEvaluator(FaceQualityFn fq)
       :fqFunc(fq) {}
@@ -78,7 +79,7 @@ namespace vm
     double operator()(const pmp::Vertex& vertex, const pmp::SurfaceMesh& mesh) const;
 
   private:
-    const FaceQualityFn fqFunc; //!< Function pointer to the face quality metric
+     FaceQualityFn fqFunc; //!< Function pointer to the face quality metric
 
   };
 

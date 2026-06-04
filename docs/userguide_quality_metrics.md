@@ -13,7 +13,7 @@ faces.
 ### Face qualities  
 The library requires a routine that evaluates the quality of a polygonal face:  
 ```cpp
-  using vm::FaceQualityFn =  double(*)(const std::vector<pmp::Point> &coords);
+    using vm::FaceQualityFn = std::function<double(const std::vector<pmp::Point> &coords)>;
 ```   
 When provided `coords`, the sequence of vertex locations, ordered
 counter-clockwise, the oracle returns the quality

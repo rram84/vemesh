@@ -54,23 +54,23 @@ int main()
 
   // Face quality: coords vs mesh operator
   for (auto f:mesh.faces())
-  {
-    std::vector<pmp::Point> coords;
-    for (auto v:mesh.vertices(f))
-      coords.push_back(mesh.position(v));
+    {
+      std::vector<pmp::Point> coords;
+      for (auto v:mesh.vertices(f))
+	coords.push_back(mesh.position(v));
 
-    const double q_coords = vm::quality::geom_shape(coords);
-    const double q_mesh   = qe(f, mesh);
+      const double q_coords = vm::quality::geom_shape(coords);
+      const double q_mesh   = qe(f, mesh);
 
-    if (std::abs(q_coords-q_mesh)>tol)
-      {
-	std::cerr << "\nFace quality mismatch\n"
-		  << "  from coordinates: " << q_coords << "\n"
-		  << "  from mesh      : " << q_mesh << "\n"
-		  << std::flush;
-	return EXIT_FAILURE;
-      }
-  }
+      if (std::abs(q_coords-q_mesh)>tol)
+	{
+	  std::cerr << "\nFace quality mismatch\n"
+		    << "  from coordinates: " << q_coords << "\n"
+		    << "  from mesh      : " << q_mesh << "\n"
+		    << std::flush;
+	  return EXIT_FAILURE;
+	}
+    }
 
   // Vertex quality = min incident face qualities
   for (auto v : mesh.vertices())
@@ -91,5 +91,49 @@ int main()
         }
     }
 
+
+
+  // --- Capturing lambda as a quality metric (requires FaceQualityFn = std::function) ---
+  {
+    const double scale = 2.5;
+    vm::QualityEvaluator qe_lambda(
+				   [scale](const std::vector<pmp::Point>& pts) -> double
+				   { return scale * vm::quality::geom_shape(pts); });
+
+    for (auto f : mesh.faces())
+      {
+        std::vector<pmp::Point> coords;
+        for (auto v : mesh.vertices(f))
+          coords.push_back(mesh.position(v));
+
+        const double q_expected = scale * vm::quality::geom_shape(coords);
+        const double q_lambda   = qe_lambda(f, mesh);
+
+        if (std::abs(q_expected - q_lambda) > tol)
+          {
+            std::cerr << "\nCapturing-lambda quality mismatch\n"
+                      << "  expected : " << q_expected << "\n"
+                      << "  evaluator: " << q_lambda   << "\n"
+                      << std::flush;
+            return EXIT_FAILURE;
+          }
+      }
+
+    // Vertex evaluation must also route through the lambda (min over incident faces).
+    for (auto v : mesh.vertices())
+      {
+        double qmin = std::numeric_limits<double>::infinity();
+        for (auto f : mesh.faces(v))
+          qmin = std::min(qmin, qe_lambda(f, mesh));
+
+        if (std::abs(qe_lambda(v, mesh) - qmin) > tol)
+          {
+            std::cerr << "\nCapturing-lambda vertex quality mismatch\n" << std::flush;
+            return EXIT_FAILURE;
+          }
+      }
+  }
+
+  
   return EXIT_SUCCESS;
 }
