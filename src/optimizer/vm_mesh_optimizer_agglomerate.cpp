@@ -69,7 +69,7 @@ namespace vm
 				 const ProgressCallback &callback)
   {
     if (qfactor <= 1.)
-      throw std::invalid_argument("MeshOptimizer::agglomerate: qfactor must be >= 1");
+      throw std::invalid_argument("MeshOptimizer::agglomerate: qfactor must be > 1");
     
     // tolerance for comparing qualities
     const double qeps = 1.e-6;
@@ -277,9 +277,10 @@ namespace vm
     const int nvertices = mesh.n_vertices();
     const int nprev_elm = mesh.n_faces();
     auto e = mesh.edge(h0);
-    assert(mesh.is_removal_ok(e));
-    bool flag = mesh.remove_edge(e);
-    assert(flag==true);
+    if (!mesh.is_removal_ok(e))
+      throw std::runtime_error("MeshOptimizer::merge_neighbors: edge removal not permitted by mesh topology");
+    if (!mesh.remove_edge(e))
+      throw std::runtime_error("MeshOptimizer::merge_neighbors: remove_edge failed");
 
     // #vertices should remain unchanged
     assert(mesh.n_vertices()==nvertices);
