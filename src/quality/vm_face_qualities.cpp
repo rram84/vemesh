@@ -49,19 +49,18 @@ namespace vm
     // measure quality as the minimum of face qualities around a vertex, with face qualities defined as the
     // ratio of the area to the perimeter^2
     double geom_shape(const std::vector<pmp::Point>& coords)
-    { 
+    {
       // boost polygon of this face
-      boost_polygon_t poly;
-      for(auto& X:coords)
-	bg::append(poly.outer(), boost_point_t(X[0],X[1]));
-      
-      auto first_vertex = *poly.outer().begin();
-      bg::append(poly.outer(), first_vertex);
-
+      boost_polygon_t poly = make_polygon(coords);
+  
       // area
       double area = bg::area(poly);
-      double perim = bg::perimeter(poly);
 
+      // perimeter
+      double perim = bg::perimeter(poly);
+      if (perim <= 0.)
+	return 0.;
+  
       // normalizing factor for this polygon
       const int n = static_cast<int>(coords.size());
       const double factor = 4.*n*std::tan(M_PI/n);
