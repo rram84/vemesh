@@ -22,7 +22,7 @@ namespace vm
    * \ingroup utils
    */
   enum class MeshInspection {
-    Basic = 0,         //!< Basic mesh sanity checks
+      Basic = 0,       //!< Basic mesh sanity checks
       FaceGeometry,    //!< Basic + face geometry checks
       Adjacency        //!< FaceGeometry + adjacency checks
       };

@@ -114,6 +114,8 @@ namespace vm
     // default domain id = 0
     auto domain_ids = mesh.add_face_property<int>("domain_id", 0);
     {
+      file.clear();
+      file.seekg(0, std::ios::beg);
       std::string line;
       if (find_line_with(file, "domain_id", line))
 	{

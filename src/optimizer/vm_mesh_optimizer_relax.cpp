@@ -246,8 +246,17 @@ namespace vm
     {
       // do the segments joining this point to the connected vertices
       // lie within the polygon?
-      // Each Y is on the polygon boundary. nudge the segment's Y endpoint inward
-      // by a small fraction (EPS) to make bg::within accept it.
+
+      // Each connected vertex Y lies ON the environment polygon's boundary, so the
+      // raw segment sample->Y is rejected by bg::within (which requires the strict
+      // interior). We instead test the segment from sample to a point nudged a small
+      // FRACTION (EPS) of the way from Y toward sample, pulling that endpoint just
+      // inside the boundary.
+      //
+      // EPS is a fraction of the segment length, so this test is scale-invariant
+      // (uniformly scaling the mesh does not change the outcome). EPS is a tolerance
+      // for boundary/floating-point fuzz at the shared vertex -- NOT a mesh-scale or
+      // edge-length parameter.
       const double EPS = 0.01;
       for(auto& Y:connected_verts)
 	{
