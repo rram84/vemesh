@@ -78,6 +78,27 @@ evaluating qualities. For example:
   double q2 = QE(v, mesh); // v of type pmp::Vertex belongs to mesh of type pmp::Surface  
 ```  
 
+### Parallel evaluation and thread safety {#ug_quality_parallel}
+VEMesh evaluates qualities in parallel using OpenMP, when
+available. It does so in the methods
+vm::MeshOptimizer::evaluate_face_qualities and
+vm::MeshOptimizer::evaluate_vertex_qualities. The parallelization is
+especially meaningful in mesh-wide candidate searches
+to determine faces that require agglomeration and vertices to be
+relaxed. The agglomeration and relaxation methods themselves remain
+**sequential**. These operations alter the mesh and the result depends
+on the order in which faces/vertices are processed.
+Parallelism in VEMesh is therefore limited in scope and **does not
+change the result** of an optimization run.
+
+An important point to keep in mind therefore is that a user-defined face
+quality oracle (instance of `vm::FaceQualityFn`) can be invoked
+**concurrently**, and must therefore be **thread-safe**. The built-in
+metrics `vm::quality::geom_shape` and
+`vm::quality::vem_stability_ratio` are functions only of input
+coordinates and satisfy this requirement.
+
+
 ### Mesh quality {#ug_mesh_quality}  
 Face qualities can in turn be used to define a notion of mesh
 quality. Based on the work of \cite rangarajan2017provably, a mesh

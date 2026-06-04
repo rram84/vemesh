@@ -138,9 +138,22 @@ namespace vm
    * stored qualities are frequently invalidated by agglomeration and relaxation operations. 
    * Moreover, the user is free to specify different quality during a mesh optimization operation.
    * 
+   *
    * For convenience, the class provides methods `evaluate_face_qualities` and `evaluate_vertex_qualities` to evaluate vertex qualities.
    * The evaluation of vertex qualities is based on an existing evaluation of face qualities.
-   * 
+   *
+   * ---
+   *
+   * **Parallelism and thread safety**: \n
+   * The quality-evaluation phases of the class are parallelized with OpenMP when it is
+   * available at build time; otherwise they run serially with identical results. The
+   * following methods incorporate such parallelism:
+   *
+   * - \ref evaluate_face_qualities and \ref evaluate_vertex_qualities, and
+   * - the mesh-wide search that identifies candidate faces/vertices in the whole-mesh
+   *   overloads of \ref agglomerate and \ref relax.
+   *
+   * The agglomeration and relaxation passes themselves remain **sequential**. 
    * ---
    * \ingroup optimizer
    */

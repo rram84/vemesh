@@ -14,9 +14,17 @@
 namespace vm
 {
   //! \brief Callable type for evaluating the quality of a polygon.
-  //! Accepts any callable (function pointer, lambda, or functor) with the signature
-  //! `double(const std::vector<pmp::Point>&)`.
-  using FaceQualityFn = std::function<double(const std::vector<pmp::Point>&)>;
+  //! Accepts any callable (function pointer, lambda, or functor) with
+  //! the signature `double(const std::vector<pmp::Point>&)`.
+  //!
+  //! MeshOptimizer may invoke this callable concurrently from
+  //! multiple threads (its quality-evaluation phases are parallelized
+  //! with OpenMP).
+  //! A custom metric must therefore be thread-safe.
+  //! Pure functions of the input coordinates - such as
+  //! the built-in vm::quality::vem_stability_ratio and
+  //! vm::quality::geom_shape - satisfy this requirement.
+  Using FaceQualityFn = std::function<double(const std::vector<pmp::Point>&)>;
  
   /**
    * \brief Evaluator for polygonal mesh quality.
@@ -26,7 +34,7 @@ namespace vm
    * The quality of a vertex is defined as the minimum quality among
    * its incident faces:
    * \f[ Q(v) = \min_{1\leq i\leq n}Q(f_i), \f]
-   where \f$f_1,\ldots,f_n\f$ are the faces incident at vertex \f$v\f$ and \f$Q\f$ is the 
+   * where \f$f_1,\ldots,f_n\f$ are the faces incident at vertex \f$v\f$ and \f$Q\f$ is the 
    * given face-quality metric.
    * 
    * \sa vm::quality::vem_stability_ratio, vm::quality::geom_shape
