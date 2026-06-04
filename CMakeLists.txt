@@ -16,19 +16,19 @@ endif()
 
 # Build options
 option(BUILD_DOCS "Build documentation" OFF)
-option(BUILD_TESTS "Run unit tests" OFF)  
+option(BUILD_TESTS "Build unit tests" ON)  
 
 # Dependencies
 find_package(Eigen3 REQUIRED)
-find_package(Boost REQUIRED)
+find_package(Boost 1.87 REQUIRED CONFIG)
 find_package(OpenMP)                        # optional
-find_package(pmp REQUIRED)
+find_package(pmp 3.0 REQUIRED)
 if(BUILD_DOCS)
 	find_package(Doxygen REQUIRED)
 endif()
 
 # Compile features
-list(APPEND VM_COMPILE_FEATURES cxx_std_20)
+list(APPEND VM_COMPILE_FEATURES cxx_std_17)
 
 # Compile code in src and test
 add_subdirectory(src)

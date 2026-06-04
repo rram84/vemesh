@@ -4,8 +4,8 @@
 
 include(CMakeFindDependencyMacro)
 
-find_dependency(Boost)
+find_dependency(Boost 1.87 CONFIG)
 find_dependency(Eigen3)
-find_dependency(pmp)
+find_dependency(pmp 3.0)
 
 include("${CMAKE_CURRENT_LIST_DIR}/vemeshTargets.cmake")
