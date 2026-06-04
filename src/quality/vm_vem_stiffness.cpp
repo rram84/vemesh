@@ -131,8 +131,9 @@ namespace vm
       // G matrix
       Eigen::MatrixXd G = B*D;
     
-      // Projector: PI
-      Eigen::MatrixXd PI = G.inverse()*B;
+      // Projector: PI = G^{-1} B, computed via a column-pivoted QR solve
+      // (more stable than forming G.inverse() for near-singular G).
+      Eigen::MatrixXd PI = G.colPivHouseholderQr().solve(B);
 
       // 1st row of G = 0
       G.row(0).setZero();
