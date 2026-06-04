@@ -182,6 +182,15 @@ namespace vm
     // given vertex position
     const pmp::Point given_vertex_pos = mesh.position(vertex);
 
+    // Restore the vertex to its original position on every exit path
+    // (normal return or exception), so a throw from QE cannot corrupt the mesh.
+    struct PositionGuard {
+      pmp::SurfaceMesh& mesh;
+      pmp::Vertex       vertex;
+      pmp::Point        saved;
+      ~PositionGuard() { mesh.position(vertex) = saved; }
+    } position_guard{mesh, vertex, given_vertex_pos};
+    
     // get feasible sample points inside the visibility polygon
     const std::vector<std::pair<double,double>> feasible_samples =
       compute_feasible_vertex_positions(vertex, num_samples);
@@ -211,9 +220,8 @@ namespace vm
 	  }
       }
     
-    // restore the vertex position
-    mesh.position(vertex) = given_vertex_pos;
-
+    // position guard restores the vertex position in the mesh
+    
     // done
     return {success, pmp::Point(curr_best_pos.first,curr_best_pos.second,given_vertex_pos[2]), curr_best_quality};
   }
