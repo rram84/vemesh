@@ -115,37 +115,40 @@ cd tutorial && mkdir build && cd build && cmake ../
 make -j
 ```
 
-Run the examples:
+Run the examples (each tutorial builds its own executable):
 ```sh
-./hello_tryumph
+./element_agglomeration
 ```
 
 
 ## Try  vemesh
-Test element improvement possible with `vemesh` before integrating it with your project.  
-Use the \ref app application `app/vemesh`.
- 
+Test the element improvement possible with `vemesh` before integrating it with your project,
+using the \ref tutorial_app "vemesh_app" command-line tool. Its source is `app/vemesh_app.cpp`.
+
+`vemesh_app` is a **standalone CMake project** in the `app/` folder. It consumes the installed
+`vemesh` package and uses [CLI11](https://github.com/CLIUtils/CLI11) for command-line parsing,
+so build it **after** installing `vemesh` (and CLI11).
+
 **Build the app:**
 ```bash
 cd app
 mkdir build && cd build
-cmake ..
+cmake ..        # add -DCMAKE_PREFIX_PATH=path/to/install for a custom prefix
 make
 ```
 
 **Run with example flags:**
 ```bash
-./vemesh -a -r -q -f -i -o
+./vemesh_app -a -i in_mesh.OFF -o out_dir -n 5 -f 1.2 -m stability
 ```
 
-The app uses [CLI11](https://github.com/CLIUtils/CLI11) for command
-line parsing. The header is provided in the `app/` folder.
+See the \ref tutorial_app page for the full list of flags, options, and usage examples.
 
 ## Link vemesh to your project
 
 **Find the package in CMake:**
 ```cmake
-find_package(VEMesh REQUIRED)
+find_package(vemesh REQUIRED)
 ```
 
 **Link to your target:**
