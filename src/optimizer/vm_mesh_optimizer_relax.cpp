@@ -148,22 +148,26 @@ namespace vm
     // update random number generator seed if provided
     if(seed) rng.seed(*seed);
     
-    // all vertices
-    auto v_container = mesh.vertices();
-    
     // interface ids of vertices
     auto v_interface_ids = mesh.get_vertex_property<int>("interface_id");
-    
-    std::set<pmp::Vertex> vertex_set{};
-    for(auto v:v_container)
-      if(mesh.is_boundary(v)==false &&
-	 v_interface_ids[v]==-1)
-	{
-	  double qval = QE(v, mesh);
-	  if(qval<qmin)
-	    vertex_set.insert(v);
-	}
 
+    // evaluate vertex qualities in parallel
+    const int nv = static_cast<int>(mesh.vertices_size());
+    std::vector<char> is_candidate(nv, 0);
+#pragma omp parallel for schedule(dynamic)
+    for(int i=0; i<nv; ++i)
+      {
+	const pmp::Vertex v(static_cast<pmp::IndexType>(i));
+	if(!mesh.is_deleted(v) && mesh.is_boundary(v)==false && v_interface_ids[v]==-1 && QE(v, mesh) < qmin)
+	  is_candidate[i] = 1;
+      }
+
+    // accumulate vertex set
+    std::set<pmp::Vertex> vertex_set{};
+    for(int i=0; i<nv; ++i)
+      if(is_candidate[i])
+	vertex_set.insert(pmp::Vertex(static_cast<pmp::IndexType>(i)));
+    
     // agglomerate
     return relax(vertex_set, QE, num_samples, callback); // if a seed was provided, rng was already reseeded
   }

@@ -39,7 +39,8 @@ namespace vm
     for(int i=0; i<nf; ++i)
       {
 	const pmp::Face f(static_cast<pmp::IndexType>(i));
-	quality[f]= QE(f, mesh);
+	if(!mesh.is_deleted(f))
+	  quality[f]= QE(f, mesh);
       }
 
     // done
@@ -69,6 +70,8 @@ namespace vm
     for(int i=0; i<nv; ++i)
       {
 	const pmp::Vertex v(static_cast<pmp::IndexType>(i));
+	if(mesh.is_deleted(v)) continue;
+
 	double min_q = std::numeric_limits<double>::max();
 	
 	// faces incident at this vertex

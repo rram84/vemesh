@@ -9,6 +9,7 @@
 #include <vm_mesh_inspection.h>
 #include <list>
 #include <queue>
+#include <vector>
 #include <iostream>
 
 namespace vm
@@ -146,12 +147,26 @@ namespace vm
 
     if (qfactor <= 1.)
       throw std::invalid_argument("MeshOptimizer::agglomerate: qfactor must be > 1");
-    
+
+    // evaluate face qualities in parallel
+    const int nf = static_cast<int>(mesh.faces_size());
+    std::vector<char> is_candidate(nf, 0);
+#pragma omp parallel for schedule(dynamic)
+    for(int i=0; i<nf; ++i)
+      {
+	const pmp::Face f(static_cast<pmp::IndexType>(i));
+	if(!mesh.is_deleted(f))
+	  {
+	    if(QE(f,mesh)<qmin)
+	      is_candidate[i] = 1;
+	  }
+      }
+
+    // accumulate set faces
     std::set<pmp::Face> faceset{};
-    auto f_container = mesh.faces();
-    for(auto f:f_container)
-      if(QE(f,mesh)<qmin)
-	faceset.insert(f);
+    for(int i=0; i<nf; ++i)
+      if(is_candidate[i])
+	faceset.insert(pmp::Face(static_cast<pmp::IndexType>(i)));
       
     return agglomerate(faceset, QE, qfactor, callback);
   }
