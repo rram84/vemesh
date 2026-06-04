@@ -27,4 +27,6 @@ concepts and algorithms underlying mesh improvement.
 
 \subpage ug_utilities
 
+\subpage performance
+
 
