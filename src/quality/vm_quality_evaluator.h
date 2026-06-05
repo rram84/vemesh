@@ -24,7 +24,7 @@ namespace vm
   //! Pure functions of the input coordinates - such as
   //! the built-in vm::quality::vem_stability_ratio and
   //! vm::quality::geom_shape - satisfy this requirement.
-  Using FaceQualityFn = std::function<double(const std::vector<pmp::Point>&)>;
+  using FaceQualityFn = std::function<double(const std::vector<pmp::Point>&)>;
  
   /**
    * \brief Evaluator for polygonal mesh quality.

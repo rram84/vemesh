@@ -1,19 +1,29 @@
 # Sriramajayam
-
-cmake_minimum_required(VERSION 3.17)
-
-project(tutorial DESCRIPTION "Tutorial examples accompanying vemesh")
-
-find_package(OpenMP)
+#
+# Tutorial examples accompanying vemesh.
 
 # Copy sample mesh files to build directory
 file(COPY
      "${CMAKE_CURRENT_SOURCE_DIR}/sample_data"
      DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
 
-set(COMMON_DIR "${CMAKE_CURRENT_SOURCE_DIR}/common")
+# shared tutorial-utilities library 
+add_library(vm_tutorial_utils STATIC
+  common/vm_tutorial_mesh_slicer.cpp
+  common/vm_tutorial_rectangle_mesh.cpp)
 
-# List of test executables
+target_include_directories(vm_tutorial_utils PUBLIC
+  "${CMAKE_CURRENT_SOURCE_DIR}/common")
+
+# the helpers use pmp::SurfaceMesh; pmp's public headers also pull in Eigen,
+# whose include path the pmp target does not propagate on its own
+target_link_libraries(vm_tutorial_utils PUBLIC pmp Eigen3::Eigen)
+
+target_compile_features(vm_tutorial_utils PUBLIC ${VM_COMPILE_FEATURES})
+
+add_library(vemesh::tutorial_utils ALIAS vm_tutorial_utils)
+
+# tutorial example executables
 set(TEST_TARGETS
 	element_agglomeration
 	vertex_relaxation
@@ -23,24 +33,16 @@ set(TEST_TARGETS
 	mesh_slicing
 	embed_boundary
 	embed_interface)
-	
+
 foreach(TGT IN LISTS TEST_TARGETS)
   add_executable(${TGT} ${TGT}.cpp)
 
-  # local sources
- target_sources(${TGT} PRIVATE
-				       "${CMAKE_CURRENT_SOURCE_DIR}/common/vm_tutorial_mesh_slicer.h"
-				       "${CMAKE_CURRENT_SOURCE_DIR}/common/vm_tutorial_mesh_slicer.cpp"
-				       "${CMAKE_CURRENT_SOURCE_DIR}/common/vm_tutorial_rectangle_mesh.h"
-				       "${CMAKE_CURRENT_SOURCE_DIR}/common/vm_tutorial_rectangle_mesh.cpp")
-
-
-  target_include_directories(${TGT} PUBLIC ${COMMON_DIR})
-  target_link_libraries(${TGT} PRIVATE vm_optimizer)
+  # vm_tutorial_utils propagates the common/ include directory transitively
+  target_link_libraries(${TGT} PRIVATE vm_optimizer vm_tutorial_utils)
   if(OpenMP_FOUND)
 	target_link_libraries(${TGT} PRIVATE OpenMP::OpenMP_CXX)
   endif()
-  
+
   target_compile_features(${TGT} PUBLIC ${VM_COMPILE_FEATURES})
 
   add_test(NAME ${TGT} COMMAND ${TGT})
