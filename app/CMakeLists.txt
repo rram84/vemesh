@@ -14,7 +14,9 @@ find_package(vemesh REQUIRED)
 # CLI11 for command-line parsing
 find_package(CLI11 REQUIRED)
 
-add_executable(vemesh_app vemesh_app.cpp)
+add_executable(vemesh_app
+			vemesh_app.cpp
+			vemesh_app_cli.cpp)
 
 target_link_libraries(vemesh_app
   PRIVATE
