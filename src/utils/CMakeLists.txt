@@ -14,6 +14,10 @@ target_include_directories(vm_utils PUBLIC
 # link
 target_link_libraries(vm_utils PUBLIC pmp Eigen3::Eigen Boost::headers)
 
+if(OpenMP_FOUND)
+  target_link_libraries(vm_utils PRIVATE OpenMP::OpenMP_CXX)
+endif()
+
 # Add required flags
 target_compile_features(vm_utils PUBLIC ${VM_COMPILE_FEATURES})
 

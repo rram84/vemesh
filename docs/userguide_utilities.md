@@ -52,12 +52,16 @@ hierarchical levels:
 | level | check | expense |
 | --- | --- | --- |
 | vm::MeshInspection::Basic | vertex and element counts | trivial |
-| vm::MeshInspection::Face | degeneracy of faces | moderate |
+| vm::MeshInspection::FaceGeometry | degeneracy of faces | moderate |
 | vm::MeshInspection::Adjacency | pairwise intersections of faces incident at vertices | expensive |
 
 On errors, the routine returns codes and messages in a
 `vm::MeshInspectionErrors` vector. These checks are necessary
 conditions on a valid mesh, not sufficient ones.
+
+The Face and Adjacency checks are read-only and are parallelized with OpenMP
+when it is available; the result is identical to a serial run — only the speed of
+inspection changes. 
 
 VEMesh's improvement methods don't run these checks internally. It
 useful to invoke them after loading a mesh from a non-standard

@@ -16,7 +16,10 @@ namespace vm
     void add_error(const std::optional<std::reference_wrapper<MeshInspectionErrors>> &errors, MeshInspectionError e) {
       if (errors) errors->get().push_back(std::move(e));
     }
+
   
+
+    // ---- basic mesh inspection tests. only sequential. --- //
     bool inspect_mesh_basic(const pmp::SurfaceMesh& mesh,
 			    const std::optional<std::reference_wrapper<MeshInspectionErrors>> &errors)
     {
@@ -29,103 +32,186 @@ namespace vm
 	
       return flag;
     }
+
+
+    // Merge thread-local findings into the optional shared error list.
+    // Should be called within a critical section
+    void merge_errors(const std::optional<std::reference_wrapper<MeshInspectionErrors>>& errors,
+		      MeshInspectionErrors& local)
+    {
+      auto& dst = errors->get();
+      dst.insert(dst.end(),
+		 std::make_move_iterator(local.begin()),
+		 std::make_move_iterator(local.end()));
+    }
+
+
+    // Thread-safe geometry checks for a single face. Appends any findings to `out`.
+    // Returns true if the face is valid, simple and positively oriented.
+    bool check_face(int findx, const boost_polygon_t& poly, MeshInspectionErrors& out)
+    {
+      bool ok = true;
+
+      std::string message;
+      if(!bg::is_valid(poly, message))
+	{
+	  ok = false;
+	  std::ostringstream oss;
+	  oss << "Boost message: " << message << "\nFace coordinates: " << boost::geometry::wkt(poly) << "\n";
+	  out.push_back({MeshInspectionErrorCode::InvalidFace, findx, -1, oss.str()});
+	}
+      if(!bg::is_simple(poly))
+	{
+	  ok = false;
+	  std::ostringstream oss;
+	  oss << "Face coordinates: " << boost::geometry::wkt(poly) <<"\n";
+	  out.push_back({MeshInspectionErrorCode::NonSimpleFace, findx, -1, oss.str()});
+	}
+      if(bg::area(poly)<=0.)
+	{
+	  ok = false;
+	  std::ostringstream oss;
+	  oss <<"Face coordinates: " << boost::geometry::wkt(poly) << "\n";
+	  out.push_back({MeshInspectionErrorCode::NonPositiveArea, findx, -1, oss.str()});
+	}
+
+      return ok;
+    }
+
+    // Thread-safe checks for overlap checks for a single face against its neighbors.
+    // Appends findings to `out`.
+    // Each adjacent pair is examined once (findx < nb_findx).
+    // Returns true if the face does not overlap any neighbor.
+    bool check_overlaps(const pmp::SurfaceMesh& mesh,
+			const pmp::Face& face,
+			const std::map<int, boost_polygon_t>& polygons,
+			MeshInspectionErrors& out)
+    {
+      const int    findx = face.idx();
+      const auto&  poly  = polygons.at(findx);
+      const double area  = bg::area(poly);
+      bool ok = true;
+
+      // its neighbors
+      auto halfedge_circulator = mesh.halfedges(face);
+      for(auto h:halfedge_circulator)
+	{
+	  // skip when there is no neighboring face across this halfedge
+	  auto h_opp = mesh.opposite_halfedge(h);
+	  if(mesh.is_boundary(h_opp))
+	    continue;
+	  
+	  // neighboring face; avoid double checking pairwise insersections
+	  auto nb_face = mesh.face(h_opp);
+	  const int nb_findx = nb_face.idx();
+	  if(findx>nb_findx)
+	    continue;
+
+	  // check pairwise intersection
+	  const auto& nb_poly = polygons.at(nb_findx);
+	  boost_multi_polygon_t intersection;
+	  bg::intersection(poly, nb_poly, intersection);
+	  double intersection_area = bg::area(intersection);
+
+	  if(std::abs(intersection_area/area)>1.e-3) {
+	    ok = false;
+	    std::ostringstream oss;
+	    oss << "Face: " << boost::geometry::wkt(poly) << "\nNeighbor face: " << boost::geometry::wkt(nb_poly) << "\n";
+	    out.push_back({MeshInspectionErrorCode::FaceOverlap, findx, nb_findx, oss.str()});
+	  }
+	}
+
+      return ok;
+    }
+
+
+    // enum to string conversion for error messages
+    std::string to_string(const MeshInspectionErrorCode code)
+    {
+      switch (code) {
+      case MeshInspectionErrorCode::EmptyMesh:       return "EmptyMesh";
+      case MeshInspectionErrorCode::InvalidFace:     return "InvalidFace";
+      case MeshInspectionErrorCode::NonSimpleFace:   return "NonSimpleFace";
+      case MeshInspectionErrorCode::NonPositiveArea: return "NonPositiveArea";
+      case MeshInspectionErrorCode::FaceOverlap:     return "FaceOverlap";
+      default:                                   return "UnknownError";
+      }
+    }
+
     
+    // --- inspect mesh faces, parallelized if OpenMP is available --- //
     bool inspect_mesh_faces(const std::map<int, boost_polygon_t>& polygons,
 			    const std::optional<std::reference_wrapper<MeshInspectionErrors>> &errors)
     {
-      bool flag = true;
-    
-      // each face should be valid, simple and have a positive area
-      for(const auto& [findx, poly]: polygons) {
+      // flat index list of polygons so that per-face checks can be iterated by index (OpenMP)
+      std::vector<int> keys;
+      keys.reserve(polygons.size());
+      for(const auto& kv : polygons)
+	keys.push_back(kv.first);
 
-	std::string message;
-	if(!bg::is_valid(poly, message))
-	  {
-	    flag = false;
-	    std::ostringstream oss;
-	    oss << "Boost message: " << message << "\nFace coordinates: " << boost::geometry::wkt(poly) << "\n";
-	    add_error(errors, {MeshInspectionErrorCode::InvalidFace, findx, -1, oss.str()});
-	  }
-      
-	if(!bg::is_simple(poly))
-	  {
-	    flag = false;
-	    std::ostringstream oss;
-	    oss << "Face coordinates: " << boost::geometry::wkt(poly) <<"\n";
-	    add_error(errors, {MeshInspectionErrorCode::NonSimpleFace, findx, -1, oss.str()});
-	  }
-      
-	if(bg::area(poly)<=0.)
-	  {
-	    flag = false;
-	    std::ostringstream oss;
-	    oss <<"Face coordinates: " << boost::geometry::wkt(poly) << "\n";
-	    add_error(errors, {MeshInspectionErrorCode::NonPositiveArea, findx, -1, oss.str()});
-	  }
-      }
-    
+      const int n = static_cast<int>(keys.size());
+      bool flag = true;
+
+      // each face should be valid, simple and have a positive area
+#pragma omp parallel for schedule(dynamic) reduction(&&:flag)
+      for(int i=0; i<n; ++i)
+	{
+	  MeshInspectionErrors local;
+	  const bool ok = check_face(keys[i], polygons.at(keys[i]), local);
+	  flag = flag && ok;
+	  if(errors && !local.empty())
+	    {
+#pragma omp critical
+	      merge_errors(errors, local);
+	    }
+	}
+
       return flag;
     }
 
-  
+
+
+    // --- inspect overlaps ---    
     bool inspect_mesh_adjacency(const pmp::SurfaceMesh& mesh,
 				const std::map<int, boost_polygon_t>& polygons,
 				const std::optional<std::reference_wrapper<MeshInspectionErrors>> &errors)
     {
-      auto face_circulator = mesh.faces();
-    
+      // flat index list for index-based (OpenMP) iteration
+      std::vector<int> keys;
+      keys.reserve(polygons.size());
+      for(const auto& kv : polygons)
+	keys.push_back(kv.first);
+
+      const int n = static_cast<int>(keys.size());
+      bool flag = true;
+
       // faces should not overlap with neighbors
       // check intersection with neighbors
-      bool flag = true;
-      for(auto face:face_circulator) {
+#pragma omp parallel for schedule(dynamic) reduction(&&:flag)
+      for(int i=0; i<n; ++i)
+	{
+	  // this face
+	  const pmp::Face face(static_cast<pmp::IndexType>(keys[i]));
 
-	// this face
-	const int& findx = face.idx();
-	const auto& poly = polygons.at(findx);
-      
-	// area
-	double area = bg::area(poly);
-      
-	// its neighbors
-	auto halfedge_circulator = mesh.halfedges(face);
-	for(auto h:halfedge_circulator)
-	  {
-	    assert(mesh.is_valid(h));
-	    assert(mesh.is_boundary(h)==false);  	// cannot be a boundary halfedge
+	  // inspect this face for overlap with neighbors
+	  MeshInspectionErrors local;
+	  const bool ok = check_overlaps(mesh, face, polygons, local);
+	  flag = flag && ok;
 
-	    // nothing to do in case of no neighbor
-	    auto h_opp  = mesh.opposite_halfedge(h);
-	    if(mesh.is_boundary(h_opp)==true)
-	      continue;
-	  
-	    // neighboring face
-	    auto nb_face = mesh.face(h_opp);
-	    assert(mesh.is_valid(nb_face)==true);
-
-	    // avoid double checking pairwise insersections
-	    const int nb_findx = nb_face.idx();
-	    if(findx>nb_findx)
-	      continue;
-
-	    // check pairwise intersection
-	    const auto& nb_poly = polygons.at(nb_findx);
-	    boost_multi_polygon_t intersection;
-	    bool does_intersect = bg::intersection(poly, nb_poly, intersection);
-	    assert(does_intersect==true); // at vertices and edges
-	    double intersection_area = bg::area(intersection);
-
-	    if(std::abs(intersection_area/area)>1.e-3) {
-	      flag = false;
-	      std::ostringstream oss;
-	      oss << "Face: " << boost::geometry::wkt(poly) << "\nNeighbor face: " << boost::geometry::wkt(nb_poly) << "\n";
-	      add_error(errors, {MeshInspectionErrorCode::FaceOverlap, findx, nb_findx, oss.str()});
+	  if(errors && !local.empty())
+	    {
+#pragma omp critical
+	      merge_errors(errors, local);
 	    }
-	  }
-      }
+	}
+
       return flag;
     }
-  }
 
+  }
+  
+    
+  // ---- mesh-level inspection -- //
   bool inspect_mesh(const pmp::SurfaceMesh& mesh,
 		    MeshInspection level,
 		    std::optional<std::reference_wrapper<MeshInspectionErrors>> errors)
@@ -162,20 +248,7 @@ namespace vm
   }
 
 
-  namespace {
-    std::string to_string(const MeshInspectionErrorCode code)
-    {
-      switch (code) {
-      case MeshInspectionErrorCode::EmptyMesh:       return "EmptyMesh";
-      case MeshInspectionErrorCode::InvalidFace:     return "InvalidFace";
-      case MeshInspectionErrorCode::NonSimpleFace:   return "NonSimpleFace";
-      case MeshInspectionErrorCode::NonPositiveArea: return "NonPositiveArea";
-      case MeshInspectionErrorCode::FaceOverlap:     return "FaceOverlap";
-      default:                                   return "UnknownError";
-      }
-    }
-  }
-  
+  // print error messages
   std::ostream& operator<<(std::ostream& os, const MeshInspectionError& e)
   {
     os << "Code: " << to_string(e.code)
@@ -186,6 +259,7 @@ namespace vm
     return os;
   }
 
+  // inspect a face
   bool inspect_face(const std::vector<pmp::Point>& coords)
   {
     // boost polygon representation

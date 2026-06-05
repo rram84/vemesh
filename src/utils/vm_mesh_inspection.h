@@ -5,11 +5,11 @@
  * \author Ramsharan Rangarajan
  */
 
-
 #pragma once
 
 #include <vm_utils.h>
 #include <string>
+#include <vector>
 
 namespace vm
 {
@@ -74,30 +74,37 @@ namespace vm
 
 
   /**
- * \brief Inspect a polygonal mesh for geometric and topological validity.
- *
- * Inspection levels are hierarchical:
- * - FaceGeometry includes all Basic checks
- * - Adjacency includes all FaceGeometry and Basic checks
- *
- * The following checks are performed:
- *
- * | Level        | Checks |
- * |-------------|--------|
- * | Basic       | Non-empty mesh, non-zero vertex/edge/face counts |
- * | FaceGeometry| Basic + face validity, simplicity, positive area |
- * | Adjacency   | FaceGeometry + overlap checks between adjacent faces |
- *
- * The inspection exits early on the first failure, regardless of whether
- * an error list is provided.
- *
- * \param[in] mesh   Surface mesh to inspect
- * \param[in] level  Inspection level (hierarchical)
- * \param[out] errors Optional container collecting inspection errors
- *
- * \return True if all requested checks pass, false otherwise
- * \ingroup utils
- */
+   * \brief Inspect a polygonal mesh for geometric and topological validity.
+   *
+   * Inspection levels are hierarchical:
+   * - FaceGeometry includes all Basic checks
+   * - Adjacency includes all FaceGeometry and Basic checks
+   *
+   * The following checks are performed:
+   *
+   * | Level        | Checks |
+   * |-------------|--------|
+   * | Basic       | Non-empty mesh, non-zero vertex/edge/face counts |
+   * | FaceGeometry| Basic + face validity, simplicity, positive area |
+   * | Adjacency   | FaceGeometry + overlap checks between adjacent faces |
+   *
+   * Inspection exits early at the first failing level. If a level reports any
+   * error, the higher levels are not run. Within a level, all faces are checked
+   * and all of their errors are collected (the per-face checks do not stop at the
+   * first failure).
+   *
+   * \note The per-face FaceGeometry checks and the Adjacency overlap checks are
+   * read-only and are parallelized with OpenMP when it is available at build time;
+   * otherwise they run serially. The boolean result and the set of collected
+   * errors are identical either way, just the speed of inspection changes.
+   *
+   * \param[in] mesh   Surface mesh to inspect
+   * \param[in] level  Inspection level (hierarchical)
+   * \param[out] errors Optional container collecting inspection errors
+   *
+   * \return True if all requested checks pass, false otherwise
+   * \ingroup utils
+   */
   bool inspect_mesh(const pmp::SurfaceMesh& mesh,
 		    MeshInspection level,
 		    std::optional<std::reference_wrapper<MeshInspectionErrors>> errors = std::nullopt);
