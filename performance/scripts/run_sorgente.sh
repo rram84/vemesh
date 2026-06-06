@@ -64,28 +64,32 @@ echo "mesh,variant,command" > "$MANIFEST"
 # run_variant <name> <variant> <mode-flag> <opts>
 run_variant() {
   local name="$1" variant="$2" mode="$3" opts="$4"
-  local run="$OUT/_runs/$name/$variant"
-  rm -rf "$run"; mkdir -p "$run"
+  local run="$OUT/_runs/$name"          # one scratch dir per mesh, reused by all variants
+  mkdir -p "$run"
 
   local cmd=("$VEMESH_APP" "$mode" -i "$SORGENTE/$name.off" -o "$run" $opts)
   echo "  [$variant] ${cmd[*]}"
   "${cmd[@]}"
 
-  cp "$run/vtk/output_mesh.vtk" "$OUT/$name/$variant.vtk"
+  # stage the result under the variant's name (the "prefix") in the curated dir
+  cp "$run/output_mesh.vtk" "$OUT/$name/$variant.vtk"
   echo "$name,$variant,\"${cmd[*]}\"" >> "$MANIFEST"
 }
 
 for name in "${MESHES[@]}"; do
   echo "== $name =="
-  rm -rf "$OUT/$name"; mkdir -p "$OUT/$name"
+  rm -rf "$OUT/$name" "$OUT/_runs/$name"; mkdir -p "$OUT/$name"
 
   run_variant "$name" "agglomerate"        "-a"   "$AGG_OPTS"
   run_variant "$name" "relax"              "-r"   "$RELAX_OPTS"
   run_variant "$name" "agglomerate_relax"  "--ar" "$AR_OPTS"
 
   # baseline (the .off re-emitted as VTK) is identical across variants
-  cp "$OUT/_runs/$name/agglomerate/vtk/input_mesh.vtk" "$OUT/$name/baseline.vtk"
+  cp "$OUT/_runs/$name/input_mesh.vtk" "$OUT/$name/baseline.vtk"
 done
+
+# discard scratch; the curated <name>/ folders and manifest.csv are all that's needed
+rm -rf "$OUT/_runs"
 
 echo
 echo "Done. Per-mesh outputs under $OUT/<name>/ :"

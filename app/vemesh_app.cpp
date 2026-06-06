@@ -80,8 +80,8 @@ int main(int argc, char **argv)
   std::cout << "  threads     : " << nthreads
 	    << " (quality evaluations & mesh inspection)\n" << std::flush;
 
-  // output directory
-  const fs::path outpath = fs::path(cfg.outdir) / "vtk/";
+  // output directory (meshes written directly here, no vtk/ subfolder)
+  const fs::path outpath = fs::path(cfg.outdir);
   fs::create_directories(outpath);
   clean_vtk_outputs(outpath);
   
@@ -158,14 +158,14 @@ int main(int argc, char **argv)
       {
 	optimizer.evaluate_face_qualities(QE, vm::Face_Quality_Tag);
 	optimizer.evaluate_vertex_qualities(vm::Face_Quality_Tag, vm::Vertex_Quality_Tag);
-	vm::write_vtk(mesh, outpath.string() + "mesh-iter-" + std::to_string(iter)+".vtk");
+	vm::write_vtk(mesh, (outpath / ("mesh-iter-" + std::to_string(iter) + ".vtk")).string());
       }
   }
 
   // Save the final mesh
   optimizer.evaluate_face_qualities(QE, vm::Face_Quality_Tag);
   optimizer.evaluate_vertex_qualities(vm::Face_Quality_Tag, vm::Vertex_Quality_Tag);
-  vm::write_vtk(mesh, outpath.string() + "output_mesh.vtk");
+  vm::write_vtk(mesh, (outpath / "output_mesh.vtk").string());
 }
 
 
