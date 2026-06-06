@@ -57,10 +57,12 @@ if(BUILD_TESTS)
   add_subdirectory(src/quality/test)
   add_subdirectory(src/optimizer/test)
 
-  # shared tutorial-utilities library, reused by the tutorial examples
-  and the performance test generators
+  # shared tutorial-utilities library, reused by the tutorial examples and the performance test generators
   add_subdirectory(tutorial/common)
   add_subdirectory(tutorial)
+
+  # in-tree performance tooling
+  add_subdirectory(performance)
 endif()
 
 # Install
