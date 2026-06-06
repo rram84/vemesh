@@ -15,3 +15,10 @@ target_link_libraries(vemesh_app PRIVATE vemesh CLI11::CLI11)
 add_subdirectory(mesh_generators)
 
 target_compile_features(vemesh_app PRIVATE cxx_std_17)
+
+# stage the run script and the sample meshes next to the binary, so the script
+# resolves all of its paths relative to its own location in the build tree.
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/scripts/run_sorgente.sh
+     DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+file(COPY ${CMAKE_SOURCE_DIR}/sample_data
+     DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
