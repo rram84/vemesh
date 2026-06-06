@@ -21,9 +21,16 @@ add_subdirectory(mesh_generators)
 
 target_compile_features(vemesh_app PRIVATE cxx_std_17)
 
-# stage the run script and the sample meshes next to the binary, so the script
-# resolves all of its paths relative to its own location in the build tree.
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/scripts/run_sorgente.sh
-     DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-file(COPY ${CMAKE_SOURCE_DIR}/sample_data
-     DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+# Stage the run script next to the binary on every build (so edits to the source
+# script propagate on a plain `make`, not only on re-configure). copy_if_different
+# preserves the executable bit and is a no-op when the source is unchanged.
+add_custom_target(stage_run_scripts ALL
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+          ${CMAKE_CURRENT_SOURCE_DIR}/scripts/run_sorgente.sh
+          ${CMAKE_CURRENT_BINARY_DIR}/run_sorgente.sh
+  COMMENT "Staging performance run scripts")
+
+# Symlink the single build-tree copy of the sample meshes (at ${CMAKE_BINARY_DIR})
+# so the run script resolves $HERE/sample_data without duplicating the data.
+file(CREATE_LINK ${CMAKE_BINARY_DIR}/sample_data
+     ${CMAKE_CURRENT_BINARY_DIR}/sample_data SYMBOLIC COPY_ON_ERROR)

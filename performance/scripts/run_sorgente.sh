@@ -49,35 +49,61 @@ OUT="$HERE/output/sorgente"
 # Driver  (no edits needed below)
 # --------------------------------------------------------------------------- #
 
-[[ -x "$VEMESH_APP" ]] || { echo "error: vemesh_app not found at $VEMESH_APP (build with -DBUILD_TESTS=ON)"; exit 1; }
-[[ -d "$SORGENTE"   ]] || { echo "error: sorgente dir not found at $SORGENTE"; exit 1; }
+# colours (only when writing to a terminal)
+if [[ -t 1 ]]; then
+  BOLD=$'\e[1m'; DIM=$'\e[2m'; GREEN=$'\e[32m'; RED=$'\e[31m'; CYAN=$'\e[36m'; RESET=$'\e[0m'
+else
+  BOLD=''; DIM=''; GREEN=''; RED=''; CYAN=''; RESET=''
+fi
+rule() { printf '%s\n' "  ────────────────────────────────────────────────────────"; }
+die()  { printf '%s\n' "${RED}error:${RESET} $*" >&2; exit 1; }
+
+[[ -x "$VEMESH_APP" ]] || die "vemesh_app not found at $VEMESH_APP (build with -DBUILD_TESTS=ON)"
+[[ -d "$SORGENTE"   ]] || die "sorgente dir not found at $SORGENTE"
 
 if [[ ${#MESHES[@]} -eq 0 ]]; then
   for f in "$SORGENTE"/*.off; do MESHES+=("$(basename "$f" .off)"); done
 fi
-[[ ${#MESHES[@]} -gt 0 ]] || { echo "error: no .off meshes found in $SORGENTE"; exit 1; }
+[[ ${#MESHES[@]} -gt 0 ]] || die "no .off meshes found in $SORGENTE"
 
 mkdir -p "$OUT"
-MANIFEST="$OUT/manifest.csv"
-echo "mesh,variant,command" > "$MANIFEST"
+
+# banner
+echo
+echo "  ${BOLD}vemesh performance · sorgente${RESET}"
+rule
+printf '  %-10s %s\n' "meshes" "${#MESHES[@]}"
+printf '  %-10s %s\n' "output" "$OUT"
+echo
+printf '  %-12s %s\n' "agglomerate"  "$DIM$AGG_OPTS$RESET"
+printf '  %-12s %s\n' "relax"        "$DIM$RELAX_OPTS$RESET"
+printf '  %-12s %s\n' "agg+relax"    "$DIM$AR_OPTS$RESET"
+rule
+echo
 
 # run_variant <name> <variant> <mode-flag> <opts>
+# runs vemesh_app quietly; prints one status line, dumps output only on failure
 run_variant() {
   local name="$1" variant="$2" mode="$3" opts="$4"
   local run="$OUT/_runs/$name"          # one scratch dir per mesh, reused by all variants
   mkdir -p "$run"
 
-  local cmd=("$VEMESH_APP" "$mode" -i "$SORGENTE/$name.off" -o "$run" $opts)
-  echo "  [$variant] ${cmd[*]}"
-  "${cmd[@]}"
-
-  # stage the result under the variant's name (the "prefix") in the curated dir
-  cp "$run/output_mesh.vtk" "$OUT/$name/$variant.vtk"
-  echo "$name,$variant,\"${cmd[*]}\"" >> "$MANIFEST"
+  printf '    %-18s' "$variant"
+  local t0=$SECONDS out
+  if out=$("$VEMESH_APP" "$mode" -i "$SORGENTE/$name.off" -o "$run" $opts 2>&1); then
+    cp "$run/output_mesh.vtk" "$OUT/$name/$variant.vtk"
+    printf ' %s✓%s %s(%ds)%s\n' "$GREEN" "$RESET" "$DIM" "$((SECONDS - t0))" "$RESET"
+  else
+    printf ' %s✗%s\n' "$RED" "$RESET"
+    printf '%s\n' "$out" | sed 's/^/      | /'
+    die "$variant failed on $name"
+  fi
 }
 
+i=0
 for name in "${MESHES[@]}"; do
-  echo "== $name =="
+  i=$((i + 1))
+  printf '  %s[%d/%d] %s%s\n' "$BOLD" "$i" "${#MESHES[@]}" "$name" "$RESET"
   rm -rf "$OUT/$name" "$OUT/_runs/$name"; mkdir -p "$OUT/$name"
 
   run_variant "$name" "agglomerate"        "-a"   "$AGG_OPTS"
@@ -86,12 +112,14 @@ for name in "${MESHES[@]}"; do
 
   # baseline (the .off re-emitted as VTK) is identical across variants
   cp "$OUT/_runs/$name/input_mesh.vtk" "$OUT/$name/baseline.vtk"
+  echo
 done
 
-# discard scratch; the curated <name>/ folders and manifest.csv are all that's needed
+# discard scratch; the curated <name>/ folders are all that's needed
 rm -rf "$OUT/_runs"
 
-echo
-echo "Done. Per-mesh outputs under $OUT/<name>/ :"
-echo "  baseline.vtk  agglomerate.vtk  relax.vtk  agglomerate_relax.vtk"
-echo "Evaluate them in MATLAB with performance/matlab/evaluate_directory."
+rule
+printf '  %s✓ done%s  %d mesh(es) staged under %s%s/<name>/%s\n' \
+       "$GREEN$BOLD" "$RESET" "${#MESHES[@]}" "$CYAN" "$OUT" "$RESET"
+echo "    baseline.vtk  agglomerate.vtk  relax.vtk  agglomerate_relax.vtk"
+echo "  ${DIM}evaluate in MATLAB: performance/matlab/evaluate_directory${RESET}"

@@ -57,6 +57,10 @@ if(BUILD_TESTS)
   add_subdirectory(src/quality/test)
   add_subdirectory(src/optimizer/test)
 
+  # single copy of the sample meshes in the build tree; the tutorial and
+  # performance subdirs symlink to this rather than each keeping its own copy.
+  file(COPY ${CMAKE_SOURCE_DIR}/sample_data DESTINATION ${CMAKE_BINARY_DIR})
+
   # shared tutorial-utilities library, reused by the tutorial examples and the performance test generators
   add_subdirectory(tutorial/common)
   add_subdirectory(tutorial)

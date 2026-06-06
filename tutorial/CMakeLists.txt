@@ -2,11 +2,11 @@
 #
 # Tutorial examples accompanying vemesh.
 
-# Copy sample mesh files (now at the repo root) to the build directory so the
-# tutorial executables find them under their working dir (build/tutorial/).
-file(COPY
-     "${CMAKE_SOURCE_DIR}/sample_data"
-     DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
+# Symlink the single build-tree copy of the sample meshes (at ${CMAKE_BINARY_DIR})
+# so the tutorial executables find them under their working dir (build/tutorial/),
+# without duplicating the data.
+file(CREATE_LINK ${CMAKE_BINARY_DIR}/sample_data
+     ${CMAKE_CURRENT_BINARY_DIR}/sample_data SYMBOLIC COPY_ON_ERROR)
 
 # tutorial example executables
 set(TEST_TARGETS
