@@ -18,6 +18,9 @@ Both accept a `-S <seed>` option (and print the seed they used) so a mesh set ca
 be regenerated exactly. Generated meshes are written as VTK for subsequent
 improvement with the \ref tutorial_app "vemesh_app" command-line tool.
 
-These generators are built together with the unit tests and tutorials when
-`BUILD_TESTS=ON` (the default) — there is no separate build option. They are
+These generators — together with the \ref tutorial_app "vemesh_app" driver used to
+improve the generated meshes — are built alongside the unit tests and tutorials when
+`BUILD_TESTS=ON` (the default); there is no separate build option. Because
+`vemesh_app` is built here, this configuration requires
+[CLI11](https://github.com/CLIUtils/CLI11) for command-line parsing. These are
 development/evaluation tools and are not installed.

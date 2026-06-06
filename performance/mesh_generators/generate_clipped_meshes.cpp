@@ -61,27 +61,28 @@ int main(int argc, char** argv)
     return std::sqrt(X[0]*X[0]+X[1]*X[1])-radius;
   };
 
-  
   // echo the run configuration (seed is printed so a random run can be reproduced with -S)
   std::cout << "generate_clipped_meshes run configuration:\n"
 	    << "  circle radius          : " << radius << "\n"
-	    << "  background mesh        : " << "h = " << hval << ", ncount = " << ncount << "\n"
 	    << "  output directory   (-o): " << outdir           << "\n"
 	    << "  realizations       (-n): " << num_realizations << "\n"
 	    << "  RNG seed           (-S): " << seed             << "\n";
 
-  
+ 
   // initial grid size and node count
   const std::array<double,2> left_cnr = {-1.0,-1.0};
   double hval = 0.2;
   int ncount = 10;
-
+  
   // pre-seeded random number generator
   std::mt19937 generator(seed);
 
   // mesh refinement iterations
   for(int div=0; div<4; ++div)
     {
+      std::cout << "Subdivision      : " << div << "\n"
+		<< "background mesh  : " << "h = " << hval << ", ncount = " << ncount << "\n";
+	
       // structured background mesh
       auto sq_mesh = vm::tutorial::create_rectangle_mesh(left_cnr, hval, ncount, hval, ncount);
 

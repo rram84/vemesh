@@ -49,8 +49,9 @@ brew install doxygen
 sudo apt-get install doxygen graphviz
 ```
 
-- **[CLI11](https://github.com/CLIUtils/CLI11)** (optional, required by \ref tutorial_app "vemesh_app" for command-line parsing)
-```bash
+- **[CLI11](https://github.com/CLIUtils/CLI11)** (required when
+  `BUILD_TESTS=ON`, optional otherwise)
+  ```bash
 # macOS (Homebrew)
 brew install cli11
 # Ubuntu
@@ -98,8 +99,8 @@ cmake ../ -DCMAKE_MODULE_PATH=path/to/pmp
 ```sh
 cmake ../ -DBUILD_TESTS=OFF
 ```
-`BUILD_TESTS=ON` also builds the tutorial examples and the meshes used
-in the \ref performance tests.
+`BUILD_TESTS=ON` also builds the tutorial examples and the in-tree
+\ref performance tooling. Required CLI11.
 
 **Build documentation (default: OFF, requires Doxygen):**
 ```sh
