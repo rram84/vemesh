@@ -16,7 +16,7 @@ endif()
 
 # Build options
 option(BUILD_DOCS "Build documentation" OFF)
-option(BUILD_TESTS "Build unit tests" ON)  
+option(BUILD_TESTS "Build unit tests" ON)
 
 # Dependencies
 find_package(Eigen3 REQUIRED)
@@ -56,6 +56,10 @@ if(BUILD_TESTS)
   add_subdirectory(src/utils/test)
   add_subdirectory(src/quality/test)
   add_subdirectory(src/optimizer/test)
+
+  # shared tutorial-utilities library, reused by the tutorial examples
+  and the performance test generators
+  add_subdirectory(tutorial/common)
   add_subdirectory(tutorial)
 endif()
 

@@ -98,6 +98,8 @@ cmake ../ -DCMAKE_MODULE_PATH=path/to/pmp
 ```sh
 cmake ../ -DBUILD_TESTS=OFF
 ```
+`BUILD_TESTS=ON` also builds the tutorial examples and the meshes used
+in the \ref performance tests.
 
 **Build documentation (default: OFF, requires Doxygen):**
 ```sh
