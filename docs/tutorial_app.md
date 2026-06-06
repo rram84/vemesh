@@ -48,6 +48,7 @@ Choose exactly one optimization mode:
 - `-q <value>` : Minimum acceptable element quality
 - `-n <value>` : Number of iterations to perform
 - `-s <value>` : Number of vertex samples (for vertex relaxation)
+- `-S <value>` : RNG seed for reproducible vertex relaxation (optional; default: nondeterministic)
 - `-f <value>` : Quality improvement factor (for agglomeration)
 - `-m <value>` : Face quality metric
   - `stability` : Element stability ratio
@@ -57,15 +58,20 @@ Choose exactly one optimization mode:
   - `iter` : output at the end of each iteration
   - `detailed` : output after each update within iteration
 
+\note Vertex relaxation perturbs vertices using randomly sampled candidate
+positions, so `-r`, `--ar`, and `--ra` runs are nondeterministic by default.
+Pass `-S <seed>` to fix the RNG seed and reproduce a run exactly. The seed has no
+effect on `-a` (agglomeration is deterministic).
+
 
 ## Command-Line Usage
 
 | Mode | Description | Required Options | Optional Flag  |
 |------------|-----------------|---------------|-------------------|
 | `-a`       | Agglomerate elements only.                     |`-i`, `-o`, `-n`, `-q`, `-m`, `-f`            | `-v` | 
-| `-r`       | Relax vertices only.                                  |`-i`, `-o`, `-n`, `-q`, `-m`, `-s`            | `-v` | 
-| `--ar`    | Agglomerate then relax in each iteration.  |`-i`, `-o`, `-n`, `-q`, `-m`, `-f`, `-s` | `-v` | 
-| `--ra`    | Relax then agglomerate in each iteration.  |`-i`, `-o`, `-n`, `-q`, `-m`, `-f`, `-s` | `-v` | 
+| `-r`       | Relax vertices only.                                  |`-i`, `-o`, `-n`, `-q`, `-m`, `-s`            | `-v`, `-S` | 
+| `--ar`    | Agglomerate then relax in each iteration.  |`-i`, `-o`, `-n`, `-q`, `-m`, `-f`, `-s` | `-v`, `-S` | 
+| `--ra`    | Relax then agglomerate in each iteration.  |`-i`, `-o`, `-n`, `-q`, `-m`, `-f`, `-s` | `-v`, `-S` | 
 
 
 ## Output 
@@ -120,22 +126,22 @@ For example, `mesh-iter-4-r-3.vtk` is the mesh written during the relaxation (`r
 
 **Agglomerate elements:**
 ```
-./vemesh -a -i in_mesh.OFF -o out_dir -n 5 -f 1.2 -m stability -v detailed
+./vemesh_app -a -i in_mesh.OFF -o out_dir -n 5 -f 1.2 -m stability -v detailed
 ```
 
-**Relax vertices:**
+**Relax vertices (reproducible with a fixed seed):**
 ```
-./vemesh -r -i in_mesh.OFF -o out_dir -n 5 -s 5 -m shape -v iter
+./vemesh_app -r -i in_mesh.OFF -o out_dir -n 5 -s 5 -m shape -v iter -S 42
 ```
 
 **Agglomerate and relax:**
 ```
-./vemesh --ar -i in_mesh.OFF -o out_dir -n 5 -f 1.2 -s 5 -m stability -v iter
+./vemesh_app --ar -i in_mesh.OFF -o out_dir -n 5 -f 1.2 -s 5 -m stability -v iter
 ```
 
 **Relax and agglomerate:**
 ```
-./vemesh --ra -i in_mesh.OFF -o out_dir -n 5 -f 1.2 -s 5 -m shape -v none
+./vemesh_app --ra -i in_mesh.OFF -o out_dir -n 5 -f 1.2 -s 5 -m shape -v none
 ```
 
 

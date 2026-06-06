@@ -78,6 +78,11 @@ int main(int argc, char **argv)
   for(int iter=0; iter<cfg.num_iters; ++iter) {
 
     std::cout << "Mesh improvement iteration " << iter <<":\n" << std::flush;
+
+    // relaxation seed. nullopt when -S is not given -> nondeterministic
+    const std::optional<unsigned int> rseed =
+      cfg.seed ? std::optional<unsigned int>(*cfg.seed + static_cast<unsigned int>(iter))
+               : std::nullopt;
     switch(cfg.mode)
       {
       case CLIConfig::Mode::Agglomerate:
@@ -89,7 +94,7 @@ int main(int argc, char **argv)
       case CLIConfig::Mode::Relax:
 	{
 	  auto callback = make_mesh_callback(iter, outpath, cfg.output_mode, "r");
-	  optimizer.relax(QE, cfg.qepsilon, cfg.num_samples, callback);
+	  optimizer.relax(QE, cfg.qepsilon, cfg.num_samples, callback, rseed);
 	  break;
 	}
       case CLIConfig::Mode::AgglomerateRelax:
@@ -97,13 +102,13 @@ int main(int argc, char **argv)
 	  auto callback_a = make_mesh_callback(iter, outpath, cfg.output_mode, "a");
 	  optimizer.agglomerate(QE, cfg.qepsilon, cfg.qfactor, callback_a);
 	  auto callback_r = make_mesh_callback(iter, outpath, cfg.output_mode, "a-r");
-	  optimizer.relax(QE, cfg.qepsilon, cfg.num_samples, callback_r);
+	  optimizer.relax(QE, cfg.qepsilon, cfg.num_samples, callback_r, rseed);
 	  break;
 	}
       case CLIConfig::Mode::RelaxAgglomerate:
 	{
 	  auto callback_r = make_mesh_callback(iter, outpath, cfg.output_mode, "r");
-	  optimizer.relax(QE, cfg.qepsilon, cfg.num_samples, callback_r);
+	  optimizer.relax(QE, cfg.qepsilon, cfg.num_samples, callback_r, rseed);
 	  auto callback_a = make_mesh_callback(iter, outpath, cfg.output_mode, "r-a");
 	  optimizer.agglomerate(QE, cfg.qepsilon, cfg.qfactor, callback_a);
 	  break;

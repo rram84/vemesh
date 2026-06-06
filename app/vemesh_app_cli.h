@@ -36,6 +36,9 @@ struct CLIConfig
   double qfactor     = 0.;
   int    num_samples = -1;
 
+  // optional RNG seed for reproducible vertex relaxation (unset -> nondeterministic)
+  std::optional<unsigned int> seed = std::nullopt;
+
   // output mode
   enum class MeshOutputMode {
     None,           // don't save anything

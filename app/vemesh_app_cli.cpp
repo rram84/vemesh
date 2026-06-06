@@ -65,7 +65,11 @@ std::optional<CLIConfig> parse_cli(int argc, char** argv, int& exit_code)
   
   auto opt_s = app.add_option("-s", cfg.num_samples, "number of random samples to generate for vertex relaxation")
     ->check(CLI::PositiveNumber);
-  
+
+  unsigned int seed_val = 0;
+  auto opt_seed = app.add_option("-S,--seed", seed_val,
+				 "RNG seed for reproducible vertex relaxation (default: nondeterministic)");
+
   std::string output_mode_str = "none";
   app.add_option("-v", output_mode_str,
 		 "Mesh output: none | iter | detailed")->check(CLI::IsMember({"none","iter","detailed"}));
@@ -103,6 +107,10 @@ std::optional<CLIConfig> parse_cli(int argc, char** argv, int& exit_code)
   else if (*opt_r)  cfg.mode = CLIConfig::Mode::Relax;
   else if (*opt_ar) cfg.mode = CLIConfig::Mode::AgglomerateRelax;
   else              cfg.mode = CLIConfig::Mode::RelaxAgglomerate;
+
+  // Optional RNG seed (only set when -S/--seed was supplied)
+  if(opt_seed->count() > 0)
+    cfg.seed = seed_val;
 
   // Mesh output mode
   if(output_mode_str=="none")
