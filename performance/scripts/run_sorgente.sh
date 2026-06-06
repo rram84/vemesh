@@ -107,11 +107,12 @@ for name in "${MESHES[@]}"; do
   rm -rf "$OUT/$name" "$OUT/_runs/$name"; mkdir -p "$OUT/$name"
 
   run_variant "$name" "agglomerate"        "-a"   "$AGG_OPTS"
+  # input mesh (re-emitted as VTK); identical across variants, stage it now so it
+  # is present as soon as the first variant completes
+  cp "$OUT/_runs/$name/input_mesh.vtk" "$OUT/$name/baseline.vtk"
+
   run_variant "$name" "relax"              "-r"   "$RELAX_OPTS"
   run_variant "$name" "agglomerate_relax"  "--ar" "$AR_OPTS"
-
-  # baseline (the .off re-emitted as VTK) is identical across variants
-  cp "$OUT/_runs/$name/input_mesh.vtk" "$OUT/$name/baseline.vtk"
   echo
 done
 
