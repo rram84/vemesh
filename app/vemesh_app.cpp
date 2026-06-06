@@ -22,6 +22,10 @@
 #include <stdexcept>
 #include <string>
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 namespace fs = std::filesystem;
 
 // Generate a per-update callback that writes intermediate meshes in detailed mode
@@ -41,7 +45,41 @@ int main(int argc, char **argv)
   if(!maybe_cfg)
     return exit_code;
   const CLIConfig& cfg = *maybe_cfg;
-  
+
+  // threads used by the parallelized quality-evaluation and mesh-inspection loops
+#ifdef _OPENMP
+  const int nthreads = omp_get_max_threads();
+#else
+  const int nthreads = 1;
+#endif
+
+  // echo the run configuration
+  auto mode_name = [](CLIConfig::Mode m) {
+    switch(m) {
+      case CLIConfig::Mode::Agglomerate:      return "agglomerate (-a)";
+      case CLIConfig::Mode::Relax:            return "relax (-r)";
+      case CLIConfig::Mode::AgglomerateRelax: return "agglomerate+relax (--ar)";
+      case CLIConfig::Mode::RelaxAgglomerate: return "relax+agglomerate (--ra)";
+    }
+    return "?";
+  };
+  std::cout << "Run configuration:\n"
+	    << "  mode        : " << mode_name(cfg.mode) << "\n"
+	    << "  input       : " << cfg.meshfile  << "\n"
+	    << "  output dir  : " << cfg.outdir    << "\n"
+	    << "  metric      : " << cfg.metric    << "\n"
+	    << "  iterations  : " << cfg.num_iters << "\n"
+	    << "  min quality : " << cfg.qepsilon  << "\n";
+  if(cfg.mode != CLIConfig::Mode::Relax)
+    std::cout << "  qfactor     : " << cfg.qfactor << "\n";
+  if(cfg.mode != CLIConfig::Mode::Agglomerate) {
+    std::cout << "  samples     : " << cfg.num_samples << "\n";
+    std::cout << "  seed        : "
+	      << (cfg.seed ? std::to_string(*cfg.seed) : "nondeterministic") << "\n";
+  }
+  std::cout << "  threads     : " << nthreads
+	    << " (quality evaluations & mesh inspection)\n" << std::flush;
+
   // output directory
   const fs::path outpath = fs::path(cfg.outdir) / "vtk/";
   fs::create_directories(outpath);

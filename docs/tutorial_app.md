@@ -64,6 +64,21 @@ Pass `-S <seed>` to fix the RNG seed and reproduce a run exactly. The seed has n
 effect on `-a` (agglomeration is deterministic).
 
 
+## Parallelism
+
+`vemesh_app` performs its quality evaluations and mesh-inspection checks through
+the vemesh library, which parallelizes those read-only loops with **OpenMP** when
+available (see \ref ug_quality_parallel and the utilities user guide). The
+agglomeration and relaxation steps themselves remain sequential, so the result is
+unchanged by the thread count.
+
+Control this with the standard OpenMP environment variable:
+```
+OMP_NUM_THREADS=4 ./vemesh_app -a -i in_mesh.OFF -o out_dir -n 5 -f 1.2 -m stability
+```
+If vemesh (and `vemesh_app`) were built without OpenMP, the count is always `1`.
+
+
 ## Command-Line Usage
 
 | Mode | Description | Required Options | Optional Flag  |

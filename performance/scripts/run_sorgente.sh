@@ -69,7 +69,7 @@ run_variant() {
 
   local cmd=("$VEMESH_APP" "$mode" -i "$SORGENTE/$name.off" -o "$run" $opts)
   echo "  [$variant] ${cmd[*]}"
-  "${cmd[@]}" > "$run/log.txt" 2>&1
+  "${cmd[@]}"
 
   cp "$run/vtk/output_mesh.vtk" "$OUT/$name/$variant.vtk"
   echo "$name,$variant,\"${cmd[*]}\"" >> "$MANIFEST"

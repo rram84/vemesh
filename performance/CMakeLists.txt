@@ -11,6 +11,11 @@ add_executable(vemesh_app
 
 target_link_libraries(vemesh_app PRIVATE vemesh CLI11::CLI11)
 
+# Optional OpenMP: lets vemesh_app report the thread count in its quality/inspection loops
+if(OpenMP_FOUND)
+  target_link_libraries(vemesh_app PRIVATE OpenMP::OpenMP_CXX)
+endif()
+
 # mesh generators that produce the test datasets
 add_subdirectory(mesh_generators)
 
