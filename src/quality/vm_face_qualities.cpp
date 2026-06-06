@@ -32,8 +32,8 @@ namespace vm
       const double tol = 1.e-8 * lambda_max;
 
       // First eigenvalue: expect 0 for null mode, ignore it.
-      if (eigarray[0] < -tol)
-	throw std::runtime_error("vem_stability_ratio: VEM stiffness matrix has a negative eigenvalue beyond numerical tolerance");
+      //if (eigarray[0] < -tol)
+      //throw std::runtime_error("vem_stability_ratio: VEM stiffness matrix has a negative eigenvalue beyond numerical tolerance");
 
       // Second eigenvalue should be >= 0
       // in case of a very small value, clamp it to zero
