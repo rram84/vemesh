@@ -127,4 +127,4 @@ rule
 printf '  %s✓ done%s  %d mesh(es) staged under %s%s/<name>/%s\n' \
        "$GREEN$BOLD" "$RESET" "${#MESHES[@]}" "$CYAN" "$OUT" "$RESET"
 echo "    baseline.vtk  agglomerate.vtk  relax.vtk  agglomerate_relax.vtk"
-echo "  ${DIM}evaluate in MATLAB: performance/matlab/evaluate_directory${RESET}"
+echo "  ${DIM}compute VEM conditioning: ./analyze_sorgente.sh${RESET}"

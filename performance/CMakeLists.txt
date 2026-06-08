@@ -28,6 +28,9 @@ add_custom_target(stage_run_scripts ALL
   COMMAND ${CMAKE_COMMAND} -E copy_if_different
           ${CMAKE_CURRENT_SOURCE_DIR}/scripts/run_sorgente.sh
           ${CMAKE_CURRENT_BINARY_DIR}/run_sorgente.sh
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+          ${CMAKE_CURRENT_SOURCE_DIR}/scripts/analyze_sorgente.sh
+          ${CMAKE_CURRENT_BINARY_DIR}/analyze_sorgente.sh
   COMMENT "Staging performance run scripts")
 
 # Symlink the single build-tree copy of the sample meshes (at ${CMAKE_BINARY_DIR})
