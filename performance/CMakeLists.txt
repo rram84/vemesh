@@ -37,6 +37,12 @@ add_custom_target(stage_run_scripts ALL
   COMMAND ${CMAKE_COMMAND} -E copy_if_different
           ${CMAKE_CURRENT_SOURCE_DIR}/scripts/analyze_shapes.sh
           ${CMAKE_CURRENT_BINARY_DIR}/analyze_shapes.sh
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+          ${CMAKE_CURRENT_SOURCE_DIR}/scripts/run_circle.sh
+          ${CMAKE_CURRENT_BINARY_DIR}/run_circle.sh
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+          ${CMAKE_CURRENT_SOURCE_DIR}/scripts/analyze_circle.sh
+          ${CMAKE_CURRENT_BINARY_DIR}/analyze_circle.sh
   COMMENT "Staging performance run scripts")
 
 # Symlink the single build-tree copy of the sample meshes (at ${CMAKE_BINARY_DIR})
