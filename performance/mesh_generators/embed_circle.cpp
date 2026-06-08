@@ -2,8 +2,9 @@
 
 /** \file embed_circle.cpp
  * \brief Performance-test generator: embeds a circular interface into a structured
- *        quad mesh across several refinement levels and randomly-perturbed
- *        realizations, writing each result as VTK for improvement with vemesh_app.
+ *        quad mesh with specified refinement level.
+ *        Applies random mesh perturbations near the interface to realize various intersection scenarios.
+ *        Writes each result as VTK for improvement with vemesh_app.
  * \ingroup performance_examples
  * \author Ramsharan Rangarajan
  */
@@ -13,17 +14,18 @@
 // Each embedded mesh is saved (VTK) so it can subsequently be improved with vemesh_app.
 //
 // Pipeline per realization:
-//   1. loop over background mesh refinement levels
-//   2. generate a background structured mesh
-//   3. loop over mesh realizations
-//   4. randomly perturb mesh nodes in the vicinity of the boundary
-//   5. push perturbed nodes off the zero level set (adjust_mesh_nodes)
-//   6. embed the interface in the mesh
-//   7. save the embedded mesh as <outdir>/embed-<div>-<iter>.vtk
+//   1. generate a background structured mesh with specified refinement
+//   2. loop over mesh realizations
+//   3. randomly perturb mesh nodes in the vicinity of the boundary
+//   4. push perturbed nodes off the zero level set (adjust_mesh_nodes)
+//   5. embed the interface in the mesh
+//   6. save the embedded mesh as <outdir>/embed-<iter>.vtk
 //
 // Options
 //   -o  output directory (created if needed)
 //   -n  number of realizations to generate (default 10)
+//   -d  background-mesh refinement level, >= 0 (default 0): level 0 is h=0.2 /
+//       ncount=10; each level halves h and doubles ncount
 //   -S  RNG seed for a reproducible mesh set (default: random, printed at startup)
 
 #include <vm_tutorial_rectangle_mesh.h>  // vm::tutorial::create_rectangle_mesh
@@ -47,15 +49,16 @@ int main(int argc, char** argv)
 {
   // command-line options
   CLI::App app{"Embed a circular interface in a structured square mesh"};
-  app.footer("Sample usage:\n"
-             "  ./embed_circle -o outdir -n 10");
+  app.footer("Sample usage:\n ./embed_circle -o outdir -d 2 -n 10");
 
   std::string outdir;
   int num_realizations = 10;
+  int subdivision = 0;
   unsigned int seed = std::random_device{}();  // default: nondeterministic
 
   app.add_option("-o", outdir, "output directory")->required();
   app.add_option("-n", num_realizations, "number of realizations to generate")->check(CLI::PositiveNumber);
+  app.add_option("-d", subdivision, "background-mesh refinement level (>= 0)")->check(CLI::NonNegativeNumber);
   app.add_option("-S", seed, "RNG seed for a reproducible mesh set (default: random)");
 
   CLI11_PARSE(app, argc, argv);
@@ -74,89 +77,82 @@ int main(int argc, char** argv)
 	    << "  circle radius          : " << radius << "\n"
 	    << "  output directory   (-o): " << outdir           << "\n"
 	    << "  realizations       (-n): " << num_realizations << "\n"
+	    << "  refinement level   (-d): " << subdivision      << "\n"
 	    << "  RNG seed           (-S): " << seed             << "\n";
 
  
-  // initial grid size and node count
+  // background grid for the requested refinement level
   const std::array<double,2> left_cnr = {-1.0,-1.0};
-  double hval = 0.2;
-  int ncount = 10;
-  
+  const double hval   = 0.2 / std::pow(2, subdivision);
+  const int    ncount = 10  * std::pow(2, subdivision);
+
   // pre-seeded random number generator
   std::mt19937 generator(seed);
 
-  // mesh refinement iterations
-  for(int div=0; div<4; ++div)
+  std::cout << "background mesh  : level " << subdivision
+	    << ", h = " << hval << ", ncount = " << ncount << "\n";
+
+  // structured background mesh
+  auto sq_mesh = vm::tutorial::create_rectangle_mesh(left_cnr, hval, ncount, hval, ncount);
+
+  // nodes near the interface
+  std::vector<pmp::Vertex> proximal_vertices{};
+  for(auto v : sq_mesh.vertices())
+    if(!sq_mesh.is_boundary(v))
+      {
+	const auto& X = sq_mesh.position(v);
+	const double Y[] = {X[0], X[1]};
+	if(std::abs(sdfunc(Y)) < 1.25 * hval)
+	  proximal_vertices.push_back(v);
+      }
+
+  // perturbation parameters
+  const double phi_tol  = 1.e-5;
+  const double pert_tol = 10. * phi_tol;
+
+  std::uniform_real_distribution<double> distribution(-0.15 * hval, 0.15 * hval);
+
+  // generate realizations
+  for(int iter = 0; iter < num_realizations; ++iter)
     {
-      std::cout << "Subdivision      : " << div << "\n"
-		<< "background mesh  : " << "h = " << hval << ", ncount = " << ncount << "\n";
-	
-      // structured background mesh
-      auto sq_mesh = vm::tutorial::create_rectangle_mesh(left_cnr, hval, ncount, hval, ncount);
+      std::cout << "Realization: " << iter << std::endl;
 
-      // nodes near the interface 
-      std::vector<pmp::Vertex> proximal_vertices{};
-      for(auto v : sq_mesh.vertices())
-	if(!sq_mesh.is_boundary(v))
-	  {
-	    const auto& X = sq_mesh.position(v);
-	    const double Y[] = {X[0], X[1]};
-	    if(std::abs(sdfunc(Y)) < 1.25 * hval)
-	      proximal_vertices.push_back(v);
-	  }
-      
-      // perturbation parameters
-      const double phi_tol  = 1.e-5;
-      const double pert_tol = 10. * phi_tol;
-      
-      std::uniform_real_distribution<double> distribution(-0.15 * hval, 0.15 * hval);
-      
-      // generate realizations
-      for(int iter = 0; iter < num_realizations; ++iter)
+      // perturb mesh nodes near the interface
+      pmp::SurfaceMesh pert_mesh = sq_mesh;
+      for(const auto& v : proximal_vertices)
 	{
-	  std::cout << "Realization: " << iter << std::endl;
+	  auto& X = pert_mesh.position(v);
+	  X[0] += distribution(generator);
+	  X[1] += distribution(generator);
+	}
 
-	  // perturb mesh nodes near the interface
-	  pmp::SurfaceMesh pert_mesh = sq_mesh;
-	  for(const auto& v : proximal_vertices)
-	    {
-	      auto& X = pert_mesh.position(v);
-	      X[0] += distribution(generator);
-	      X[1] += distribution(generator);
-	    }
+      pmp::SurfaceMesh circ_mesh;
+      try
+	{
+	  // push perturbed nodes off the zero level set
+	  vm::tutorial::adjust_mesh_nodes(pert_mesh, phi_tol, pert_tol, sdfunc);
 
-	  pmp::SurfaceMesh circ_mesh;
-	  try
+	  // reject perturbations that produced an invalid background mesh
+	  if(!vm::inspect_mesh(pert_mesh, vm::MeshInspection::Adjacency))
 	    {
-	      // push perturbed nodes off the zero level set
-	      vm::tutorial::adjust_mesh_nodes(pert_mesh, phi_tol, pert_tol, sdfunc);
-	  
-	      // reject perturbations that produced an invalid background mesh
-	      if(!vm::inspect_mesh(pert_mesh, vm::MeshInspection::Adjacency))
-		{
-		  std::cout << "  generated an invalid mesh, redoing perturbation" << std::endl;
-		  --iter;
-		  continue;
-		}
-	  
-	      // emebed the circle in the perturbed mesh
-	      circ_mesh = vm::tutorial::embed_interface(pert_mesh, phi_tol, sdfunc);
-	    }
-	  catch(const std::exception& e)
-	    {
-	      std::cout << "  realization failed (" << e.what() << "), redoing" << std::endl;
+	      std::cout << "  generated an invalid mesh, redoing perturbation" << std::endl;
 	      --iter;
 	      continue;
 	    }
 
-	  // save the embedded mesh
-	  vm::write_vtk(circ_mesh,
-			(fs::path(outdir) / ("embed-" + std::to_string(div) + "-" + std::to_string(iter) + ".vtk")).string());
+	  // embed the circle in the perturbed mesh
+	  circ_mesh = vm::tutorial::embed_interface(pert_mesh, phi_tol, sdfunc);
+	}
+      catch(const std::exception& e)
+	{
+	  std::cout << "  realization failed (" << e.what() << "), redoing" << std::endl;
+	  --iter;
+	  continue;
 	}
 
-      // next subdivision
-      hval /= 2.0;
-      ncount *= 2;
+      // save the embedded mesh
+      vm::write_vtk(circ_mesh,
+		    (fs::path(outdir) / ("embed-" + std::to_string(iter) + ".vtk")).string());
     }
 
   return 0;
