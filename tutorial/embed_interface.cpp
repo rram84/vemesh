@@ -10,11 +10,9 @@
 #include <vm_io.h>
 #include <vm_tutorial_rectangle_mesh.h>
 #include <vm_tutorial_mesh_slicer.h>
+#include <vm_tutorial_polygonSDF.h>
 #include <filesystem>
 #include <fstream>
-
-// get a polygonal representation of the interface
-void get_interface(const std::string, vm::boost_polygon_t&, vm::boost_linestring_t&);
 
 // identify candidate faces for agglomeration
 std::set<pmp::Face> identify_candidate_faces(const pmp::SurfaceMesh&,
@@ -29,27 +27,20 @@ std::set<pmp::Vertex> identify_candidate_vertices(const pmp::SurfaceMesh&,
 int main()
 {
   // --- define the interface using sampling provided in file ---
-  const std::string filename_interface_samples = "sample_data/vertices/85909.dat";
+  const std::string filename_interface_vertices = "sample_data/shapes/85909.dat";
 
-  vm::boost_linestring_t interface_linestring;  // linestring representation of the interface
-  vm::boost_polygon_t interface_polygon;        // polygon enclosed by the interface
-  get_interface(filename_interface_samples, interface_polygon, interface_linestring);
+  // signed distance function calculator to the interface
+  const vm::tutorial::PolygonSDF interface_sdf(filename_interface_vertices);
 
-  // level set function for the interface
-  vm::tutorial::LevelSetFn ls_interface =
-    [&interface_linestring, &interface_polygon](const double* X) {
-    bool is_inside = vm::bg::within(vm::boost_point_t(X[0],X[1]), interface_polygon);
-    double dist = vm::bg::distance(vm::boost_point_t(X[0],X[1]), interface_linestring);
-    return (is_inside==true) ? -dist : dist;
-  };
-
+  // signed-distance level set to the polygon
+  vm::tutorial::LevelSetFn sdfunc = [&interface_sdf](const double* X) { return interface_sdf(X); };
   
   // --- generate a structured quad mesh (not conforming to the interface) ---
-  const std::array<double,2> left_cnr{0.,0.}; // bottom left corner
-  const int nx = 15; // #nodes along x
-  const int ny = 15; // #nodes along y
-  const double hx = 1./static_cast<double>(nx-1); // grid size along x
-  const double hy = 1./static_cast<double>(ny-1); // grid size along y
+  const std::array<double,2> left_cnr{-1.5,-1.5}; // bottom left corner
+  const int nx = 25; // #nodes along x
+  const int ny = 25; // #nodes along y
+  const double hx = 3.0/static_cast<double>(nx-1); // grid size along x
+  const double hy = 3.0/static_cast<double>(ny-1); // grid size along y
   auto rect_mesh = vm::tutorial::create_rectangle_mesh(left_cnr, hx, nx, hy, ny);
 
   // --- output directory ---
@@ -69,10 +60,10 @@ int main()
   // perturb mesh nodes away from the zero level set
   const double phi_tol = 1.e-5; 
   const double pert_dist = 10.*phi_tol;
-  vm::tutorial::adjust_mesh_nodes(rect_mesh, phi_tol, pert_dist, ls_interface);
+  vm::tutorial::adjust_mesh_nodes(rect_mesh, phi_tol, pert_dist, sdfunc);
 
   // embed the interface in the perturbed mesh
-  pmp::SurfaceMesh embedded_mesh = vm::tutorial::embed_interface(rect_mesh, phi_tol, ls_interface);
+  pmp::SurfaceMesh embedded_mesh = vm::tutorial::embed_interface(rect_mesh, phi_tol, sdfunc);
 
   // --- algorithmic parameters for agglomeration ---
   
@@ -188,29 +179,4 @@ std::set<pmp::Vertex> identify_candidate_vertices(const pmp::SurfaceMesh &mesh,
       }
   
   return relax_vertices;
-}
-
-
-// get a polygonal representation of the interface
-void get_interface(const std::string filename,
-		   vm::boost_polygon_t &polygon,
-		   vm::boost_linestring_t &linestring)
-{
-  // read the polygon vertices
-  std::ifstream file(filename);
-  if(!file.is_open())
-    throw std::runtime_error("Could not open file to read interface nodes "+filename);
-
-  // create polygon
-  polygon.clear();
-  double x, y;
-  while(file >> x >> y)
-    vm::bg::append(polygon.outer(), vm::boost_point_t(x, y));
-  file.close();
-  vm::bg::correct(polygon);
-  
-  // line string representation of the interface
-  linestring.clear();
-  for(auto& it:polygon.outer())
-    vm::bg::append(linestring, it);
 }

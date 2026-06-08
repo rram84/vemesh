@@ -34,52 +34,18 @@ embed an interface in a non-conforming mesh using a level set function.
 
 ### Embedding an interface in a non-conforming mesh
 **The interface:**  
-Given an ordered sequence of sample points, the interface is defined as a line string joining them in the same order.  
+The interface is given by an ordered sequence of sample points read from a file, one `x y` pair per line. These points are the vertices of a simple polygon whose boundary is the interface.  
 
+**The level set:**  
+The location of the interface is specified using a level set function of type `vm::tutorial::LevelSetFn`, see \ref utilities. Here it is provided by `vm::tutorial::PolygonSDF`, the signed distance to the interface polygon:  
 ```cpp
-void get_interface(const std::string filename,
-                   vm::boost_polygon_t &polygon,
-		           vm::boost_linestring_t &linestring)
-{
-  // read the polygon vertices
-  std::ifstream file(filename);
-  if(!file.is_open())
-    throw std::runtime_error("Could not open file to read interface nodes "+filename);
+  // signed distance to the interface polygon (read from the sample file)
+  const vm::tutorial::PolygonSDF interface_sdf(filename_interface_vertices);
 
-  // create polygon
-  polygon.clear();
-  double x, y;
-  while(file >> x >> y)
-    vm::bg::append(polygon.outer(), vm::boost_point_t(x, y));
-  file.close();
-  vm::bg::correct(polygon);
-  
-  // line string representation of the interface
-  linestring.clear();
-  for(auto& it:polygon.outer())
-    vm::bg::append(linestring, it);
-}
-
+  vm::tutorial::LevelSetFn sdfunc =
+    [&interface_sdf](const double* X) { return interface_sdf(X); };
 ```  
-
-Here, the sample points provided define the line string representation, as well as the vertices of a polygon.  
-As we will see next, the polygon is used to determine the sign of the level set function, while the line string is used to compute its magnitude.  
-
-
-
-The location of the interface is specified using a level set function, of type `vm::tutorial::LevelSetFn`, see \ref utilities. In this case, the level set function is defined by the lamba:  
-```cpp
-  vm::tutorial::LevelSetFn ls_interface =
-    [&interface_linestring, &interface_polygon](const double* X) {
-    bool is_inside = vm::bg::within(vm::boost_point_t(X[0],X[1]), interface_polygon);
-    double dist = vm::bg::distance(vm::boost_point_t(X[0],X[1]), interface_linestring);
-    return (is_inside==true) ? -dist : dist;
-  };
-```  
-The magnitude of the level set function is taken as the Euclidean distance to the line string representation of the interface.
- Adopting the convention that the negative sub-level set coincides with the polygon enclosed by the interface, the sign of the level set function is determined by checking if the point of evaluation lies within the polygon.   
-
-The level set function defined this way vanishes at the interface, is negative at points belonging to the polygon enclosed by the interface, and is positive elsewhere.
+`vm::tutorial::PolygonSDF` evaluates the signed distance to the polygon boundary: its magnitude is the Euclidean distance to the nearest boundary segment, and its sign is determined by whether the evaluation point lies inside the polygon. Adopting the convention that the negative sub-level set coincides with the polygon enclosed by the interface, the level set vanishes on the interface, is negative at points inside the polygon, and is positive elsewhere. The boundary segments are stored internally in an R-tree, so each evaluation stays fast even for finely sampled interfaces; see \ref tutorial_utils.
 
 **Background mesh:**   
 A structured rectangle mesh over a square domain  is generated using the utility `vm::tutorial::create_rectangle_mesh`.  
@@ -99,10 +65,10 @@ The routine is provided for convenience. The rectangle mesh used can be replaced
   // perturb mesh nodes away from the zero level set
   const double phi_tol = 1.e-5; 
   const double pert_dist = 10.*phi_tol;
-  vm::tutorial::adjust_mesh_nodes(rect_mesh, phi_tol, pert_dist, ls_interface);
+  vm::tutorial::adjust_mesh_nodes(rect_mesh, phi_tol, pert_dist, sdfunc);
 
   // embed the interface in the perturbed mesh
-  pmp::SurfaceMesh embedded_mesh = vm::tutorial::clip_mesh(rect_mesh, phi_tol, ls_interface);
+  pmp::SurfaceMesh embedded_mesh = vm::tutorial::embed_interface(rect_mesh, phi_tol, sdfunc);
 ```  
 
 Embedding an interface in the mesh closely follows the steps discussed in \ref tutorial_embed_boundary. Hence, we first ensure that nodes of the background mesh `rect_mesh` are away from the zero level set by a specified tolerance `phi_tol` by possibly perturbing nodes. The routine `vm::tutorial::adjust_mesh_nodes` achieves this.  

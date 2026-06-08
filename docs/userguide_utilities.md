@@ -84,7 +84,7 @@ this setting, the library provides two routines:
 
 Notes:
 - Both routines use a `vm::tutorial::LevelSetFn` to specify the
-  boundary or interface as a zero level set.
+  boundary or interface as a zero level set (see \ref ug_level_sets).
 - Both linearly interpolate level-set values to locate edge-boundary
   and edge-interface intersections approximately.
 - Both assume vertices lie away from the zero level set by a
@@ -93,3 +93,20 @@ Notes:
   enforce this margin.
 - Neither routine is optimized for performance.
 - Both expect a triangle or quad input mesh.
+
+### Level sets {#ug_level_sets}
+
+The mesh slicing routines take the boundary or interface as the zero level set of a
+`vm::tutorial::LevelSetFn` — a callable `double(const double* x)` returning a
+signed value that is negative on one side of the interface and positive on the
+other. Any function matching this signature can be used (for example, an
+analytic signed distance such as `std::sqrt(x*x + y*y) - r` for a circle).
+
+For an interface given as a **polygon**, the library provides a
+ready-made implementation through th class `vm::tutorial::PolygonSDF`.
+The class takes the polygon's vertices at construction. Its operators
+return the signed distance to its boundary (negative inside, positive
+outside). To accelerate distance queries, it stores boundary segments
+in an R-tree. This reduces the query cost to `O(log n)` in the number
+of polygon vertices. The implementation is fast enough to evaluate at
+every mesh vertex even for finely sampled interfaces.

@@ -1,5 +1,10 @@
 // Sriramajayam
 
+/** \file vm_tutorial_mesh_slicer.h
+ * \brief Level-set mesh slicing and interface-embedding utilities for the tutorials
+ * \author Ramsharan Rangarajan
+ */
+
 #pragma once
 
 #include <pmp/surface_mesh.h>

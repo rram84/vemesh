@@ -1,5 +1,10 @@
 // Sriramajayam
 
+/** \file vm_tutorial_rectangle_mesh.h
+ * \brief Structured rectangle/quad mesh generation utility for the tutorials
+ * \author Ramsharan Rangarajan
+ */
+
 #pragma once
 
 #include <pmp/surface_mesh.h>

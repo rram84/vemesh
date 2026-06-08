@@ -6,7 +6,7 @@
 # so the tutorial executables find them under their working dir (build/tutorial/),
 # without duplicating the data.
 file(CREATE_LINK ${CMAKE_BINARY_DIR}/sample_data
-     ${CMAKE_CURRENT_BINARY_DIR}/sample_data SYMBOLIC COPY_ON_ERROR)
+     ${CMAKE_CURRENT_BINARY_DIR}/sample_data SYMBOLIC)
 
 # tutorial example executables
 set(TEST_TARGETS

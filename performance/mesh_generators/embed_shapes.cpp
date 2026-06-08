@@ -24,10 +24,11 @@
 //   -g  input file of polygon vertices defining the interface (x y per line)
 //   -i  input background triangle mesh (.off)
 //   -o  output directory (created if needed)
-//   -n  number of realizations to generate (default 1000)
+//   -n  number of realizations to generate (default 10)
 //   -S  RNG seed for a reproducible mesh set (default: random, printed at startup)
 
 #include <vm_tutorial_mesh_slicer.h>   // vm::tutorial::{LevelSetFn,adjust_mesh_nodes,embed_interface}
+#include <vm_tutorial_polygonSDF.h>    // vm::tutorial::PolygonSDF
 #include <vm_io.h>                      // vm::read_off, vm::write_vtk
 #include <vm_mesh_inspection.h>         // vm::inspect_mesh, vm::MeshInspection
 #include <vm_utils.h>                   // vm::bg, vm::boost_point_t/polygon_t/linestring_t
@@ -44,16 +45,6 @@
 
 namespace fs = std::filesystem;
 
-// get a polygonal representation of the interface
-void get_interface(const std::string& filename,
-                   vm::boost_polygon_t& polygon,
-                   vm::boost_linestring_t& linestring);
-
-// signed distance function to a polygon
-double polygon_signed_distance(const double* X,
-                               const vm::boost_polygon_t& poly,
-                               const vm::boost_linestring_t& ls);
-
 // average edge length of a mesh
 double mesh_size(const pmp::SurfaceMesh& mesh);
 
@@ -63,10 +54,10 @@ int main(int argc, char** argv)
   // command-line options
   CLI::App app{"Embed a polygonal geometry within a triangle mesh"};
   app.footer("Sample usage:\n"
-             "  ./embed_shapes -g polyvertices.dat -i bbbb-3.off -o outdir -n 1000");
+             "  ./embed_shapes -g polyvertices.dat -i bbbb-3.off -o outdir -n 10");
 
   std::string geom_file, in_meshfile, outdir;
-  int num_realizations = 1000;
+  int num_realizations = 10;
   unsigned int seed = std::random_device{}();  // default: nondeterministic
 
   app.add_option("-g", geom_file, "input polygon vertices (interface)")->required()->check(CLI::ExistingFile);
@@ -80,16 +71,11 @@ int main(int argc, char** argv)
   // output directory
   fs::create_directories(outdir);
 
-  // polygonal representation of the interface
-  vm::boost_linestring_t interface_linestring;  // linestring representation of the interface
-  vm::boost_polygon_t    interface_polygon;     // polygon enclosed by the interface
-  get_interface(geom_file, interface_polygon, interface_linestring);
+  // SDF to interface
+  vm::tutorial::PolygonSDF interface_sdf(geom_file);
 
   // signed-distance level set to the polygon
-  vm::tutorial::LevelSetFn sdfunc =
-    [&interface_polygon, &interface_linestring](const double* X) {
-      return polygon_signed_distance(X, interface_polygon, interface_linestring);
-    };
+  vm::tutorial::LevelSetFn sdfunc = [&interface_sdf](const double* X) { return interface_sdf(X); };
 
   // background triangle mesh
   pmp::SurfaceMesh mesh = vm::read_off(in_meshfile);
@@ -166,45 +152,6 @@ int main(int argc, char** argv)
     }
 
   return 0;
-}
-
-
-// get a polygonal representation of the interface
-void get_interface(const std::string& filename,
-                   vm::boost_polygon_t& polygon,
-                   vm::boost_linestring_t& linestring)
-{
-  std::ifstream file(filename);
-  if(!file.is_open())
-    throw std::runtime_error("Could not open file to read interface nodes " + filename);
-
-  // create polygon
-  polygon.clear();
-  double x, y;
-  while(file >> x >> y)
-    vm::bg::append(polygon.outer(), vm::boost_point_t(x, y));
-  file.close();
-  vm::bg::correct(polygon);
-
-  if(polygon.outer().size() < 3)
-    throw std::runtime_error("Interface polygon read from " + filename +
-                             " has fewer than 3 vertices");
-
-  // line-string representation of the interface
-  linestring.clear();
-  for(const auto& it : polygon.outer())
-    vm::bg::append(linestring, it);
-}
-
-
-// signed distance function to a polygon
-double polygon_signed_distance(const double* X,
-                               const vm::boost_polygon_t& poly,
-                               const vm::boost_linestring_t& ls)
-{
-  const vm::boost_point_t P(X[0], X[1]);
-  const double dist = vm::bg::distance(P, ls);
-  return vm::bg::within(P, poly) ? -dist : dist;
 }
 
 

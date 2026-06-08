@@ -23,7 +23,7 @@
 //
 // Options
 //   -o  output directory (created if needed)
-//   -n  number of realizations to generate (default 1000)
+//   -n  number of realizations to generate (default 10)
 //   -S  RNG seed for a reproducible mesh set (default: random, printed at startup)
 
 #include <vm_tutorial_rectangle_mesh.h>  // vm::tutorial::create_rectangle_mesh
@@ -48,10 +48,10 @@ int main(int argc, char** argv)
   // command-line options
   CLI::App app{"Embed a circular interface in a structured square mesh"};
   app.footer("Sample usage:\n"
-             "  ./embed_circle -o outdir -n 1000");
+             "  ./embed_circle -o outdir -n 10");
 
   std::string outdir;
-  int num_realizations = 1000;
+  int num_realizations = 10;
   unsigned int seed = std::random_device{}();  // default: nondeterministic
 
   app.add_option("-o", outdir, "output directory")->required();

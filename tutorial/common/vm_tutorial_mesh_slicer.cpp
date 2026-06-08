@@ -1,5 +1,10 @@
 // Sriramajayam
 
+/** \file vm_tutorial_mesh_slicer.cpp
+ * \brief Implementation of the level-set mesh slicing / interface-embedding utilities
+ * \author Ramsharan Rangarajan
+ */
+
 #include <vm_tutorial_mesh_slicer.h>
 #include <random>
 #include <iostream>

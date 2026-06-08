@@ -1,5 +1,10 @@
 // Sriramajayam
 
+/** \file vm_tutorial_rectangle_mesh.cpp
+ * \brief Implementation of the rectangle/quad mesh generation utility
+ * \author Ramsharan Rangarajan
+ */
+
 #include <vm_tutorial_rectangle_mesh.h>
 #include <cassert>
 
