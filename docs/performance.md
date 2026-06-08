@@ -9,10 +9,14 @@ documented here.
 The `performance/` folder contains small driver programs that produce large,
 reproducible sets of test meshes for evaluating mesh improvement:
 
-- `generate_embedded_meshes` — embeds a polygonal interface into a background
-  triangle mesh over many randomly-perturbed realizations.
-- `generate_clipped_meshes` — clips a circular boundary out of a structured quad
-  mesh across several refinement levels and realizations.
+- `embed_shapes` — embeds polygonal shapes as interior interfaces into a
+  background triangle mesh over many randomly-perturbed realizations.
+- `embed_circle` — embeds a circular interface into a structured quad mesh across
+  several refinement levels and realizations. The circle is embedded in the
+  **interior** (rather than clipping it out at the boundary) so that homogeneous
+  Dirichlet conditions on the outer boundary do not mask the elements reshaped by
+  agglomeration/relaxation — keeping them in the interior DOFs that the λ_max/λ_min
+  conditioning metric actually measures.
 
 Both accept a `-S <seed>` option (and print the seed they used) so a mesh set can
 be regenerated exactly. Generated meshes are written as VTK for subsequent

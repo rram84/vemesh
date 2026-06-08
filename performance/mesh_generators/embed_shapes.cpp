@@ -1,5 +1,13 @@
 // Sriramajayam
 
+/** \file embed_shapes.cpp
+ * \brief Performance-test generator: embeds polygonal shapes as interior
+ *        interfaces into a background triangle mesh over many randomly-perturbed
+ *        realizations, writing each result as VTK for improvement with vemesh_app.
+ * \ingroup performance_examples
+ * \author Ramsharan Rangarajan
+ */
+
 // Embed a polygonal interface into a background triangle mesh, generating many
 // realizations by randomly perturbing the nodes near the interface. Each embedded
 // mesh is written to disk (VTK) so it can subsequently be improved with vemesh_app.
@@ -55,7 +63,7 @@ int main(int argc, char** argv)
   // command-line options
   CLI::App app{"Embed a polygonal geometry within a triangle mesh"};
   app.footer("Sample usage:\n"
-             "  ./generate_embedded_meshes -g polyvertices.dat -i bbbb-3.off -o outdir -n 1000");
+             "  ./embed_shapes -g polyvertices.dat -i bbbb-3.off -o outdir -n 1000");
 
   std::string geom_file, in_meshfile, outdir;
   int num_realizations = 1000;
@@ -106,7 +114,7 @@ int main(int argc, char** argv)
   std::uniform_real_distribution<double> distribution(-0.15 * hval, 0.15 * hval);
 
   // echo the run configuration (seed is printed so a random run can be reproduced with -S)
-  std::cout << "generate_embedded_meshes run configuration:\n"
+  std::cout << "embed_shapes run configuration:\n"
             << "  interface vertices (-g): " << geom_file       << "\n"
             << "  background mesh    (-i): " << in_meshfile      << "\n"
             << "  output directory   (-o): " << outdir           << "\n"

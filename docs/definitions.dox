@@ -18,6 +18,9 @@
 * \brief Tutorial- and testing-oriented utilities
 *
 * \defgroup tests Unit tests
-* \brief Unit tests for functions and classes 
+* \brief Unit tests for functions and classes
+*
+* \defgroup performance_examples Performance examples
+* \brief Generators that produce reproducible mesh datasets for performance tests
 */
 
