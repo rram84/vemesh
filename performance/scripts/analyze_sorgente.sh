@@ -5,8 +5,9 @@
 # For each mesh folder staged by run_sorgente.sh
 #   output/sorgente/<name>/{baseline,agglomerate,relax,agglomerate_relax}.vtk
 # compute the VEM stiffness conditioning (lambda_min, lambda_max, ratio) of every
-# variant and write a per-mesh CSV:
-#   output/sorgente/<name>/eigen.csv
+# variant and collect them all into one combined CSV:
+#   output/sorgente/eigen.csv
+# with columns: mesh,variant,lambda_min,lambda_max,ratio
 #
 # The eigen calc is the only step that needs MATLAB/Octave. This script owns the
 # coordination (which files belong to which mesh); the engine only runs the
@@ -76,38 +77,54 @@ printf '  %-10s %s\n' "output" "$OUT"
 rule
 echo
 
+# one combined CSV for every mesh/variant
+CSV="$OUT/eigen.csv"
+echo "mesh,variant,lambda_min,lambda_max,ratio" > "$CSV"
+
 i=0
 for name in "${MESHES[@]}"; do
   i=$((i + 1))
   dir="$OUT/$name"
   printf '  %s[%d/%d] %s%s\n' "$BOLD" "$i" "${#MESHES[@]}" "$name" "$RESET"
 
-  # this mesh's variant VTKs (eigen.csv from a prior run is ignored: not *.vtk)
+  # this mesh's variant VTKs
   files=("$dir"/*.vtk)
   if [[ ${#files[@]} -eq 0 ]]; then
     printf '    %sno vtk files, skipping%s\n\n' "$DIM" "$RESET"
     continue
   fi
 
+  # detail on what is being analyzed for this mesh
+  variants=()
+  for f in "${files[@]}"; do variants+=("$(basename "$f" .vtk)"); done
+  printf '    %s%-9s%s %s\n' "$DIM" "folder"   "$RESET" "$dir"
+  printf '    %s%-9s%s %d (%s)\n' "$DIM" "variants" "$RESET" "${#files[@]}" "${variants[*]}"
+
   # build the engine arg list: vem_eig('f1','f2',...)
   args=""
   for f in "${files[@]}"; do args+="'$f',"; done
   args="${args%,}"
 
-  # one engine call for the whole folder; stdout is the CSV body, stderr (engine
-  # warnings/errors) flows to the terminal so failures are visible
+  # one engine call for the whole folder; stdout is CSV rows of
+  # <variant>.vtk,lambda_min,lambda_max,ratio; stderr flows to the terminal
   code="addpath('$MATLAB_DIR'); vem_eig($args);"
   rows=$("${ENGINE[@]}" "$code") \
     || die "eigen engine failed on $name (re-run the engine on this folder to see the error)"
 
-  # per-mesh CSV
-  csv="$dir/eigen.csv"
-  { echo "name,lambda_min,lambda_max,ratio"; printf '%s\n' "$rows"; } > "$csv"
+  # prepend the mesh name and strip the .vtk extension from the variant column
+  out=$(printf '%s\n' "$rows" \
+    | awk -v m="$name" -F, 'BEGIN{OFS=","} {sub(/\.vtk$/,"",$1); print m,$1,$2,$3,$4}')
 
-  printf '%s\n' "$rows" | sed 's/^/      /'
-  printf '    %s→ %s%s\n\n' "$DIM" "$csv" "$RESET"
+  # append the raw rows to the single combined CSV
+  printf '%s\n' "$out" >> "$CSV"
+
+  # echo a labeled view of the same numbers to the terminal (scientific notation)
+  printf '%s\n' "$out" | awk -F, '{
+    printf "      %-18s lambda_min=%-12.4e lambda_max=%-12.4e ratio=%.4e\n", $2, $3, $4, $5
+  }'
+  echo
 done
 
 rule
-printf '  %s✓ done%s  %d mesh(es) analyzed; eigen.csv written under %s%s/<name>/%s\n' \
-       "$GREEN$BOLD" "$RESET" "${#MESHES[@]}" "$CYAN" "$OUT" "$RESET"
+printf '  %s✓ done%s  %d mesh(es) analyzed; all eigen data in %s%s%s\n' \
+       "$GREEN$BOLD" "$RESET" "${#MESHES[@]}" "$CYAN" "$CSV" "$RESET"

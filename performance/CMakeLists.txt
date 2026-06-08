@@ -31,9 +31,20 @@ add_custom_target(stage_run_scripts ALL
   COMMAND ${CMAKE_COMMAND} -E copy_if_different
           ${CMAKE_CURRENT_SOURCE_DIR}/scripts/analyze_sorgente.sh
           ${CMAKE_CURRENT_BINARY_DIR}/analyze_sorgente.sh
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+          ${CMAKE_CURRENT_SOURCE_DIR}/scripts/run_shapes.sh
+          ${CMAKE_CURRENT_BINARY_DIR}/run_shapes.sh
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+          ${CMAKE_CURRENT_SOURCE_DIR}/scripts/analyze_shapes.sh
+          ${CMAKE_CURRENT_BINARY_DIR}/analyze_shapes.sh
   COMMENT "Staging performance run scripts")
 
 # Symlink the single build-tree copy of the sample meshes (at ${CMAKE_BINARY_DIR})
 # so the run script resolves $HERE/sample_data without duplicating the data.
 file(CREATE_LINK ${CMAKE_BINARY_DIR}/sample_data
-     ${CMAKE_CURRENT_BINARY_DIR}/sample_data SYMBOLIC COPY_ON_ERROR)
+     ${CMAKE_CURRENT_BINARY_DIR}/sample_data SYMBOLIC)
+
+# Symlink the MATLAB/Octave eigen-analysis sources so the analysis script resolves
+# $HERE/matlab without duplicating them (edits to the .m files propagate live).
+file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/matlab
+     ${CMAKE_CURRENT_BINARY_DIR}/matlab SYMBOLIC)
