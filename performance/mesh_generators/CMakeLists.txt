@@ -3,8 +3,8 @@
 # Generators that produce reproducible mesh datasets for the performance tests.
 
 set(TARGETS
-  generate_embedded_meshes
-  generate_clipped_meshes)
+  embed_shapes
+  embed_circle)
 
 foreach(TGT IN LISTS TARGETS)
   add_executable(${TGT} ${TGT}.cpp)
