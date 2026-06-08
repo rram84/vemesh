@@ -111,6 +111,7 @@ int main(int argc, char **argv)
   optimizer.evaluate_face_qualities(QE, vm::Face_Quality_Tag);
   optimizer.evaluate_vertex_qualities(vm::Face_Quality_Tag, vm::Vertex_Quality_Tag);
   vm::write_vtk(mesh, (outpath / "input_mesh.vtk").string());
+  vm::write_face_quality_vector(mesh, (outpath / "input_mesh_quality.dat").string());
 
   // improvement iterations
   for(int iter=0; iter<cfg.num_iters; ++iter) {
@@ -166,6 +167,7 @@ int main(int argc, char **argv)
   optimizer.evaluate_face_qualities(QE, vm::Face_Quality_Tag);
   optimizer.evaluate_vertex_qualities(vm::Face_Quality_Tag, vm::Vertex_Quality_Tag);
   vm::write_vtk(mesh, (outpath / "output_mesh.vtk").string());
+  vm::write_face_quality_vector(mesh, (outpath / "output_mesh_quality.dat").string());
 }
 
 

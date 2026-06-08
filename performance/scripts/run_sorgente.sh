@@ -28,9 +28,11 @@ MESHES=()
 # Full vemesh_app option string per variant (everything except -i/-o, which the
 # driver supplies). Include -m here; add -S <seed> on the relaxation variants for
 # reproducibility (seed has no effect on agglomeration-only).
-AGG_OPTS="-n 5 -q 0.2 -f 1.2 -m stability"                  # agglomeration only            (-a)
-RELAX_OPTS="-n 5 -q 0.2 -s 20 -m stability -S 12345"        # relaxation only               (-r)
-AR_OPTS="-n 5 -q 0.2 -f 1.2 -s 20 -m stability -S 12345"    # alternate agglomerate + relax (--ar)
+AGG_OPTS="-n 6 -q 0.2 -f 1.2 -m stability"                  # agglomeration only            (-a)
+RELAX_OPTS="-n 6 -q 0.2 -s 20 -m stability -S 12345"        # relaxation only               (-r)
+# --ar does an agglomerate AND a relax per iteration, so -n 3 == 6 operations,
+# a fair comparison with the 6 single-operation iterations above.
+AR_OPTS="-n 3 -q 0.2 -f 1.2 -s 20 -m stability -S 12345"    # alternate agglomerate + relax (--ar)
 
 # --------------------------------------------------------------------------- #
 # Paths  (no edits needed; resolved relative to this script)
@@ -85,13 +87,14 @@ echo
 # runs vemesh_app quietly; prints one status line, dumps output only on failure
 run_variant() {
   local name="$1" variant="$2" mode="$3" opts="$4"
-  local run="$OUT/_runs/$name"          # one scratch dir per mesh, reused by all variants
-  mkdir -p "$run"
+  local run="$OUT/_runs/$name"          # scratch dir, wiped fresh for each run
+  rm -rf "$run"; mkdir -p "$run"
 
   printf '    %-18s' "$variant"
   local t0=$SECONDS out
   if out=$("$VEMESH_APP" "$mode" -i "$SORGENTE/$name.off" -o "$run" $opts 2>&1); then
-    cp "$run/output_mesh.vtk" "$OUT/$name/$variant.vtk"
+    cp "$run/output_mesh.vtk"         "$OUT/$name/$variant.vtk"
+    cp "$run/output_mesh_quality.dat" "$OUT/$name/${variant}_quality.dat"
     printf ' %s✓%s %s(%ds)%s\n' "$GREEN" "$RESET" "$DIM" "$((SECONDS - t0))" "$RESET"
   else
     printf ' %s✗%s\n' "$RED" "$RESET"
@@ -109,7 +112,8 @@ for name in "${MESHES[@]}"; do
   run_variant "$name" "agglomerate"        "-a"   "$AGG_OPTS"
   # input mesh (re-emitted as VTK); identical across variants, stage it now so it
   # is present as soon as the first variant completes
-  cp "$OUT/_runs/$name/input_mesh.vtk" "$OUT/$name/baseline.vtk"
+  cp "$OUT/_runs/$name/input_mesh.vtk"         "$OUT/$name/baseline.vtk"
+  cp "$OUT/_runs/$name/input_mesh_quality.dat" "$OUT/$name/baseline_quality.dat"
 
   run_variant "$name" "relax"              "-r"   "$RELAX_OPTS"
   run_variant "$name" "agglomerate_relax"  "--ar" "$AR_OPTS"
