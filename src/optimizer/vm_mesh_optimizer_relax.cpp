@@ -9,6 +9,13 @@
 #include <vm_utils.h>
 #include <random>
 #include <queue>
+#include <limits>
+#include <algorithm>
+
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 
 namespace vm
 {
@@ -173,12 +180,26 @@ namespace vm
   }
   
   // ------ optimal relocation point calculation -------- //
-  
-  // identify a feasible point to move a vertex
+
+  // dispatch: use the parallel candidate evaluation when built with OpenMP,
+  // otherwise the serial one. Both yield identical results for a given seed.
   std::tuple<bool, pmp::Point, double>
   MeshOptimizer::compute_improved_vertex_position(const pmp::Vertex     &vertex,
 						  const int             num_samples,
-						  const QualityEvaluator &QE)  
+						  const QualityEvaluator &QE)
+  {
+#ifdef _OPENMP
+    if(omp_get_max_threads() > 1)
+      return compute_improved_vertex_position_parallel(vertex, num_samples, QE);
+#endif
+    return compute_improved_vertex_position_serial(vertex, num_samples, QE);
+  }
+
+  // --- serial implementation --- //
+  std::tuple<bool, pmp::Point, double>
+  MeshOptimizer::compute_improved_vertex_position_serial(const pmp::Vertex     &vertex,
+							 const int             num_samples,
+							 const QualityEvaluator &QE)  
   {
     assert(mesh.is_valid(vertex)==true);
     assert(mesh.is_boundary(vertex)==false);
@@ -231,7 +252,82 @@ namespace vm
   }
 
 
+  // --- parallel implementation --- //
+  std::tuple<bool, pmp::Point, double>
+  MeshOptimizer::compute_improved_vertex_position_parallel(const pmp::Vertex     &vertex,
+							   const int             num_samples,
+							   const QualityEvaluator &QE)
+  {
+    assert(mesh.is_valid(vertex)==true);
+    assert(mesh.is_boundary(vertex)==false);
 
+    // given vertex position (z carried through unchanged)
+    const pmp::Point given_vertex_pos = mesh.position(vertex);
+
+    // get feasible sample points inside the visibility polygon
+    const std::vector<std::pair<double,double>> feasible_samples =
+      compute_feasible_vertex_positions(vertex, num_samples);
+
+    // Precompute, once, the incident-face polygons with a placeholder slot for `vertex`.
+    // Each candidate is then scored on a local copy with that slot overwritten.
+    // There is no shared-mesh mutation, so candidates are independent.
+    std::vector<std::vector<pmp::Point>> face_coords;   // coords per incident face
+    std::vector<std::size_t>             v_slot;        // index of `vertex` in each
+    for(auto f : mesh.faces(vertex))
+      {
+	std::vector<pmp::Point> coords;
+	std::size_t slot = 0, k = 0;
+	for(auto w : mesh.vertices(f))
+	  {
+	    if(w == vertex) { slot = k; coords.push_back(given_vertex_pos); }
+	    else            { coords.push_back(mesh.position(w)); }
+	    ++k;
+	  }
+	face_coords.push_back(std::move(coords));
+	v_slot.push_back(slot);
+      }
+
+    // vertex quality at an arbitrary (x,y): min over incident faces. Thread-safe:
+    // reads only precomputed data and calls QE on local coordinates.
+    auto quality_at = [&](double x, double y)
+      {
+	double q = std::numeric_limits<double>::max();
+	for(std::size_t i = 0; i < face_coords.size(); ++i)
+	  {
+	    std::vector<pmp::Point> coords = face_coords[i];   // local copy
+	    coords[v_slot[i]] = pmp::Point(x, y, 0.);
+	    q = std::min(q, QE(coords));
+	  }
+	return q;
+      };
+
+    // evaluate all candidates in parallel
+    const int nsamp = static_cast<int>(feasible_samples.size());
+    std::vector<double> sample_quality(static_cast<std::size_t>(nsamp));
+#pragma omp parallel for schedule(dynamic)
+    for(int s = 0; s < nsamp; ++s)
+      sample_quality[s] = quality_at(feasible_samples[s].first,
+				     feasible_samples[s].second);
+
+    // serial argmax: identical comparison order/tie-breaking to the serial loop,
+    // so results are unchanged (parallelism is only in the QE evaluations above)
+    std::pair<double,double> curr_best_pos = {given_vertex_pos[0], given_vertex_pos[1]};
+    double curr_best_quality = quality_at(given_vertex_pos[0], given_vertex_pos[1]);
+    bool success = false;
+    for(int s = 0; s < nsamp; ++s)
+      if(sample_quality[s] > curr_best_quality)
+	{
+	  curr_best_quality = sample_quality[s];
+	  curr_best_pos     = feasible_samples[s];
+	  success           = true;
+	}
+
+    return {success,
+	    pmp::Point(curr_best_pos.first, curr_best_pos.second, given_vertex_pos[2]),
+	    curr_best_quality};
+  }
+
+  
   // ------ feasible relocation point generation -------- //
   namespace {
     

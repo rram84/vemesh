@@ -36,9 +36,10 @@ VEMesh:
 - is not a polygonal mesh generator.
 - does not repair invalid meshes — it only improves valid ones.
 - has no GUI for visualisation or interactivity.
-- is not parallelised and may not be thread-safe.
+- is only lightly parallelized. it uses OpenMP to accelerate read-only quality evaluations
+  and for candidate scoring in vertex relaxation. In general, public
+  APIs are not safe to call concurrently from multiple threads.
 - is restricted to planar meshes.
-
 
 
 ## Next steps

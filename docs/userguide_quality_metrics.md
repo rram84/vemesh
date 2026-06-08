@@ -79,10 +79,15 @@ evaluating qualities. For example:
 ```  
 
 ### Parallel evaluation and thread safety {#ug_quality_parallel}
-VEMesh evaluates qualities in parallel using OpenMP, when
-available. It does so in the methods
-vm::MeshOptimizer::evaluate_face_qualities and
-vm::MeshOptimizer::evaluate_vertex_qualities. The parallelization is
+Parallelization in VEMesh is limited to the mesh-wide candidate searches that determine which
+faces to agglomerate and which vertices to relax (vm::MeshOptimizer::evaluate_face_qualities and
+vm::MeshOptimizer::evaluate_vertex_qualities), and in the scoring of candidate
+positions during vertex relaxation (the most expensive part of a relaxation pass).
+What remains **sequential** is element agglomeration as a whole, and the *order* in
+which vertices are relaxed — these alter the mesh and depend on the processing
+order. Parallelism in VEMesh is therefore limited in scope and **does not change
+the result** of an optimization run, which for a fixed RNG seed is reproducible
+regardless of thread count.
 especially meaningful in mesh-wide candidate searches
 to determine faces that require agglomeration and vertices to be
 relaxed. The agglomeration and relaxation methods themselves remain

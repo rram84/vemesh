@@ -145,16 +145,22 @@ namespace vm
    * ---
    *
    * **Parallelism and thread safety**: \n
-   * The quality-evaluation phases of the class are parallelized with OpenMP when it is
-   * available at build time; otherwise they run serially with identical results. The
-   * following methods incorporate such parallelism:
+   * Limited phases are parallelized with OpenMP when it is available at build time
+   * and more than one thread is requested; otherwise they run serially, with
+   * identical results. The following incorporate such parallelism:
    *
-   * - \ref evaluate_face_qualities and \ref evaluate_vertex_qualities, and
+   * - \ref evaluate_face_qualities and \ref evaluate_vertex_qualities,
    * - the mesh-wide search that identifies candidate faces/vertices in the whole-mesh
-   *   overloads of \ref agglomerate and \ref relax.
+   *   overloads of \ref agglomerate and \ref relax, and
+   * - the scoring of candidate positions for each vertex during relaxation
+   *   (the most expensive part of \ref relax).
    *
-   * The agglomeration and relaxation passes themselves remain **sequential**. 
+   * What remains **sequential**: element agglomeration in its entirety, and the
+   * *order* in which vertices are relaxed (one after another, poorest first). Only
+   * the per-vertex candidate scoring is parallelized, so the outcome of a run is
+   * **independent of the thread count** and, for a fixed RNG seed, reproducible.
    * ---
+   *
    * \ingroup optimizer
    */
   class MeshOptimizer
@@ -333,9 +339,24 @@ namespace vm
 				       const QualityEvaluator& QE);
 
     
+    //! \brief Serial implementation of compute_improved_vertex_position.
+    //! Evaluates candidate positions one at a time, moving the vertex in place.
+    std::tuple<bool, pmp::Point, double>
+      compute_improved_vertex_position_serial(const pmp::Vertex      &vertex,
+					      const int              num_samples,
+					      const QualityEvaluator& QE);
+
+    //! \brief Parallel (OpenMP) implementation of compute_improved_vertex_position.
+    //! Scores each candidate on local copies of the incident-face polygons, so no
+    //! shared mesh state is mutated. Identical results to the serial version.
+    std::tuple<bool, pmp::Point, double>
+      compute_improved_vertex_position_parallel(const pmp::Vertex      &vertex,
+						const int              num_samples,
+						const QualityEvaluator& QE);
+    
     pmp::SurfaceMesh mesh; //!< Persistent mesh
 
-  private:
+  protected:
     //! \brief Persistent RNG used for vertex-relaxation sampling.
     //!
     //! Seeded nondeterministically by the constructor. Public relax methods

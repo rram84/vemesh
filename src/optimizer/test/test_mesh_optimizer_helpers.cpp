@@ -10,6 +10,7 @@
 #include <vm_mesh_inspection.h>
 #include <vm_face_qualities.h>
 #include <vm_io.h>
+#include <cmath>
 
 // Class for testing
 class TestMeshOptimizer: public vm::MeshOptimizer
@@ -32,7 +33,13 @@ public:
 
   // Helper method to compute new location for a vertex
   using vm::MeshOptimizer::compute_improved_vertex_position;
-  
+
+  // Serial and parallel implementations, to verify they agree
+  using vm::MeshOptimizer::compute_improved_vertex_position_serial;
+  using vm::MeshOptimizer::compute_improved_vertex_position_parallel;
+
+  // RNG, so a test can seed serial & parallel relax paths identically
+  using vm::MeshOptimizer::rng;
 };
 
 // test merge face
@@ -205,6 +212,8 @@ void test_improved_vertex_position(const pmp::SurfaceMesh &in_mesh, const vm::Qu
   TestMeshOptimizer opt(in_mesh);
   auto mesh = opt.get_mesh();
   auto v_circulator = mesh.vertices();
+  std::random_device rd;   
+    
   for(auto v:v_circulator)
     if(!mesh.is_boundary(v))
       {
@@ -239,6 +248,34 @@ void test_improved_vertex_position(const pmp::SurfaceMesh &in_mesh, const vm::Qu
 		for(auto &e:errors) std::cerr << e << "\n";
 		std::exit(EXIT_FAILURE);
 	      }
+	  }
+
+	// --- serial and parallel paths must agree ------------------------- //
+	// Both consume the RNG identically, so seed it the same before each:
+	// same candidate samples -> identical chosen position and quality.
+	const unsigned seed = rd();   // random, but identical for the serial & parallel calls below
+
+	opt.rng.seed(seed);
+	const auto res_serial   = opt.compute_improved_vertex_position_serial(v, 4, QE);
+	opt.rng.seed(seed);
+	const auto res_parallel = opt.compute_improved_vertex_position_parallel(v, 4, QE);
+
+	if(std::get<bool>(res_serial) != std::get<bool>(res_parallel))
+	  {
+	    std::cerr << "\ntest_improved_vertex_position: serial/parallel disagree on success"
+		      << " (vertex " << v.idx() << ", seed " << seed << ")\n";
+	    std::exit(EXIT_FAILURE);
+	  }
+
+	const auto& ps = std::get<pmp::Point>(res_serial);
+	const auto& pp = std::get<pmp::Point>(res_parallel);
+	const double dx = ps[0]-pp[0], dy = ps[1]-pp[1], dz = ps[2]-pp[2];
+	if(std::sqrt(dx*dx + dy*dy + dz*dz) > 1.e-12 ||
+	   std::abs(std::get<double>(res_serial) - std::get<double>(res_parallel)) > 1.e-12)
+	  {
+	    std::cerr << "\ntest_improved_vertex_position: serial/parallel results differ at vertex "
+		      << v.idx() << ", seed " << seed << "\n";
+	    std::exit(EXIT_FAILURE);
 	  }
       }
 }

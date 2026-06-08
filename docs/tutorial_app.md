@@ -65,12 +65,12 @@ effect on `-a` (agglomeration is deterministic).
 
 
 ## Parallelism
-
 `vemesh_app` performs its quality evaluations and mesh-inspection checks through
 the vemesh library, which parallelizes those read-only loops with **OpenMP** when
-available (see \ref ug_quality_parallel and the utilities user guide). The
-agglomeration and relaxation steps themselves remain sequential, so the result is
-unchanged by the thread count.
+available (see \ref ug_quality_parallel and the utilities user guide). Vertex
+relaxation additionally scores each vertex's candidate positions in parallel.
+Element agglomeration and the order in which vertices are relaxed remain
+sequential, so the result is unchanged by the thread count.
 
 Control this with the standard OpenMP environment variable:
 ```
