@@ -4,10 +4,12 @@
 # Performance analysis: embedded shapes (eigen / VEM conditioning).
 # For each shape folder staged by run_shapes.sh
 #   output/shapes/<shape>/<realization>__<variant>.vtk
-# compute the VEM stiffness conditioning (lambda_min, lambda_max, ratio) of every
+# compute the VEM stiffness conditioning (lambda_2, lambda_max, ratio) of every
 # mesh and write a per-shape CSV:
 #   output/shapes/<shape>.csv
-# with columns: realization,variant,lambda_min,lambda_max,ratio
+# with columns: realization,variant,lambda_2,lambda_max,ratio
+# (lambda_2 is the smallest NONZERO eigenvalue; the pure-Neumann stiffness has a
+#  zero eigenvalue from the constant mode, so ratio = lambda_max / lambda_2.)
 #
 # The eigen calc is the only step that needs MATLAB/Octave. One engine call per
 # shape folder pays the engine start-up cost once per shape rather than per file.
@@ -94,7 +96,7 @@ for shape in "${SHAPES[@]}"; do
   args="${args%,}"
 
   # one engine call for the whole shape; stdout is CSV rows of
-  # <realization>__<variant>.vtk,lambda_min,lambda_max,ratio; stderr to the terminal
+  # <realization>__<variant>.vtk,lambda_2,lambda_max,ratio; stderr to the terminal
   code="addpath('$MATLAB_DIR'); vem_eig($args);"
   rows=$("${ENGINE[@]}" "$code") \
     || die "eigen engine failed on $shape (re-run the engine on this folder to see the error)"
@@ -102,7 +104,7 @@ for shape in "${SHAPES[@]}"; do
   # per-shape CSV: split the "<realization>__<variant>" stem into two columns
   csv="$OUT/${shape}.csv"
   {
-    echo "realization,variant,lambda_min,lambda_max,ratio"
+    echo "realization,variant,lambda_2,lambda_max,ratio"
     printf '%s\n' "$rows" \
       | awk -F, 'BEGIN{OFS=","} {
           stem=$1; sub(/\.vtk$/,"",stem);

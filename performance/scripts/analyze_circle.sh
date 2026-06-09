@@ -96,7 +96,7 @@ for level in "${LEVELS[@]}"; do
   args="${args%,}"
 
   # one engine call for the whole level; stdout is CSV rows of
-  # <realization>__<variant>.vtk,lambda_min,lambda_max,ratio; stderr to the terminal
+  # <realization>__<variant>.vtk,lambda_2,lambda_max,ratio; stderr to the terminal
   code="addpath('$MATLAB_DIR'); vem_eig($args);"
   rows=$("${ENGINE[@]}" "$code") \
     || die "eigen engine failed on level $level (re-run the engine on this folder to see the error)"

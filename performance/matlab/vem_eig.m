@@ -2,7 +2,9 @@ function vem_eig(varargin)
 % VEM_EIG  Print VEM stiffness conditioning for one or more mesh files as CSV.
 %
 %   vem_eig(file1, file2, ...) writes one CSV line per file to stdout:
-%       <name>,<lambda_min>,<lambda_max>,<ratio>
+%       <name>,<lambda_2>,<lambda_max>,<ratio>
+%   where lambda_2 is the smallest NONZERO eigenvalue (the pure-Neumann
+%   stiffness has a zero eigenvalue from the constant mode).
 %
 %   This is a thin, shell-friendly wrapper around the per-file kernel
 %   vem_quality (which assembles the pure-Neumann, unit-stabilized k=1 VEM

@@ -108,7 +108,7 @@ for name in "${MESHES[@]}"; do
   args="${args%,}"
 
   # one engine call for the whole folder; stdout is CSV rows of
-  # <variant>.vtk,lambda_min,lambda_max,ratio; stderr flows to the terminal
+  # <variant>.vtk,lambda_2,lambda_max,ratio; stderr flows to the terminal
   code="addpath('$MATLAB_DIR'); vem_eig($args);"
   rows=$("${ENGINE[@]}" "$code") \
     || die "eigen engine failed on $name (re-run the engine on this folder to see the error)"
