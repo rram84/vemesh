@@ -4,10 +4,12 @@
 # Performance analysis: embedded circle (eigen / VEM conditioning).
 # For each level folder staged by run_circle.sh
 #   output/circle/<level>/<realization>__<variant>.vtk
-# compute the VEM stiffness conditioning (lambda_min, lambda_max, ratio) of every
+# compute the VEM stiffness conditioning (lambda_2, lambda_max, ratio) of every
 # mesh and write a per-level CSV:
 #   output/circle/<level>.csv
-# with columns: realization,variant,lambda_min,lambda_max,ratio
+# with columns: realization,variant,lambda_2,lambda_max,ratio
+# (lambda_2 is the smallest NONZERO eigenvalue; the pure-Neumann stiffness has a
+#  zero eigenvalue from the constant mode, so ratio = lambda_max / lambda_2.)
 #
 # The eigen calc is the only step that needs MATLAB/Octave. One engine call per
 # level folder pays the engine start-up cost once per level rather than per file.
@@ -102,7 +104,7 @@ for level in "${LEVELS[@]}"; do
   # per-level CSV: split the "<realization>__<variant>" stem into two columns
   csv="$OUT/${level}.csv"
   {
-    echo "realization,variant,lambda_min,lambda_max,ratio"
+    echo "realization,variant,lambda_2,lambda_max,ratio"
     printf '%s\n' "$rows" \
       | awk -F, 'BEGIN{OFS=","} {
           stem=$1; sub(/\.vtk$/,"",stem);

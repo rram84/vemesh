@@ -4,10 +4,12 @@
 # Performance analysis: sorgente meshes.
 # For each mesh folder staged by run_sorgente.sh
 #   output/sorgente/<name>/{baseline,agglomerate,relax,agglomerate_relax}.vtk
-# compute the VEM stiffness conditioning (lambda_min, lambda_max, ratio) of every
+# compute the VEM stiffness conditioning (lambda_2, lambda_max, ratio) of every
 # variant and collect them all into one combined CSV:
 #   output/sorgente/eigen.csv
-# with columns: mesh,variant,lambda_min,lambda_max,ratio
+# with columns: mesh,variant,lambda_2,lambda_max,ratio
+# (lambda_2 is the smallest NONZERO eigenvalue; the pure-Neumann stiffness has a
+#  zero eigenvalue from the constant mode, so ratio = lambda_max / lambda_2.)
 #
 # The eigen calc is the only step that needs MATLAB/Octave. This script owns the
 # coordination (which files belong to which mesh); the engine only runs the
@@ -79,7 +81,7 @@ echo
 
 # one combined CSV for every mesh/variant
 CSV="$OUT/eigen.csv"
-echo "mesh,variant,lambda_min,lambda_max,ratio" > "$CSV"
+echo "mesh,variant,lambda_2,lambda_max,ratio" > "$CSV"
 
 i=0
 for name in "${MESHES[@]}"; do
@@ -120,7 +122,7 @@ for name in "${MESHES[@]}"; do
 
   # echo a labeled view of the same numbers to the terminal (scientific notation)
   printf '%s\n' "$out" | awk -F, '{
-    printf "      %-18s lambda_min=%-12.4e lambda_max=%-12.4e ratio=%.4e\n", $2, $3, $4, $5
+    printf "      %-18s lambda_2=%-12.4e lambda_max=%-12.4e ratio=%.4e\n", $2, $3, $4, $5
   }'
   echo
 done
