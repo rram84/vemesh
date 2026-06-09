@@ -1,26 +1,31 @@
 function [ratio, lambda_max, lambda_min] = vem_quality(filepath)
-% VEM_QUALITY  Conditioning of the homogeneous-Dirichlet VEM stiffness matrix.
+% VEM_QUALITY  Conditioning of the pure-Neumann VEM stiffness matrix.
 %
 %   [ratio, lambda_max, lambda_min] = vem_quality(filepath) reads the vemesh
 %   VTK mesh, assembles the k=1 VEM Poisson stiffness with unit stabilization,
-%   imposes homogeneous Dirichlet BCs by keeping only interior vertices, and
-%   returns the extreme eigenvalues of the resulting SPD matrix and their ratio.
+%   and returns its conditioning under pure Neumann ("do nothing") boundary
+%   conditions -- i.e. no DOFs are removed, the full assembled matrix is used.
+%
+%   With pure Neumann BCs the stiffness is only positive *semi*-definite: the
+%   constant mode is in its null space, so the smallest eigenvalue is (up to
+%   round-off) zero. The meaningful conditioning measure is therefore
+%       ratio = lambda_max / lambda_2
+%   where lambda_2 is the second-smallest (smallest nonzero) eigenvalue. The
+%   returned lambda_min IS this second-smallest eigenvalue, not the ~0 one.
 
   mesh = read_vemesh_vtk(filepath);
   K = vem_stiffness(mesh, 1);               % stabilization factor = 1
+  K = (K + K.') / 2;                        % kill round-off asymmetry
 
-  % homogeneous Dirichlet: u = 0 on the boundary -> interior block only
-  n_dofs   = size(mesh.vertices, 1);
-  interior = setdiff((1:n_dofs).', mesh.boundary);
-  Kii = K(interior, interior);
-  Kii = (Kii + Kii.') / 2;                  % kill round-off asymmetry
+  % K is sparse and symmetric, so eigs uses the symmetric Lanczos path.
+  % We need only two eigenvalues, so a full dense decomposition is avoided.
+  lambda_max = eigs(K, 1, 'largestabs');
 
-  % extreme eigenvalues of the SPD interior stiffness matrix.
-  % Kii is sparse and symmetric, so eigs uses the symmetric Lanczos path
-  % automatically (passing a matrix makes it detect symmetry itself).
-  lambda_max = eigs(Kii, 1, 'largestabs');
-  lambda_min = eigs(Kii, 1, 'smallestabs');
-  ratio = lambda_max / lambda_min;
+  % The constant mode makes the smallest eigenvalue ~ 0, so we ask for the two
+  % smallest and keep the second: lambda_2, the smallest nonzero eigenvalue.
+  small  = sort(eigs(K, 2, 'smallestabs'));  % [~0 ; lambda_2]
+  lambda_min = small(2);                      % second-smallest = smallest nonzero
+  ratio  = lambda_max / lambda_min;
 end
 
 

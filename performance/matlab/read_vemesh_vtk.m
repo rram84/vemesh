@@ -5,9 +5,6 @@ function mesh = read_vemesh_vtk(filepath)
 %       vertices : (n_vertices x 2) coordinates (x, y); z is dropped
 %       elements : (1 x n_elements) cell array; each cell a row vector of
 %                  1-based vertex indices, ordered counter-clockwise
-%       boundary : column vector of 1-based indices of vertices on the outer
-%                  (domain) boundary, found as endpoints of edges used by a
-%                  single element
 %
 %   vemesh writes 0-based connectivity; it is shifted to 1-based here.
 
@@ -36,22 +33,6 @@ function mesh = read_vemesh_vtk(filepath)
     elements{e} = conn(:).' + 1;            % 1-based row vector
   end
   mesh.elements = elements;
-
-  % ---- boundary vertices: endpoints of edges used by exactly one element ----
-  total = sum(cellfun(@numel, elements));
-  edges = zeros(total, 2);
-  pos = 0;
-  for e = 1:n_elements
-    v  = elements{e}(:);
-    ne = numel(v);
-    edges(pos+1:pos+ne, :) = [v, v([2:end, 1])];
-    pos = pos + ne;
-  end
-  edges = sort(edges, 2);                    % undirected
-  [ue, ~, ic] = unique(edges, 'rows');
-  counts = accumarray(ic, 1);
-  boundary_edges = ue(counts == 1, :);
-  mesh.boundary = unique(boundary_edges(:));
 end
 
 

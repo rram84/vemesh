@@ -5,8 +5,9 @@ function vem_eig(varargin)
 %       <name>,<lambda_min>,<lambda_max>,<ratio>
 %
 %   This is a thin, shell-friendly wrapper around the per-file kernel
-%   vem_quality (which assembles the homogeneous-Dirichlet, unit-stabilized k=1
-%   VEM stiffness and returns its extreme eigenvalues and their ratio). The
+%   vem_quality (which assembles the pure-Neumann, unit-stabilized k=1 VEM
+%   stiffness and returns lambda_max, the smallest nonzero eigenvalue, and
+%   their ratio -- the smallest eigenvalue itself is ~0, the constant mode). The
 %   wrapper does no coordination: a shell driver decides which files belong
 %   together and calls this once per group, e.g.
 %
