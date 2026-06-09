@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # Sriramajayam
 #
-# Performance test: embedded circle — mesh generation + improvement.
+# Performance test: clipped circle — mesh generation + improvement.
 #
 # For each background-mesh refinement level, generate N randomly-perturbed
-# embeddings of a circular interface (embed_circle -d <level>) and improve each
-# with vemesh_app. Every resulting mesh is KEPT on disk; the VEM-conditioning
-# (eigen) analysis is a separate step — run analyze_circle.sh afterwards.
+# clippings of a structured quad mesh to a circular disk (clip_circle -d <level>)
+# and improve each with vemesh_app. Every resulting mesh is KEPT on disk; the
+# VEM-conditioning (eigen) analysis is a separate step — run analyze_circle.sh afterwards.
 #
 # The refinement level plays the same role here that the interface polygon plays
 # in run_shapes.sh: one output folder per level, named after the level.
@@ -16,7 +16,7 @@
 #   output/circle/<level>/<realization>__agglomerate.vtk
 #   output/circle/<level>/<realization>__relax.vtk
 #   output/circle/<level>/<realization>__agglomerate_relax.vtk
-# baseline = the unimproved embedded mesh; the others are vemesh_app variants.
+# baseline = the unimproved clipped mesh; the others are vemesh_app variants.
 
 set -euo pipefail
 shopt -s nullglob
@@ -25,7 +25,7 @@ shopt -s nullglob
 # Configuration  (edit levels, counts and algorithm options below)
 # --------------------------------------------------------------------------- #
 
-# background-mesh refinement levels to sweep (embed_circle -d). Level 0 is h=0.2 /
+# background-mesh refinement levels to sweep (clip_circle -d). Level 0 is h=0.2 /
 # ncount=10; each level halves h and doubles ncount. One output folder per level.
 LEVELS=(
   0
@@ -34,11 +34,11 @@ LEVELS=(
   3
 )
 
-# embed_circle options (everything except -o, -d and -S, which the script supplies).
+# clip_circle options (everything except -o, -d and -S, which the script supplies).
 # -n sets the number of randomly-perturbed realizations generated per level.
-EMBED_OPTS="-n 3"
+CLIP_OPTS="-n 3"
 
-# base RNG seed for embed_circle (one seed for the whole set, so it is reproducible)
+# base RNG seed for clip_circle (one seed for the whole set, so it is reproducible)
 SEED=12345
 
 # vemesh_app options per variant (everything except -i/-o and the mode flag).
@@ -47,9 +47,9 @@ AGG_OPTS="-n 6 -q 0.2 -f 1.2 -m stability"
 RELAX_OPTS="-n 6 -q 0.2 -s 20 -m stability -S 12345"
 AR_OPTS="-n 3 -q 0.2 -f 1.2 -s 20 -m stability -S 12345"
 
-# variants run on each embedded mesh, as "name|<mode-flag>|<opts>" (an indexed
+# variants run on each clipped mesh, as "name|<mode-flag>|<opts>" (an indexed
 # array, so it works on the stock macOS bash 3.2 which lacks associative arrays).
-# the baseline (the unimproved embedded mesh) is always staged in addition.
+# the baseline (the unimproved clipped mesh) is always staged in addition.
 VARIANTS=(
   "agglomerate|-a|$AGG_OPTS"
   "agglomerate_relax|--ar|$AR_OPTS"
@@ -65,7 +65,7 @@ PROGRESS_EVERY=20
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 VEMESH_APP="$HERE/vemesh_app"                  # built alongside this script
-EMBED="$HERE/mesh_generators/embed_circle"     # mesh generator (self-contained)
+CLIP="$HERE/mesh_generators/clip_circle"       # mesh generator (self-contained)
 OUT="$HERE/output/circle"
 
 # --------------------------------------------------------------------------- #
@@ -80,7 +80,7 @@ rule() { printf '%s\n' "  ──────────────────
 die()  { printf '%s\n' "${RED}error:${RESET} $*" >&2; exit 1; }
 
 [[ -x "$VEMESH_APP" ]] || die "vemesh_app not found at $VEMESH_APP (build with -DBUILD_TESTS=ON)"
-[[ -x "$EMBED"      ]] || die "embed_circle not found at $EMBED (build with -DBUILD_TESTS=ON)"
+[[ -x "$CLIP"       ]] || die "clip_circle not found at $CLIP (build with -DBUILD_TESTS=ON)"
 [[ ${#LEVELS[@]} -gt 0 ]] || die "no refinement levels configured"
 
 mkdir -p "$OUT"
@@ -93,9 +93,9 @@ for entry in "${VARIANTS[@]}"; do variant_names+=" ${entry%%|*}"; done
 echo
 echo "  ${BOLD}vemesh performance · circle · generate + improve${RESET}"
 rule
-printf '  %-18s %s\n' "interface"          "circle"
+printf '  %-18s %s\n' "domain"             "disk (clipped to circle)"
 printf '  %-18s %s\n' "subdivision levels" "${LEVELS[*]}"
-printf '  %-18s %s\n' "embed opts"         "$EMBED_OPTS"
+printf '  %-18s %s\n' "clip opts"          "$CLIP_OPTS"
 printf '  %-18s %s\n' "variants"           "$variant_names"
 printf '  %-18s %s\n' "output"             "$OUT/<level>/"
 rule
@@ -112,26 +112,26 @@ for level in "${LEVELS[@]}"; do
   # levels one at a time — or side by side in different terminals — never shares
   # scratch. Removed when this level finishes; the staged meshes under $leveldir remain.
   scratch="$OUT/_scratch/$level"
-  rm -rf "$scratch"; mkdir -p "$scratch/embed"
+  rm -rf "$scratch"; mkdir -p "$scratch/clip"
 
   printf '  %s[%d/%d] subdivision level %s%s\n' "$BOLD" "$ci" "${#LEVELS[@]}" "$level" "$RESET"
 
-  # 1) generate all embedded meshes for this level in one go -> scratch/embed/embed-<i>.vtk
-  #    the realization count lives in $EMBED_OPTS (-n); the script supplies -o/-d/-S.
-  embeddir="$scratch/embed"
-  printf '    %sgenerating embedded meshes (seed %d)...%s\n' "$DIM" "$SEED" "$RESET"
-  if ! "$EMBED" -o "$embeddir" -d "$level" -S "$SEED" $EMBED_OPTS \
-                > "$leveldir/embed.log" 2>&1; then
-    die "embed_circle failed for level $level (see $leveldir/embed.log)"
+  # 1) generate all clipped meshes for this level in one go -> scratch/clip/clip-<i>.vtk
+  #    the realization count lives in $CLIP_OPTS (-n); the script supplies -o/-d/-S.
+  clipdir="$scratch/clip"
+  printf '    %sgenerating clipped meshes (seed %d)...%s\n' "$DIM" "$SEED" "$RESET"
+  if ! "$CLIP" -o "$clipdir" -d "$level" -S "$SEED" $CLIP_OPTS \
+                > "$leveldir/clip.log" 2>&1; then
+    die "clip_circle failed for level $level (see $leveldir/clip.log)"
   fi
 
-  # 2a) stage all baselines = the embedded meshes (move into place; no duplicates).
-  #     glob the generated files so the count comes from $EMBED_OPTS, not a separate var.
-  embedded=("$embeddir"/embed-*.vtk)
-  [[ ${#embedded[@]} -gt 0 ]] || die "embed_circle produced no meshes (see $leveldir/embed.log)"
-  printf '    %sstaging %d baselines...%s\n' "$DIM" "${#embedded[@]}" "$RESET"
-  for emb in "${embedded[@]}"; do
-    i="$(basename "$emb" .vtk)"; i="${i#embed-}"   # embed-<i>.vtk -> <i>
+  # 2a) stage all baselines = the clipped meshes (move into place; no duplicates).
+  #     glob the generated files so the count comes from $CLIP_OPTS, not a separate var.
+  clipped=("$clipdir"/clip-*.vtk)
+  [[ ${#clipped[@]} -gt 0 ]] || die "clip_circle produced no meshes (see $leveldir/clip.log)"
+  printf '    %sstaging %d baselines...%s\n' "$DIM" "${#clipped[@]}" "$RESET"
+  for emb in "${clipped[@]}"; do
+    i="$(basename "$emb" .vtk)"; i="${i#clip-}"   # clip-<i>.vtk -> <i>
     mv "$emb" "$leveldir/${i}__baseline.vtk"
   done
 

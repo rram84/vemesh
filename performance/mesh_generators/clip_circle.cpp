@@ -1,25 +1,25 @@
 // Sriramajayam
 
-/** \file embed_circle.cpp
- * \brief Performance-test generator: embeds a circular interface into a structured
- *        quad mesh with specified refinement level.
+/** \file clip_circle.cpp
+ * \brief Performance-test generator: clips a structured quad mesh to a circular
+ *        disk at a specified refinement level.
  *        Applies random mesh perturbations near the interface to realize various intersection scenarios.
  *        Writes each result as VTK for improvement with vemesh_app.
  * \ingroup performance_examples
  * \author Ramsharan Rangarajan
  */
 
-// Embed a circular interface in a structured quad mesh, generating many
-// realizations by randomly perturbing the nodes near the interface.
-// Each embedded mesh is saved (VTK) so it can subsequently be improved with vemesh_app.
+// Clip a structured quad mesh to the disk bounded by a circle, generating many
+// realizations by randomly perturbing the nodes near the circle.
+// Each clipped mesh is saved (VTK) so it can subsequently be improved with vemesh_app.
 //
 // Pipeline per realization:
 //   1. generate a background structured mesh with specified refinement
 //   2. loop over mesh realizations
-//   3. randomly perturb mesh nodes in the vicinity of the boundary
+//   3. randomly perturb mesh nodes in the vicinity of the circle
 //   4. push perturbed nodes off the zero level set (adjust_mesh_nodes)
-//   5. embed the interface in the mesh
-//   6. save the embedded mesh as <outdir>/embed-<iter>.vtk
+//   5. clip the mesh to the disk interior (clip_mesh): keeps phi<0, slices cut cells
+//   6. save the clipped mesh as <outdir>/clip-<iter>.vtk
 //
 // Options
 //   -o  output directory (created if needed)
@@ -29,7 +29,7 @@
 //   -S  RNG seed for a reproducible mesh set (default: random, printed at startup)
 
 #include <vm_tutorial_rectangle_mesh.h>  // vm::tutorial::create_rectangle_mesh
-#include <vm_tutorial_mesh_slicer.h>    // vm::tutorial::{LevelSetFn,adjust_mesh_nodes,embed_interface}
+#include <vm_tutorial_mesh_slicer.h>    // vm::tutorial::{LevelSetFn,adjust_mesh_nodes,clip_mesh}
 #include <vm_io.h>                      // vm::write_vtk
 #include <vm_mesh_inspection.h>         // vm::inspect_mesh, vm::MeshInspection
 
@@ -48,8 +48,8 @@ namespace fs = std::filesystem;
 int main(int argc, char** argv)
 {
   // command-line options
-  CLI::App app{"Embed a circular interface in a structured square mesh"};
-  app.footer("Sample usage:\n ./embed_circle -o outdir -d 2 -n 10");
+  CLI::App app{"Clip a structured square mesh to a circular disk"};
+  app.footer("Sample usage:\n ./clip_circle -o outdir -d 2 -n 10");
 
   std::string outdir;
   int num_realizations = 10;
@@ -73,7 +73,7 @@ int main(int argc, char** argv)
   };
 
   // echo the run configuration (seed is printed so a random run can be reproduced with -S)
-  std::cout << "embed_circle run configuration:\n"
+  std::cout << "clip_circle run configuration:\n"
 	    << "  circle radius          : " << radius << "\n"
 	    << "  output directory   (-o): " << outdir           << "\n"
 	    << "  realizations       (-n): " << num_realizations << "\n"
@@ -95,7 +95,7 @@ int main(int argc, char** argv)
   // structured background mesh
   auto sq_mesh = vm::tutorial::create_rectangle_mesh(left_cnr, hval, ncount, hval, ncount);
 
-  // nodes near the interface
+  // nodes near the circle
   std::vector<pmp::Vertex> proximal_vertices{};
   for(auto v : sq_mesh.vertices())
     if(!sq_mesh.is_boundary(v))
@@ -117,7 +117,7 @@ int main(int argc, char** argv)
     {
       std::cout << "Realization: " << iter << std::endl;
 
-      // perturb mesh nodes near the interface
+      // perturb mesh nodes near the circle
       pmp::SurfaceMesh pert_mesh = sq_mesh;
       for(const auto& v : proximal_vertices)
 	{
@@ -140,8 +140,8 @@ int main(int argc, char** argv)
 	      continue;
 	    }
 
-	  // embed the circle in the perturbed mesh
-	  circ_mesh = vm::tutorial::embed_interface(pert_mesh, phi_tol, sdfunc);
+	  // clip the perturbed mesh to the disk interior (phi < 0)
+	  circ_mesh = vm::tutorial::clip_mesh(pert_mesh, phi_tol, sdfunc);
 	}
       catch(const std::exception& e)
 	{
@@ -150,9 +150,9 @@ int main(int argc, char** argv)
 	  continue;
 	}
 
-      // save the embedded mesh
+      // save the clipped mesh
       vm::write_vtk(circ_mesh,
-		    (fs::path(outdir) / ("embed-" + std::to_string(iter) + ".vtk")).string());
+		    (fs::path(outdir) / ("clip-" + std::to_string(iter) + ".vtk")).string());
     }
 
   return 0;

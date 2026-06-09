@@ -4,7 +4,7 @@
 
 set(TARGETS
   embed_shapes
-  embed_circle)
+  clip_circle)
 
 foreach(TGT IN LISTS TARGETS)
   add_executable(${TGT} ${TGT}.cpp)

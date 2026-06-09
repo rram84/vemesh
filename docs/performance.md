@@ -11,12 +11,13 @@ reproducible sets of test meshes for evaluating mesh improvement:
 
 - `embed_shapes` — embeds polygonal shapes as interior interfaces into a
   background triangle mesh over many randomly-perturbed realizations.
-- `embed_circle` — embeds a circular interface into a structured quad mesh across
-  several refinement levels and realizations. The circle is embedded in the
-  **interior** (rather than clipping it out at the boundary) so that homogeneous
-  Dirichlet conditions on the outer boundary do not mask the elements reshaped by
-  agglomeration/relaxation — keeping them in the interior DOFs that the λ_max/λ_min
-  conditioning metric actually measures.
+- `clip_circle` — clips a structured quad mesh to the disk bounded by a circle,
+  across several refinement levels and realizations. Under pure-Neumann
+  ("do nothing") boundary conditions no degrees of freedom are removed at the
+  boundary, so the sliver cut-cells produced along the circle are fully exposed to
+  the λ_max/λ₂ conditioning metric (λ₂ = smallest nonzero eigenvalue). This makes
+  boundary-clipping a meaningful complement to the interior interface-embedding of
+  `embed_shapes`, enriching the test suite with both scenarios.
 
 Both accept a `-S <seed>` option (and print the seed they used) so a mesh set can
 be regenerated exactly. Generated meshes are written as VTK for subsequent
