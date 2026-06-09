@@ -23,6 +23,11 @@ function [ratio, lambda_max, lambda_min] = vem_quality(filepath)
 
   % The constant mode makes the smallest eigenvalue ~ 0, so we ask for the two
   % smallest and keep the second: lambda_2, the smallest nonzero eigenvalue.
+  % 'smallestabs' shift-inverts at sigma = 0, i.e. factors the (near-)singular
+  % K; that is expected and harmless here, so silence the near-singular warning
+  % it raises (restored afterwards) to keep the 30k-mesh batch logs clean.
+  ws = warning('off', 'MATLAB:nearlySingularMatrix');
+  restore_warn = onCleanup(@() warning(ws));
   small  = sort(eigs(K, 2, 'smallestabs'));  % [~0 ; lambda_2]
   lambda_min = small(2);                      % second-smallest = smallest nonzero
   ratio  = lambda_max / lambda_min;
