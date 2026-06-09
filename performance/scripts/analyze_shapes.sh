@@ -106,11 +106,13 @@ for shape in "${SHAPES[@]}"; do
   {
     echo "realization,variant,lambda_2,lambda_max,ratio"
     printf '%s\n' "$rows" \
-      | awk -F, 'BEGIN{OFS=","} {
-          stem=$1; sub(/\.vtk$/,"",stem);
-          j=index(stem,"__"); realn=substr(stem,1,j-1); variant=substr(stem,j+2);
-          print realn,variant,$2,$3,$4
-        }'
+      | awk -F, 'BEGIN{OFS=","}
+          NF==4 && $1 ~ /\.vtk$/ {
+            stem=$1; sub(/\.vtk$/,"",stem);
+            j=index(stem,"__"); realn=substr(stem,1,j-1); variant=substr(stem,j+2);
+            print realn,variant,$2,$3,$4; next
+          }
+          { print "  engine: " $0 > "/dev/stderr" }'
   } > "$csv"
 
   printf '    %s→ %s%s\n\n' "$DIM" "$csv" "$RESET"

@@ -22,13 +22,14 @@ function [ratio, lambda_max, lambda_min] = vem_quality(filepath)
   lambda_max = eigs(K, 1, 'largestabs');
 
   % The constant mode makes the smallest eigenvalue ~ 0, so we ask for the two
-  % smallest and keep the second: lambda_2, the smallest nonzero eigenvalue.
-  % 'smallestabs' shift-inverts at sigma = 0, i.e. factors the (near-)singular
-  % K; that is expected and harmless here, so silence the near-singular warning
-  % it raises (restored afterwards) to keep the 30k-mesh batch logs clean.
-  ws = warning('off', 'MATLAB:nearlySingularMatrix');
-  restore_warn = onCleanup(@() warning(ws));
-  small  = sort(eigs(K, 2, 'smallestabs'));  % [~0 ; lambda_2]
+  % eigenvalues nearest a tiny shift and keep the second: lambda_2, the smallest
+  % nonzero eigenvalue. A plain 'smallestabs' would shift-invert at sigma = 0,
+  % i.e. factor the EXACTLY singular K (RCOND ~ eps): MATLAB then warns and the
+  % result is unreliable. A small NEGATIVE sigma makes K - sigma*I SPD and well
+  % conditioned (RCOND ~ |sigma|/lambda_max ~ 1e-12, no warning), and the two
+  % eigenvalues nearest ~0 are still the constant mode and lambda_2.
+  sigma  = -1e-12 * lambda_max;
+  small  = sort(eigs(K, 2, sigma));          % [~0 ; lambda_2]
   lambda_min = small(2);                      % second-smallest = smallest nonzero
   ratio  = lambda_max / lambda_min;
 end

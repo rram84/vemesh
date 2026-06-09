@@ -114,8 +114,13 @@ for name in "${MESHES[@]}"; do
     || die "eigen engine failed on $name (re-run the engine on this folder to see the error)"
 
   # prepend the mesh name and strip the .vtk extension from the variant column
+  # split well-formed rows (<stem>.vtk,num,num,num) into the CSV; any other stray
+  # engine output (e.g. a MATLAB warning) is echoed to stderr so it stays VISIBLE
+  # to the user without polluting the data file -- warnings are surfaced, not hidden.
   out=$(printf '%s\n' "$rows" \
-    | awk -v m="$name" -F, 'BEGIN{OFS=","} {sub(/\.vtk$/,"",$1); print m,$1,$2,$3,$4}')
+    | awk -v m="$name" -F, 'BEGIN{OFS=","}
+        NF==4 && $1 ~ /\.vtk$/ { sub(/\.vtk$/,"",$1); print m,$1,$2,$3,$4; next }
+        { print "  engine: " $0 > "/dev/stderr" }')
 
   # append the raw rows to the single combined CSV
   printf '%s\n' "$out" >> "$CSV"
