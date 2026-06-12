@@ -135,32 +135,38 @@ for shape in "${SHAPES[@]}"; do
     die "embed_shapes failed for $label (see $shapedir/embed.log)"
   fi
 
-  # 2a) stage all baselines = the embedded meshes (move into place; no duplicates)
-  printf '    %sstaging %d baselines...%s\n' "$DIM" "$N_REALIZATIONS" "$RESET"
+  # 2a) the embedded meshes are the variant INPUTS, not staged as-is: the baseline is
+  #     captured from vemesh_app's input_mesh.vtk during the first variant run below,
+  #     so it carries face_quality like the improved variants (not the raw generator
+  #     output, which has none).
   for (( i=0; i<N_REALIZATIONS; i++ )); do
-    emb="$embeddir/embed-$i.vtk"
-    [[ -f "$emb" ]] || die "expected embedded mesh missing: $emb"
-    mv "$emb" "$shapedir/${i}__baseline.vtk"
+    [[ -f "$embeddir/embed-$i.vtk" ]] || die "expected embedded mesh missing: $embeddir/embed-$i.vtk"
   done
 
-  # 2b) improve variant-by-variant: each variant runs across every realization
-  #     before moving on to the next (agglomerate, then agglomerate+relax, then relax).
+  # 2b) improve variant-by-variant: each variant runs across every realization before
+  #     moving on to the next (agglomerate, then agglomerate+relax, then relax).
+  #     vemesh_app writes input_mesh.vtk (the input mesh WITH face_quality) before
+  #     optimizing; the FIRST variant pass stages that as the baseline, so baseline
+  #     carries quality -- exactly as run_sorgente.sh does.
   run="$scratch/run"                            # vemesh_app scratch (intermediates)
+  first=1
   for entry in "${VARIANTS[@]}"; do
     IFS='|' read -r name mode opts <<< "$entry"
     printf '    %s%s for all %d realizations...%s\n' "$DIM" "$name" "$N_REALIZATIONS" "$RESET"
     for (( i=0; i<N_REALIZATIONS; i++ )); do
-      baseline="$shapedir/${i}__baseline.vtk"
+      emb="$embeddir/embed-$i.vtk"
       rm -rf "$run"; mkdir -p "$run"
-      if ! out=$("$VEMESH_APP" "$mode" -i "$baseline" -o "$run" $opts 2>&1); then
+      if ! out=$("$VEMESH_APP" "$mode" -i "$emb" -o "$run" $opts 2>&1); then
         printf '%s\n' "$out" | sed 's/^/      | /'
         die "vemesh_app $mode failed on $label realization $i"
       fi
       cp "$run/output_mesh.vtk" "$shapedir/${i}__${name}.vtk"
+      if (( first )); then cp "$run/input_mesh.vtk" "$shapedir/${i}__baseline.vtk"; fi
       if (( (i + 1) % PROGRESS_EVERY == 0 || i + 1 == N_REALIZATIONS )); then
         printf '      %s%s %d/%d%s\n' "$DIM" "$name" "$(( i + 1 ))" "$N_REALIZATIONS" "$RESET"
       fi
     done
+    first=0
   done
 
   # drop this shape's scratch entirely; the staged meshes under $shapedir remain

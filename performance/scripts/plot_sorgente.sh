@@ -37,7 +37,7 @@
 # agglomerate / relax of the same mesh. Points are coloured by the same six
 # strategies as the other figures (baseline/Sorgente_20/Sorgente_40 = the
 # unimproved full/20%/40% meshes; agglomerate/relax/agglomerate_relax pooled over
-# starting meshes), with a log-log best-fit line overlaid.
+# starting meshes), with a reference q_min^-1/2 line overlaid.
 # across ALL sorgente cases (every family x starting-mesh x variant), one point
 # per case, coloured by the per-element operation (baseline / agglomerate / relax
 # / agglomerate_relax). A clean downward trend means worst-element quality
@@ -261,7 +261,7 @@ GP
 #     meshes ARE the baseline / Sorgente_20 / Sorgente_40 strategies;
 #   - agglomerate / relax / agglomerate_relax are one strategy each, pooled over
 #     all three starting meshes.
-# A log-log least-squares line through all points is overlaid (slope + R^2 shown).
+# A reference -1/2 power law (scaled_cond ~ q_min^-1/2, offset fitted) is overlaid.
 #
 # ratio from eigen.csv; N_vert = POINTS in the VTK; worst quality = min of the
 # stability column in the *_quality.dat. One index block per strategy, in the
@@ -321,19 +321,29 @@ make_correlation_figure() {
     titles+="$t "; colors+="$c "; fmark+="$fm "; omark+="$om "
   done
 
-  # log-log least-squares fit through ALL plotted points -> slope A, intercept B
-  # (in log10), and R^2, passed to gnuplot to draw y = 10^B * x^A.
-  local A B R2
-  read -r A B R2 < <(awk 'NF>=5 && $1 ~ /^[0-9eE.+-]+$/ {
-      lx=log($1)/log(10); ly=log($2)/log(10);
-      n++; sx+=lx; sy+=ly; sxx+=lx*lx; sxy+=lx*ly; syy+=ly*ly
-    } END {
-      s=(n*sxy-sx*sy)/(n*sxx-sx*sx); b=(sy-s*sx)/n;
-      r=(n*sxy-sx*sy)/sqrt((n*sxx-sx*sx)*(n*syy-sy*sy));
-      printf "%.6f %.6f %.4f\n", s, b, r*r
-    }' "$dat")
+  # Fits characterise the NATURAL quality -> conditioning relationship, so they are
+  # computed over the BASELINE cases ONLY (operation column $5 == "baseline": the
+  # unimproved full / 20% / 40% meshes). The improving operations deliberately bunch
+  # points into the favourable (high-quality, low-cond) corner, which would bias a
+  # pooled fit. Two fits over those rows: a FIXED -1/2 reference (offset only,
+  # intercept = mean(ly - A*lx)) and the FREE least-squares best fit (slope + offset).
+  local Aref=-0.5 Bref R2ref Afit Bfit R2fit
+  read -r Bref R2ref Afit Bfit R2fit < <(awk -v Aref="$Aref" \
+      'NF>=5 && $1 ~ /^[0-9eE.+-]+$/ && $5=="baseline" {
+        lx=log($1)/log(10); ly=log($2)/log(10);
+        n++; X[n]=lx; Y[n]=ly; sx+=lx; sy+=ly; sxx+=lx*lx; sxy+=lx*ly; syy+=ly*ly
+      } END {
+        if(n<2){ print "nan nan nan nan nan"; exit }
+        mx=sx/n; my=sy/n;
+        Bref=my-Aref*mx;                       # fixed slope: intercept = mean(ly-Aref*lx)
+        Sxx=sxx-n*mx*mx; Sxy=sxy-n*mx*my;
+        Afit=Sxy/Sxx; Bfit=my-Afit*mx;         # free least-squares best fit
+        sst=syy-n*my*my;
+        for(i=1;i<=n;i++){ dr=Y[i]-(Aref*X[i]+Bref); sr+=dr*dr; df=Y[i]-(Afit*X[i]+Bfit); sf+=df*df }
+        printf "%.6f %.4f %.6f %.6f %.4f\n", Bref, (sst>0?1-sr/sst:0), Afit, Bfit, (sst>0?1-sf/sst:0)
+      }' "$dat")
 
-  echo "wrote $dat   (fit: slope=$A, R^2=$R2)"
+  echo "wrote $dat   (baseline fit: slope=$Afit R^2=$R2fit; -1/2 ref R^2=$R2ref)"
   gnuplot <<GP
 set terminal ${TERM_GP} enhanced size ${GP_SIZE} font "Helvetica,11" linewidth 1.2
 set output "${fig}"
@@ -353,18 +363,125 @@ fmark  = "${fmark}"
 omark  = "${omark}"
 psz    = 1.4
 
-A = ${A}
-B = ${B}
-fitline(x) = (10**B) * x**A      # NB: 'fit' is a reserved gnuplot keyword
+Aref = ${Aref}
+Bref = ${Bref}
+Afit = ${Afit}
+Bfit = ${Bfit}
+refline(x) = (10**Bref) * x**Aref   # NB: 'fit' is a reserved gnuplot keyword
+fitline(x) = (10**Bfit) * x**Afit
 
-# best-fit power law (dashed), then per-strategy pastel filled markers + dark
-# open-outline overlay. Each strategy keeps its colour+marker from the others.
-plot fitline(x) with lines dt 2 lw 2 lc rgb "#444444" \
-       title sprintf("fit: slope %.2f, R^2 %.2f", A, ${R2}), \
+# fits over the BASELINE cases only: a -1/2 reference (dashed grey) and the free
+# best fit (solid dark), drawn across the full x-range; then per-strategy pastel
+# filled markers + dark open-outline overlay. Each strategy keeps its colour+marker.
+plot refline(x) with lines dt 2 lw 2 lc rgb "#999999" \
+       title sprintf("slope -1/2 (baseline R^2 %.2f)", ${R2ref}), \
+     fitline(x) with lines lw 2 lc rgb "#444444" \
+       title sprintf("baseline best fit: slope %.2f (R^2 %.2f)", ${Afit}, ${R2fit}), \
      for [i=0:${nstrat}-1] "${dat}" index i using 1:2 \
        with points pt int(word(fmark,i+1)) ps psz lc rgb word(colors,i+1) title word(titles,i+1), \
      for [i=0:${nstrat}-1] "${dat}" index i using 1:2 \
        with points pt int(word(omark,i+1)) ps psz lw 1.1 lc rgb "#555555" notitle
+GP
+  echo "wrote $fig"
+}
+
+# --------------------------------------------------------------------------- #
+# Stability vs shape: merged conditioning comparison on the _40 meshes.
+# The _40 set is the only one run both ways (stability metric -> output/sorgente,
+# shape metric -> output/sorgente_shape). A SINGLE log-log axes plots the
+# condition number (lambda_max/lambda_2) vs # elements for baseline + the three
+# improved variants: stability series in their pastel colour, shape series in
+# grey with the SAME markers (so a given symbol = a given variant, colour vs grey
+# = stability vs shape). Each stability point sits below its grey shape twin
+# because the conditioning kernel is metric-agnostic and the stability optimizer
+# reaches lower condition numbers. Skipped (with a warning) if the shape tree has
+# not been analyzed yet.
+# --------------------------------------------------------------------------- #
+make_compare_figure() {
+  local inp="_40"
+  local fig="$OUT/compare_stability_vs_shape_40.${EXT}"
+  local stab_dir="$OUT"                          # output/sorgente   (stability)
+  local shape_dir="$HERE/output/sorgente_shape"  # output/sorgente_shape (shape)
+  local stab_csv="$stab_dir/eigen.csv" shape_csv="$shape_dir/eigen.csv"
+  [[ -f "$shape_csv" ]] || { echo "warn: no $shape_csv (run run_sorgente.sh then analyze_sorgente.sh; both now cover the shape _40 pass); skipping compare figure" >&2; return; }
+
+  local -a STRAT=(baseline agglomerate relax agglomerate_relax)
+  local nstrat=${#STRAT[@]}
+
+  # build a strategy-major dat (cols: famidx family nelem lambda_2 lambda_max ratio)
+  # for one tree's _40 meshes.
+  build_compare_dat() {                 # $1=tree_dir  $2=csv  $3=out_dat
+    local td="$1" csv="$2" out="$3" s fam fi mesh row vtk
+    : > "$out"
+    printf '# famidx family nelem lambda_2 lambda_max ratio\n' >> "$out"
+    for s in "${STRAT[@]}"; do
+      printf '# strategy: %s\n' "$s" >> "$out"
+      fi=0
+      for fam in $families; do
+        fi=$((fi + 1))
+        mesh="${fam}${inp}"
+        row=$(awk -F, -v m="$mesh" -v V="$s" 'NR>1 && $1==m && $2==V {print $3, $4, $5; exit}' "$csv")
+        [[ -n "$row" ]] || { echo "warn: no $csv row for $mesh/$s" >&2; continue; }
+        vtk="$td/$mesh/$s.vtk"
+        [[ -f "$vtk" ]] || { echo "warn: missing $vtk" >&2; continue; }
+        printf '%d %s %s %s\n' "$fi" "$fam" "$(nel "$vtk")" "$row" >> "$out"
+      done
+      printf '\n\n' >> "$out"
+    done
+  }
+
+  local sdat="$OUT/compare_stability_40.dat" hdat="$OUT/compare_shape_40.dat"
+  build_compare_dat "$stab_dir"  "$stab_csv"  "$sdat"
+  build_compare_dat "$shape_dir" "$shape_csv" "$hdat"
+
+  # shared ranges over both panels: x = nelem (col 3), y = ratio (col 6)
+  local xr yr
+  read -r xmin xmax < <(awk '$1 ~ /^[0-9]/ {print $3}' "$sdat" "$hdat" | sort -g | awk 'NR==1{a=$1}{b=$1}END{print a, b}')
+  read -r ymin ymax < <(awk '$1 ~ /^[0-9]/ {print $6}' "$sdat" "$hdat" | sort -g | awk 'NR==1{a=$1}{b=$1}END{print a, b}')
+
+  # style lists in strategy order (colour + filled marker; same marker reused for
+  # the grey shape series so a symbol identifies the variant in both)
+  local titles="" colors="" fmark="" s
+  for s in "${STRAT[@]}"; do
+    local c fm om; read -r c fm om <<< "$(style_for "$s")"
+    titles+="$s "; colors+="$c "; fmark+="$fm "
+  done
+
+  echo "wrote $sdat, $hdat"
+  gnuplot <<GP
+set terminal ${TERM_GP} enhanced size ${GP_SIZE} font "Helvetica,11" linewidth 1.2
+set output "${fig}"
+
+set logscale xy
+set format x "10^{%T}"
+set format y "10^{%T}"
+set xlabel "# elements"
+set ylabel "condition number ({/Symbol l}_{max}/{/Symbol l}_{min})"
+set border lc rgb "#666666"
+set grid xtics ytics lc rgb "#e3e3e3"
+set xrange [${xmin}*0.8 : ${xmax}*1.25]
+set yrange [${ymin}*0.6 : ${ymax}*1.7]
+set key outside right top noenhanced
+set title "sorgente _40: conditioning -- stability (colour) vs shape (grey)"
+
+titles = "${titles}"
+colors = "${colors}"
+fmark  = "${fmark}"
+psz    = 1.5
+grey   = "#9a9a9a"
+
+# one axes: shape series in grey (dashed, SAME symbols) drawn underneath, then
+# stability series in pastel colour on top. Same marker => same variant; colour
+# vs grey => stability vs shape. The legend lists the stability group (from the
+# coloured data) then the full grey shape group (via keyentries, matching markers
+# and dashes) so every grey symbol is labelled.
+plot for [i=0:${nstrat}-1] "${hdat}" index i using 3:6 \
+       with linespoints lw 2 dt 2 pt int(word(fmark,i+1)) ps psz lc rgb grey notitle, \
+     for [i=0:${nstrat}-1] "${sdat}" index i using 3:6 \
+       with linespoints lw 2 pt int(word(fmark,i+1)) ps psz lc rgb word(colors,i+1) \
+       title word(titles,i+1)." (stability)", \
+     for [k=1:${nstrat}] keyentry with linespoints lw 2 dt 2 pt int(word(fmark,k)) ps psz \
+       lc rgb grey title word(titles,k)." (shape)"
 GP
   echo "wrote $fig"
 }
@@ -378,3 +495,5 @@ for input in "${QINPUTS[@]}"; do
 done
 
 make_correlation_figure
+
+make_compare_figure

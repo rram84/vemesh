@@ -125,37 +125,40 @@ for level in "${LEVELS[@]}"; do
     die "clip_circle failed for level $level (see $leveldir/clip.log)"
   fi
 
-  # 2a) stage all baselines = the clipped meshes (move into place; no duplicates).
-  #     glob the generated files so the count comes from $CLIP_OPTS, not a separate var.
-  clipped=("$clipdir"/clip-*.vtk)
-  [[ ${#clipped[@]} -gt 0 ]] || die "clip_circle produced no meshes (see $leveldir/clip.log)"
-  printf '    %sstaging %d baselines...%s\n' "$DIM" "${#clipped[@]}" "$RESET"
-  for emb in "${clipped[@]}"; do
-    i="$(basename "$emb" .vtk)"; i="${i#clip-}"   # clip-<i>.vtk -> <i>
-    mv "$emb" "$leveldir/${i}__baseline.vtk"
-  done
+  # 2a) the clipped meshes are the variant INPUTS, not staged as-is: the baseline is
+  #     captured from vemesh_app's input_mesh.vtk during the first variant run below,
+  #     so it carries face_quality like the improved variants (not the raw generator
+  #     output, which has none). glob so the count comes from $CLIP_OPTS (-n).
+  inputs=("$clipdir"/clip-*.vtk)
+  [[ ${#inputs[@]} -gt 0 ]] || die "clip_circle produced no meshes (see $leveldir/clip.log)"
+  printf '    %s%d realizations to improve...%s\n' "$DIM" "${#inputs[@]}" "$RESET"
 
-  # 2b) improve variant-by-variant: each variant runs across every realization
-  #     before moving on to the next (agglomerate, then agglomerate+relax, then relax).
-  baselines=("$leveldir"/*__baseline.vtk)
+  # 2b) improve variant-by-variant: each variant runs across every realization before
+  #     moving on to the next (agglomerate, then agglomerate+relax, then relax).
+  #     vemesh_app writes input_mesh.vtk (the input mesh WITH face_quality) before
+  #     optimizing; the FIRST variant pass stages that as the baseline, so baseline
+  #     carries quality -- exactly as run_sorgente.sh does.
   run="$scratch/run"                            # vemesh_app scratch (intermediates)
+  first=1
   for entry in "${VARIANTS[@]}"; do
     IFS='|' read -r name mode opts <<< "$entry"
-    printf '    %s%s for all %d realizations...%s\n' "$DIM" "$name" "${#baselines[@]}" "$RESET"
+    printf '    %s%s for all %d realizations...%s\n' "$DIM" "$name" "${#inputs[@]}" "$RESET"
     n=0
-    for baseline in "${baselines[@]}"; do
+    for inp in "${inputs[@]}"; do
       n=$((n + 1))
-      i="$(basename "$baseline" __baseline.vtk)"  # realization index
+      i="$(basename "$inp" .vtk)"; i="${i#clip-}"   # clip-<i>.vtk -> <i>
       rm -rf "$run"; mkdir -p "$run"
-      if ! out=$("$VEMESH_APP" "$mode" -i "$baseline" -o "$run" $opts 2>&1); then
+      if ! out=$("$VEMESH_APP" "$mode" -i "$inp" -o "$run" $opts 2>&1); then
         printf '%s\n' "$out" | sed 's/^/      | /'
         die "vemesh_app $mode failed on level $level realization $i"
       fi
       cp "$run/output_mesh.vtk" "$leveldir/${i}__${name}.vtk"
-      if (( n % PROGRESS_EVERY == 0 || n == ${#baselines[@]} )); then
-        printf '      %s%s %d/%d%s\n' "$DIM" "$name" "$n" "${#baselines[@]}" "$RESET"
+      if (( first )); then cp "$run/input_mesh.vtk" "$leveldir/${i}__baseline.vtk"; fi
+      if (( n % PROGRESS_EVERY == 0 || n == ${#inputs[@]} )); then
+        printf '      %s%s %d/%d%s\n' "$DIM" "$name" "$n" "${#inputs[@]}" "$RESET"
       fi
     done
+    first=0
   done
 
   # drop this level's scratch entirely; the staged meshes under $leveldir remain

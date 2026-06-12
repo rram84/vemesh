@@ -11,6 +11,10 @@
 # (lambda_2 is the smallest NONZERO eigenvalue; the pure-Neumann stiffness has a
 #  zero eigenvalue from the constant mode, so ratio = lambda_max / lambda_2.)
 #
+# If run_sorgente.sh also produced the shape-metric tree output/sorgente_shape/, this
+# analyzes it too, writing output/sorgente_shape/eigen.csv the same way (so the
+# stability-vs-shape comparison in plot_sorgente.sh has both eigen.csv files).
+#
 # The eigen calc is the only step that needs MATLAB/Octave. This script owns the
 # coordination (which files belong to which mesh); the engine only runs the
 # per-file kernel (vem_quality, via the vem_eig wrapper), one call per mesh folder
@@ -64,74 +68,87 @@ command -v "${ENGINE[0]}" >/dev/null 2>&1 || die "eigen engine '${ENGINE[0]}' no
 [[ -d "$OUT"        ]] || die "no staged output at $OUT (run run_sorgente.sh first)"
 [[ -d "$MATLAB_DIR" ]] || die "matlab sources not found at $MATLAB_DIR"
 
-if [[ ${#MESHES[@]} -eq 0 ]]; then
-  for d in "$OUT"/*/; do MESHES+=("$(basename "$d")"); done
-fi
-[[ ${#MESHES[@]} -gt 0 ]] || die "no mesh folders found under $OUT"
+SHAPE_OUT="$HERE/output/sorgente_shape"   # shape-metric tree (optional)
 
-# banner
-echo
-echo "  ${BOLD}vemesh performance · sorgente · eigen analysis${RESET}"
-rule
-printf '  %-10s %s\n' "meshes" "${#MESHES[@]}"
-printf '  %-10s %s\n' "engine" "${ENGINE[*]}"
-printf '  %-10s %s\n' "output" "$OUT"
-rule
-echo
+# analyze_tree <outdir> <label> <honor_meshes:yes|no>
+# computes conditioning for every <name>/ folder under <outdir> and writes the
+# combined <outdir>/eigen.csv. The main tree honours a non-empty $MESHES override;
+# the shape tree always auto-discovers its folders.
+analyze_tree() {
+  local out="$1" label="$2" honor="$3"
+  [[ -d "$out" ]] || die "no staged output at $out (run run_sorgente.sh first)"
 
-# one combined CSV for every mesh/variant
-CSV="$OUT/eigen.csv"
-echo "mesh,variant,lambda_2,lambda_max,ratio" > "$CSV"
-
-i=0
-for name in "${MESHES[@]}"; do
-  i=$((i + 1))
-  dir="$OUT/$name"
-  printf '  %s[%d/%d] %s%s\n' "$BOLD" "$i" "${#MESHES[@]}" "$name" "$RESET"
-
-  # this mesh's variant VTKs
-  files=("$dir"/*.vtk)
-  if [[ ${#files[@]} -eq 0 ]]; then
-    printf '    %sno vtk files, skipping%s\n\n' "$DIM" "$RESET"
-    continue
+  local meshes=()
+  if [[ "$honor" == yes && ${#MESHES[@]} -gt 0 ]]; then
+    meshes=("${MESHES[@]}")
+  else
+    local d
+    for d in "$out"/*/; do meshes+=("$(basename "$d")"); done
   fi
+  [[ ${#meshes[@]} -gt 0 ]] || die "no mesh folders found under $out"
 
-  # detail on what is being analyzed for this mesh
-  variants=()
-  for f in "${files[@]}"; do variants+=("$(basename "$f" .vtk)"); done
-  printf '    %s%-9s%s %s\n' "$DIM" "folder"   "$RESET" "$dir"
-  printf '    %s%-9s%s %d (%s)\n' "$DIM" "variants" "$RESET" "${#files[@]}" "${variants[*]}"
-
-  # build the engine arg list: vem_eig('f1','f2',...)
-  args=""
-  for f in "${files[@]}"; do args+="'$f',"; done
-  args="${args%,}"
-
-  # one engine call for the whole folder; stdout is CSV rows of
-  # <variant>.vtk,lambda_2,lambda_max,ratio; stderr flows to the terminal
-  code="addpath('$MATLAB_DIR'); vem_eig($args);"
-  rows=$("${ENGINE[@]}" "$code") \
-    || die "eigen engine failed on $name (re-run the engine on this folder to see the error)"
-
-  # prepend the mesh name and strip the .vtk extension from the variant column
-  # split well-formed rows (<stem>.vtk,num,num,num) into the CSV; any other stray
-  # engine output (e.g. a MATLAB warning) is echoed to stderr so it stays VISIBLE
-  # to the user without polluting the data file -- warnings are surfaced, not hidden.
-  out=$(printf '%s\n' "$rows" \
-    | awk -v m="$name" -F, 'BEGIN{OFS=","}
-        NF==4 && $1 ~ /\.vtk$/ { sub(/\.vtk$/,"",$1); print m,$1,$2,$3,$4; next }
-        { print "  engine: " $0 > "/dev/stderr" }')
-
-  # append the raw rows to the single combined CSV
-  printf '%s\n' "$out" >> "$CSV"
-
-  # echo a labeled view of the same numbers to the terminal (scientific notation)
-  printf '%s\n' "$out" | awk -F, '{
-    printf "      %-18s lambda_2=%-12.4e lambda_max=%-12.4e ratio=%.4e\n", $2, $3, $4, $5
-  }'
   echo
-done
+  echo "  ${BOLD}vemesh performance · ${label} · eigen analysis${RESET}"
+  rule
+  printf '  %-10s %s\n' "meshes" "${#meshes[@]}"
+  printf '  %-10s %s\n' "engine" "${ENGINE[*]}"
+  printf '  %-10s %s\n' "output" "$out"
+  rule
+  echo
 
-rule
-printf '  %s✓ done%s  %d mesh(es) analyzed; all eigen data in %s%s%s\n' \
-       "$GREEN$BOLD" "$RESET" "${#MESHES[@]}" "$CYAN" "$CSV" "$RESET"
+  # one combined CSV for every mesh/variant in this tree
+  local CSV="$out/eigen.csv"
+  echo "mesh,variant,lambda_2,lambda_max,ratio" > "$CSV"
+
+  local i=0 name dir f args code rows out_rows
+  local files variants
+  for name in "${meshes[@]}"; do
+    i=$((i + 1))
+    dir="$out/$name"
+    printf '  %s[%d/%d] %s%s\n' "$BOLD" "$i" "${#meshes[@]}" "$name" "$RESET"
+
+    files=("$dir"/*.vtk)
+    if [[ ${#files[@]} -eq 0 ]]; then
+      printf '    %sno vtk files, skipping%s\n\n' "$DIM" "$RESET"
+      continue
+    fi
+
+    variants=()
+    for f in "${files[@]}"; do variants+=("$(basename "$f" .vtk)"); done
+    printf '    %s%-9s%s %s\n' "$DIM" "folder"   "$RESET" "$dir"
+    printf '    %s%-9s%s %d (%s)\n' "$DIM" "variants" "$RESET" "${#files[@]}" "${variants[*]}"
+
+    # build the engine arg list: vem_eig('f1','f2',...)
+    args=""
+    for f in "${files[@]}"; do args+="'$f',"; done
+    args="${args%,}"
+
+    # one engine call for the whole folder; stdout is CSV rows of
+    # <variant>.vtk,lambda_2,lambda_max,ratio; stderr flows to the terminal
+    code="addpath('$MATLAB_DIR'); vem_eig($args);"
+    rows=$("${ENGINE[@]}" "$code") \
+      || die "eigen engine failed on $name (re-run the engine on this folder to see the error)"
+
+    # prepend the mesh name, strip the .vtk extension from the variant column; stray
+    # engine output (e.g. a MATLAB warning) is echoed to stderr, kept out of the CSV.
+    out_rows=$(printf '%s\n' "$rows" \
+      | awk -v m="$name" -F, 'BEGIN{OFS=","}
+          NF==4 && $1 ~ /\.vtk$/ { sub(/\.vtk$/,"",$1); print m,$1,$2,$3,$4; next }
+          { print "  engine: " $0 > "/dev/stderr" }')
+
+    printf '%s\n' "$out_rows" >> "$CSV"
+    printf '%s\n' "$out_rows" | awk -F, '{
+      printf "      %-18s lambda_2=%-12.4e lambda_max=%-12.4e ratio=%.4e\n", $2, $3, $4, $5
+    }'
+    echo
+  done
+
+  rule
+  printf '  %s✓ done%s  %d mesh(es) analyzed; all eigen data in %s%s%s\n' \
+         "$GREEN$BOLD" "$RESET" "${#meshes[@]}" "$CYAN" "$CSV" "$RESET"
+}
+
+analyze_tree "$OUT" "sorgente" yes
+if [[ -d "$SHAPE_OUT" ]]; then
+  analyze_tree "$SHAPE_OUT" "sorgente _40 (shape)" no
+fi
