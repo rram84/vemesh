@@ -29,7 +29,7 @@ This tutorial demonstrates:
 
 See \ref tutorial_embed_boundary for explanation of a closely related example embedding a boundary in a non-conforming mesh.  
 
-Here, we mainly focus on using \ref utilities provided as part of these tutorial examples to define and
+Here, we mainly focus on using \ref tutorial_utils "tutorial utilities" provided as part of these tutorial examples to define and
 embed an interface in a non-conforming mesh using a level set function.  
 
 ### Embedding an interface in a non-conforming mesh
@@ -37,7 +37,7 @@ embed an interface in a non-conforming mesh using a level set function.
 The interface is given by an ordered sequence of sample points read from a file, one `x y` pair per line. These points are the vertices of a simple polygon whose boundary is the interface.  
 
 **The level set:**  
-The location of the interface is specified using a level set function of type `vm::tutorial::LevelSetFn`, see \ref utilities. Here it is provided by `vm::tutorial::PolygonSDF`, the signed distance to the interface polygon:  
+The location of the interface is specified using a level set function of type `vm::tutorial::LevelSetFn`, see \ref tutorial_utils "tutorial utilities". Here it is provided by `vm::tutorial::PolygonSDF`, the signed distance to the interface polygon:  
 ```cpp
   // signed distance to the interface polygon (read from the sample file)
   const vm::tutorial::PolygonSDF interface_sdf(filename_interface_vertices);

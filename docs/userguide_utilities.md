@@ -7,7 +7,7 @@ VEMesh provides a few utilities outside the main `vm::MeshOptimizer`
 class. They are not essential to the agglomeration and relaxation
 algorithms, but are used in the unit tests and tutorial examples.
 
-## I/O {#ug_io}
+# I/O {#ug_io}
 
 **Details:** \ref io
 
@@ -29,7 +29,7 @@ vertex qualities under the default tags `face_quality` and
 
 
 
-## Mesh quality vectors
+# Mesh quality vectors
 
 **Details:** \ref io
 
@@ -42,7 +42,7 @@ For direct inspection of the mesh quality vector, VEMesh provides:
 | ASCII file (column 1: index, column 2: value) |
 
 
-## Mesh inspection
+# Mesh inspection
 
 **Details:** \ref utils
 
@@ -67,7 +67,7 @@ VEMesh's improvement methods don't run these checks internally. It
 useful to invoke them after loading a mesh from a non-standard
 source, for instance.
 
-## Mesh slicing
+# Mesh slicing
 
 **Details:** \ref tutorial_utils
 
@@ -94,7 +94,7 @@ Notes:
 - Neither routine is optimized for performance.
 - Both expect a triangle or quad input mesh.
 
-### Level sets {#ug_level_sets}
+## Level sets {#ug_level_sets}
 
 The mesh slicing routines take the boundary or interface as the zero level set of a
 `vm::tutorial::LevelSetFn` — a callable `double(const double* x)` returning a

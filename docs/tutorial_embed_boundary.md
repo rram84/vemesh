@@ -34,7 +34,7 @@ using vemesh for iterative element agglomeration and vertex
 relaxation.  
 
 Here, we focus on:  
-- using \ref utilities provided as part of these tutorial examples to
+- using \ref tutorial_utils "tutorial utilities" provided as part of these tutorial examples to
 embed a boundary in a non-conforming mesh using a level set function.  
 - identifying candidate faces for agglomeration and candidate vertices
 for relaxation
@@ -65,7 +65,7 @@ the mesh are all nearly regular and the mesh is of high quality.
 
 The location of the circular boundary to embed in the mesh is
 specified using a level set function, of type
-`vm::tutorial::LevelSetFn`, see \ref utilities. In this case, the
+`vm::tutorial::LevelSetFn`, see \ref tutorial_utils "tutorial utilities". In this case, the
 level set function is given by \f$\phi({\bf x}) = \|{\bf x}-{\bf
 c}\|-R\f$, where the center and radius of the circular boundary are
 \f${\bf c}\f$ and \f$R\f$, respectively. The function is negative
@@ -87,7 +87,7 @@ The utility functions `vm::tutorial::adjust_mesh_nodes` and
 `vm::tutorial::clip_mesh` help embed the circular boundary in the
 triangle mesh.  
 
-The embedding algorithm implemented at part of the \ref utilities
+The embedding algorithm implemented at part of the \ref tutorial_utils "tutorial utilities"
 avoids *corner* cases in boundary-mesh intersections by assuming that
 there is a positive \f$\epsilon>0\f$ such that \f$|\phi|>\epsilon\f$ at all
 nodes of the mesh.  

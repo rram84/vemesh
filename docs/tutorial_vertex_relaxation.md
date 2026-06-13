@@ -3,7 +3,7 @@
 
 This tutorial demonstrates using vemesh to relax vertices to improve element qualities in a polygonal mesh.  
 Vertex relaxation perturbs vertices to more favorable locations by relying on the notion of vertex qualities.  
-As discussed in @userguide, vertex qualities are defined implicitly in terms of face qualities in the mesh.  
+As discussed in \ref userguide "User Guide", vertex qualities are defined implicitly in terms of face qualities in the mesh.  
 Vertex relaxation leaves the topology of the mesh unchanged; just the locations of vertices are adjusted.  
 
 **Overview:**  
@@ -99,7 +99,7 @@ result in a valid mesh without self-intersections or degenerate faces.
     vm::QualityEvaluator QE(face_quality_metric);
 ```
 vemesh enables users to define the metric for evaluating face qualities, see @ref quality.  
-The vertex quality is defined implicitly using this metric, see @userguide.
+The vertex quality is defined implicitly using this metric, see \ref userguide "User Guide".
 
 Two specific examples are provided with the library:   
 - vm::quality::vem_stability_ratio: uses the ratio of extreme eigenvalues of
@@ -133,7 +133,7 @@ The vm::MeshOptimizer class evaluates qualities of faces using the
 vm::MeshOptimizer::evaluate_face_qualities method. The evaluated
 qualities are stored as a face property in the mesh using the tag
 provided. In this example, we use the *default* tag
-'vm::Face_Quality_Tag = "face_quality"`. Access the evaluated face qualities using the same tag, as:
+`vm::Face_Quality_Tag = "face_quality"`. Access the evaluated face qualities using the same tag, as:
 ```cpp
 auto face_qualities = mesh.get_face_property<double>(vm::Face_Quality_Tag);
 ```
@@ -149,7 +149,7 @@ auto vertex_qualities = mesh.get_vertex_property<double>(vm::Vertex_Quality_Tag)
 ```
 
 It is possible to evaluate and store multiple face quality metrics, and corresponding vertex quality metrics in a mesh. 
-Note, however, that mesh @io functions only look for the default tags given by `vm::Face_Quality_Tag` 
+Note, however, that mesh \ref io "I/O" functions only look for the default tags given by `vm::Face_Quality_Tag` 
 and `vm::Vertex_Quality_Tag` when saving meshes to files.
 
 The face and vertex qualities computed and stored in the mesh this way are **not** used or accessed during mesh improvement. The agglomerate and relaxation routines of vm::MeshOptimizer evaluate all qualities on the fly, using the instance of the vm::QualityEvaluator object provided.
@@ -211,7 +211,7 @@ In addition to saving vertex qualities , we also save the
 *quality vector* of the input and output meshes.   
 The mesh quality vector is a sorted list of vertex qualities. It
 reveals a meaningful and monotonic sense in which the mesh quality
-improves after each mesh update, see @userguide.  
+improves after each mesh update, see \ref userguide "User Guide".  
 The quality vector allows a global comparison of meshes by ordering vertices from worst to best and comparing these ordered values.
 
 The first column of the saved file is an index, and the second is the vertex quality. The length of the vector is hence equal to the number of vertices in the mesh. In particular, since the number of vertices in the mesh remains unchanged during relaxation, the length of the quality vector remains a constant.  The quality \f$q^{\rm out}_{n\times 1}\f$ of the output mesh is better than the quality \f$q^{\rm in}_{m\times 1}\f$ of the input mesh in the sense that  

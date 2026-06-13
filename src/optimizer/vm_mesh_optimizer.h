@@ -192,7 +192,7 @@ namespace vm
     //! \return A triplet `result` such that:
     //! - `std::get<0>(result)`: true if the face was agglomerated, and false otherwise
     //! - `std::get<1>(result)`: quality of the agglomerated face in case of success, of the existing face otherwise
-    //! - `std::get<2>(result)`: the new agglomerated face in case of success, and `f' otherwise
+    //! - `std::get<2>(result)`: the new agglomerated face in case of success, and `f` otherwise
     std::tuple<bool, double, pmp::Face> agglomerate(const pmp::Face& f,
 						    const QualityEvaluator& QE,
 						    double qfactor);
@@ -332,7 +332,7 @@ namespace vm
     //! \return Triplet result, such that: \n
     //! `std::get<bool>(result)` indicates whether an improved location was found
     //! `std::get<pmp::Point>` equals the new location in case of success, and the current location otherwise \n
-    //! std::get<double>` equals the new quality at the vertex in case of success, and the current quality otherwise 
+    //! `std::get<double>` equals the new quality at the vertex in case of success, and the current quality otherwise
     std::tuple<bool, pmp::Point, double>
       compute_improved_vertex_position(const pmp::Vertex      &vertex,
 				       const int              num_samples,

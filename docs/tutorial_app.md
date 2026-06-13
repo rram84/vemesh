@@ -110,7 +110,7 @@ Additional mesh outputs depend on the selected output mode (`-v`):
   Only the initial and final meshes are written.
 
 - `iter`  
-  A mesh is written once at the end of each iteration as mesh-iter-<k>.vtk
+  A mesh is written once at the end of each iteration as `mesh-iter-<k>.vtk`
 
 - `detailed`  
   Meshes are written after every mesh update during agglomeration

@@ -151,8 +151,8 @@ survey.
 
 Recent investigations of the VEM have established that polygon shape
 correlates poorly with element performance — far more tenuously than
-in conventional finite element methods \cite
-sorgente2022vem,sorgente2022role. This makes the case for
+in conventional finite element methods \cite sorgente2022vem,sorgente2022role.
+This makes the case for
 element-based quality criteria over geometric ones;
 `vm::quality::vem_stability_ratio` is one such criterion.
 

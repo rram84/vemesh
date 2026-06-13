@@ -61,7 +61,7 @@ namespace vm
      * \param[in] hy        Grid spacing in the y-direction.
      * \param[in] ny        Number of vertices in the y-direction (must be > 1).
      *
-     * \return A \ref pmp::SurfaceMesh representing the rectangular grid.
+     * \return A pmp::SurfaceMesh representing the rectangular grid.
      * \ingroup tutorial_utils
      */
     pmp::SurfaceMesh create_rectangle_mesh(const std::array<double,2> left_cnr,

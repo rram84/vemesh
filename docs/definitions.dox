@@ -2,8 +2,8 @@
 * \defgroup io I/O
 * \brief Mesh I/O related functionalities
 *
-* \defgroup optimizer
-* \brief Element agglomeration and vertex relaxation opertions
+* \defgroup optimizer Optimizer
+* \brief Element agglomeration and vertex relaxation operations
 *
 * \defgroup utils Utilities
 * \brief Utilties related to Boost.Geometry, pmp::SurfaceMesh and mesh inspection

@@ -146,7 +146,7 @@ It takes an instance of the mesh to be improved at construction and makes a copy
 The vm::MeshOptimizer class evaluates qualities of faces using the
 vm::MeshOptimizer::evaluate_face_qualities method. The evaluated
 qualities are stored as a face property in the mesh using the tag provided. In this example, we use the *default* tag
-'vm::Face_Quality_Tag = "face_quality"`.   
+`vm::Face_Quality_Tag = "face_quality"`.   
 Access the evaluated face qualities using the same tag, as:
 ```cpp
 auto face_qualities = mesh.get_face_property<double>(vm::Face_Quality_Tag);
@@ -155,7 +155,7 @@ auto face_qualities = mesh.get_face_property<double>(vm::Face_Quality_Tag);
 It is possible to store  face qualities evaluated using multiple
 metrics in a mesh, simply by providing different quality evaluator
 instances, and corresponding property tags.   
-Note, however, that mesh @io functions only look for the default tags
+Note, however, that mesh \ref io "I/O" functions only look for the default tags
 given by `vm::Face_Quality_Tag` when saving meshes to files.
 
 The face qualities computed and stored in the mesh are **never** used
@@ -228,7 +228,7 @@ In addition to saving face qualities, we also save the
 *quality vector* of the input and output meshes.   
 The mesh quality vector is a sorted list of face qualities. It
 reveals a meaningful and monotonic sense in which the mesh quality
-improves after each mesh update, see @userguide.  
+improves after each mesh update, see \ref userguide "User Guide".  
 The quality vector allows a global comparison of meshes by ordering faces from worst to best and comparing these ordered values.
 
 The first column of the saved file is an index, and the second is the
