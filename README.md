@@ -92,7 +92,7 @@ locally before submitting a PR.
 ## License and citation
 
 VEMesh is released under the MIT License; see [`LICENSE.txt`](LICENSE.txt).
-If you use VEMesh in academic work, please cite *(JOSS paper / DOI to be added)*.
+If you use VEMesh in your work, please cite *(TBA)*.
 
 [docs]:       https://<docs-host>/vemesh/
 [about]:      https://<docs-host>/vemesh/aboutvemesh.html
