@@ -26,8 +26,9 @@ behind the library.
 - Callbacks for monitoring and visualising updates.
 - Reads/writes OFF and VTK.
 
-VEMesh is **not** a mesh generator or repair tool, is not parallelised, and is
-restricted to planar meshes. The full feature list and non-features are on the
+VEMesh is **not** a mesh generator or repair tool, is only lightly parallelised
+(OpenMP for read-only quality evaluation and relaxation candidate scoring), and
+is restricted to planar meshes. The full feature list and non-features are on the
 [About][about] page.
 
 ## Dependencies
@@ -73,14 +74,16 @@ target_link_libraries(your_target PUBLIC vemesh::vemesh)
 
 ## Documentation
 
-Full documentation is generated with Doxygen (`cmake -DBUILD_DOCS=ON && make docs`)
+Full documentation is generated with Doxygen
+(`cmake -S . -B build -DBUILD_DOCS=ON && cmake --build build --target docs`)
 and hosted at **[\<docs-url\>][docs]**. Main entry points:
 
 - [About][about] — overview and feature list
 - [Rationale][rationale] — design philosophy and motivation
+- [VEMesh in practice][practice] — what to expect, with benchmark results
 - [Get Started][getstarted] — dependencies, build, and install
-- [User Guide][userguide] — quality metrics, conventions, and algorithmic details
 - [Tutorials][tutorials] — worked examples for each operation
+- [User Guide][userguide] — quality metrics, conventions, and algorithmic details
 
 ## Contributing
 
@@ -98,6 +101,7 @@ If you use VEMesh in your work, please cite *(TBA)*.
 [about]:      https://<docs-host>/vemesh/aboutvemesh.html
 [rationale]:  https://<docs-host>/vemesh/rationale.html
 [getstarted]: https://<docs-host>/vemesh/getstarted.html
+[practice]:   https://<docs-host>/vemesh/performance.html
 [userguide]:  https://<docs-host>/vemesh/userguide.html
 [tutorials]:  https://<docs-host>/vemesh/tutorial.html
 [cmake]:      https://cmake.org
