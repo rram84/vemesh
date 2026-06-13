@@ -32,8 +32,8 @@
 # analyze_shapes.sh is still filling them in.
 #
 # Inputs : output/shapes/<shape>.csv (analyze_shapes.sh) + the staged VTKs
-# Output : output/shapes/shapes_condition_dist.<ext>
-#          output/shapes/shapes_correlation_minq.<ext>     (PDF by default)
+# Output : output/shapes/shapes_condition_dist.{pdf,svg}
+#          output/shapes/shapes_correlation_minq.{pdf,svg}  (PLOT_EXT to override)
 
 import csv
 import math
@@ -54,9 +54,22 @@ from matplotlib.ticker import FixedLocator, FuncFormatter
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "output", "shapes")
 
-EXT = os.environ.get("PLOT_EXT", "pdf")           # pdf (paper) or png (preview)
-DIST_FIG = os.path.join(OUT, f"shapes_condition_dist.{EXT}")
-CORR_FIG = os.path.join(OUT, f"shapes_correlation_minq.{EXT}")
+# Figures are written in every format in PLOT_EXT (comma/space separated). Default:
+# PDF (paper / Doxygen LaTeX) AND SVG (Doxygen HTML docs, which cannot embed PDF).
+# Restrict with e.g. PLOT_EXT=svg or PLOT_EXT=png.
+EXTS = os.environ.get("PLOT_EXT", "pdf,svg").replace(",", " ").split()
+DIST_BASE = os.path.join(OUT, "shapes_condition_dist")
+CORR_BASE = os.path.join(OUT, "shapes_correlation_minq")
+
+
+def save_all(fig, base):
+    """Save `fig` as base.<ext> for every requested extension; return the paths."""
+    paths = []
+    for e in EXTS:
+        p = f"{base}.{e}"
+        fig.savefig(p, bbox_inches="tight")
+        paths.append(p)
+    return paths
 
 # variant order and shared colours/markers (consistent across all figures).
 VARIANTS = ["baseline", "agglomerate", "relax", "agglomerate_relax"]
@@ -208,8 +221,8 @@ def make_distribution_figure():
               frameon=False, title="variant")
 
     fig.tight_layout()
-    fig.savefig(DIST_FIG, bbox_inches="tight")
-    print(f"wrote {DIST_FIG}")
+    for p in save_all(fig, DIST_BASE):
+        print(f"wrote {p}")
 
 
 # =========================================================================== #
@@ -312,8 +325,8 @@ def make_correlation_figure():
             h.set_alpha(0.9)
 
     fig.tight_layout()
-    fig.savefig(CORR_FIG, bbox_inches="tight")
-    print(f"wrote {CORR_FIG}   (baseline best-fit slope {A_fit:.3f}, R^2 {R2_fit:.3f}; "
+    paths = save_all(fig, CORR_BASE)
+    print(f"wrote {', '.join(paths)}   (baseline best-fit slope {A_fit:.3f}, R^2 {R2_fit:.3f}; "
           f"-1/2 ref R^2 {R2_ref:.3f}; {total} points, {bx.size} baseline)")
 
 

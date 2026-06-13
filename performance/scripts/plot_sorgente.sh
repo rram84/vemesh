@@ -59,10 +59,15 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 OUT="$HERE/output/sorgente"
 CSV="$OUT/eigen.csv"
 
-# paper-quality vector PDF by default; raster preview via TERM_GP / GP_SIZE.
-TERM_GP="${TERM_GP:-pdfcairo}"
-GP_SIZE="${GP_SIZE:-8in,5.5in}"
-case "$TERM_GP" in pdfcairo) EXT=pdf ;; pngcairo) EXT=png ;; *) EXT=out ;; esac
+# Figures are emitted in every format listed in PLOT_FORMATS (space-separated).
+# Default: PDF (paper / Doxygen LaTeX) AND SVG (Doxygen HTML docs, which cannot
+# embed PDF). Restrict with e.g. PLOT_FORMATS="svg" or "pdf" or "png".
+PLOT_FORMATS="${PLOT_FORMATS:-pdf svg}"
+
+# gnuplot terminal + canvas size for a given output extension. pdfcairo/pngcairo
+# take inch/pixel sizes; the svg terminal sizes in pixels only.
+gp_term() { case "$1" in pdf) echo pdfcairo ;; png) echo pngcairo ;; svg) echo svg ;; *) echo "unknown PLOT_FORMATS entry: $1" >&2; return 1 ;; esac; }
+gp_size() { case "$1" in pdf) echo "8in,5.5in" ;; png) echo "1600,1100" ;; svg) echo "800,550" ;; esac; }
 
 # starting meshes to plot (conditioning figures)
 INPUTS=(full _20 _40)
@@ -486,14 +491,23 @@ GP
   echo "wrote $fig"
 }
 
-for input in "${INPUTS[@]}"; do
-  make_figure "$input"
+# Render every figure once per requested output format. The make_* functions read
+# TERM_GP / GP_SIZE / EXT as globals (the .dat data files are identical across
+# formats and are simply rewritten on each pass).
+for EXT in $PLOT_FORMATS; do
+  TERM_GP="$(gp_term "$EXT")" || exit 1
+  GP_SIZE="$(gp_size "$EXT")"
+  echo "=== rendering format: $EXT (terminal $TERM_GP, size $GP_SIZE) ==="
+
+  for input in "${INPUTS[@]}"; do
+    make_figure "$input"
+  done
+
+  for input in "${QINPUTS[@]}"; do
+    make_quality_figure "$QFAM" "$input"
+  done
+
+  make_correlation_figure
+
+  make_compare_figure
 done
-
-for input in "${QINPUTS[@]}"; do
-  make_quality_figure "$QFAM" "$input"
-done
-
-make_correlation_figure
-
-make_compare_figure
