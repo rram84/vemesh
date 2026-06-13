@@ -912,7 +912,8 @@ INPUT                  = ${CMAKE_SOURCE_DIR}/docs \
 		         ${CMAKE_SOURCE_DIR}/src \
 			 ${CMAKE_SOURCE_DIR}/tutorial \
 			 ${CMAKE_SOURCE_DIR}/app \
-			 ${CMAKE_SOURCE_DIR}/performance
+			 ${CMAKE_SOURCE_DIR}/performance \
+			 ${CMAKE_SOURCE_DIR}/CONTRIBUTING.md
 
 #${CMAKE_CURRENT_SOURCE_DIR}/about.md \
 # This tag can be used to specify the character encoding of the source files
@@ -1310,7 +1311,7 @@ HTML_EXTRA_STYLESHEET  = ${CMAKE_CURRENT_SOURCE_DIR}/style/doxygen-awesome.css \
 # files will be copied as-is; there are no commands or markers available.
 # This tag requires that the tag GENERATE_HTML is set to YES.
 
-HTML_EXTRA_FILES       =
+HTML_EXTRA_FILES       = ${CMAKE_SOURCE_DIR}/LICENSE.txt
 
 # The HTML_COLORSTYLE_HUE tag controls the color of the HTML output. Doxygen
 # will adjust the colors in the style sheet and background images according to

@@ -85,8 +85,9 @@ and hosted at **[\<docs-url\>][docs]**. Main entry points:
 ## Contributing
 
 Bug reports, feature requests, and pull requests are welcome via the
-[issue tracker](<github-url>/vemesh/issues). Please run `ctest` locally before
-submitting a PR.
+[issue tracker](<github-url>/vemesh/issues). See
+[`CONTRIBUTING.md`](CONTRIBUTING.md) for guidelines, and please run `ctest`
+locally before submitting a PR.
 
 ## License and citation
 

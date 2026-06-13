@@ -44,8 +44,15 @@ VEMesh:
 
 ## Next steps
 
-- \ref getstarted "Install VEMesh" — dependencies and build.
-- \ref tutorial "Tutorials" — worked examples explaining each operation and the key concepts behind them.
-- \ref tutorial_app "Command-line app" — try VEMesh on your own mesh without writing code.
-- \ref userguide "User guide" — quality metrics, meshes, and algorithmic details.
+- \subpage rationale "Rationale" — design philosophy and motivation.
+- \subpage performance "VEMesh in practice" — what to expect, with benchmark results on real meshes.
+- \subpage getstarted "Install VEMesh" — dependencies and build.
+- \subpage tutorial "Tutorials" — worked examples explaining each operation and the key concepts behind them.
+- \subpage userguide "User guide" — quality metrics, meshes, and algorithmic details.
+
+Try VEMesh on your own mesh without writing code with the
+\ref tutorial_app "command-line app".
+
+Interested in contributing? See the [contributing guidelines](../CONTRIBUTING.md).
+VEMesh is released under the [MIT License](LICENSE.txt).
 
