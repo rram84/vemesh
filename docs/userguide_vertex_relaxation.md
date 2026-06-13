@@ -75,9 +75,8 @@ user-specified total number of samples per vertex.
   We draw \f$N\f$ uniform random samples from \f${\cal B}(v)\f$ into
   \f${\cal S}_2(v)\f$.
 
-Fig \ref XX illustrates both sets. The search for a position to
-relocate \f$v\f$ runs over \f${\cal S}(v) = {\cal S}_1(v) \cup {\cal
-S}_2(v)\f$.
+The search for a position to relocate \f$v\f$ runs over the union of
+both sample sets, \f${\cal S}(v) = {\cal S}_1(v) \cup {\cal S}_2(v)\f$.
 
 ### Feasibility (visibility)
 
@@ -92,8 +91,8 @@ This is the [visibility
 polygon](https://en.wikipedia.org/wiki/Visibility_polygon) problem:
 \f$v\f$ can be safely relocated to \f${\bf y}\f$ only if \f${\bf y}\f$
 is *visible* from each vertex \f$\{v_i\}_{i=1}^m\f$ in its 1-ring;
-otherwise the mesh tangles (see Fig \ref XX). Sample points must
-therefore be visible from every 1-ring vertex.
+otherwise the mesh tangles. Sample points must therefore be visible
+from every 1-ring vertex.
 
 Computing visibility polygons is
 [expensive](https://doc.cgal.org/latest/Visibility_2/index.html).
@@ -105,8 +104,7 @@ a location \f${\bf y}\f$ for \f$v\f$ is *feasible* if
   \f$f_i(v({\bf y}))\cap f_j(v({\bf y}))\f$ for \f$i\neq j\f$ have
   zero area.
 
-Fig \ref XX shows feasible and infeasible cases. Only feasible samples
-contribute to the vertex-quality evaluation. The improved location is
+Only feasible samples contribute to the vertex-quality evaluation. The improved location is
 \f[ \text{Find}~{\bf x} = \arg\max_{\substack{{\bf y}\in {\cal S}(v)\\{\bf y}~\text{feasible}}}\min_{1\leq i\leq n} Q(f_i(v({\bf y}))). \f]
 
 ## Algorithm
