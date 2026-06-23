@@ -51,7 +51,7 @@ Platform-specific install commands are listed on the [Get Started][getstarted] p
 ## Installation
 
 ```sh
-git clone <github-url>/vemesh.git
+git clone https://bitbucket.org/rram/vemesh.git
 cd vemesh
 cmake -S . -B build -DBUILD_TESTS=ON
 cmake --build build -j
@@ -76,7 +76,7 @@ target_link_libraries(your_target PUBLIC vemesh::vemesh)
 
 Full documentation is generated with Doxygen
 (`cmake -S . -B build -DBUILD_DOCS=ON && cmake --build build --target docs`)
-and hosted at **[\<docs-url\>][docs]**. Main entry points:
+and hosted at **[rram.bitbucket.io/vemesh-docs][docs]**. Main entry points:
 
 - [About][about] — overview and feature list
 - [Rationale][rationale] — design philosophy and motivation
@@ -88,7 +88,7 @@ and hosted at **[\<docs-url\>][docs]**. Main entry points:
 ## Contributing
 
 Bug reports, feature requests, and pull requests are welcome via the
-[issue tracker](<github-url>/vemesh/issues). See
+[issue tracker](https://bitbucket.org/rram/vemesh/issues). See
 [`CONTRIBUTING.md`](CONTRIBUTING.md) for guidelines, and please run `ctest`
 locally before submitting a PR.
 
@@ -97,13 +97,13 @@ locally before submitting a PR.
 VEMesh is released under the MIT License; see [`LICENSE.txt`](LICENSE.txt).
 If you use VEMesh in your work, please cite *(TBA)*.
 
-[docs]:       https://<docs-host>/vemesh/
-[about]:      https://<docs-host>/vemesh/aboutvemesh.html
-[rationale]:  https://<docs-host>/vemesh/rationale.html
-[getstarted]: https://<docs-host>/vemesh/getstarted.html
-[practice]:   https://<docs-host>/vemesh/performance.html
-[userguide]:  https://<docs-host>/vemesh/userguide.html
-[tutorials]:  https://<docs-host>/vemesh/tutorial.html
+[docs]:       https://rram.bitbucket.io/vemesh-docs/
+[about]:      https://rram.bitbucket.io/vemesh-docs/index.html
+[rationale]:  https://rram.bitbucket.io/vemesh-docs/rationale.html
+[getstarted]: https://rram.bitbucket.io/vemesh-docs/getstarted.html
+[practice]:   https://rram.bitbucket.io/vemesh-docs/performance.html
+[userguide]:  https://rram.bitbucket.io/vemesh-docs/userguide.html
+[tutorials]:  https://rram.bitbucket.io/vemesh-docs/tutorial.html
 [cmake]:      https://cmake.org
 [boost]:      https://www.boost.org
 [eigen]:      https://libeigen.gitlab.io
