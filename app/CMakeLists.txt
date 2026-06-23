@@ -1,33 +1,33 @@
 # Sriramajayam
 
-cmake_minimum_required(VERSION 3.12)
+# Build the vemesh application
 
+cmake_minimum_required(VERSION 3.17)
+
+project(vemesh_app
+  DESCRIPTION "Command-line driver for vemesh"
+  LANGUAGES CXX)
+
+# find vemesh
+find_package(vemesh REQUIRED)
+
+# CLI11 for command-line parsing
 find_package(CLI11 REQUIRED)
 
-project(app DESCRIPTION "Application for running vemesh")
+# Optional OpenMP: lets vemesh_app report the thread count in quality/inspection loops
+ find_package(OpenMP)
 
-file(GLOB MESH_FILES "${CMAKE_SOURCE_DIR}/src/manager/test/*.OFF")
-file(COPY ${MESH_FILES} DESTINATION ${CMAKE_BINARY_DIR}/src/manager/test/)
-find_package(OpenMP)
-foreach(TARGET
-	    vemesh
-	    gen_square_mesh
-	    clip_mesh
-	    annulus_mesh
-	    random_mesh
-	    multicircle_mesh
-	    embed_polygon_mesh
-	    threshold)
-#	    moving_mesh)
+add_executable(vemesh_app
+			vemesh_app.cpp
+			vemesh_app_cli.cpp)
 
-  # add executable
-  add_executable(${TARGET} ${TARGET}.cpp)
+target_link_libraries(vemesh_app
+  PRIVATE
+  vemesh::vemesh
+  CLI11::CLI11)
 
-  # link 
-  target_link_libraries(${TARGET} PUBLIC vm_manager vm_test_rect
-  vm_test_mesh_slicer CLI11::CLI11 OpenMP::OpenMP_CXX)
+if(OpenMP_FOUND)
+  target_link_libraries(vemesh_app PRIVATE OpenMP::OpenMP_CXX)
+endif()
 
-  # choose appropriate flags
-  target_compile_features(${TARGET} PUBLIC ${COMPILE_FEATURES})
-
-endforeach()
+target_compile_features(vemesh_app PRIVATE cxx_std_17)
