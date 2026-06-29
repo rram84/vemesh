@@ -1321,6 +1321,11 @@ HTML_EXTRA_FILES       = ${CMAKE_SOURCE_DIR}/LICENSE.txt \
                          ${CMAKE_SOURCE_DIR}/docs/images/sorgente_cases_full.png \
                          ${CMAKE_SOURCE_DIR}/docs/images/sorgente_cases_40.png \
                          ${CMAKE_SOURCE_DIR}/docs/images/correlation_stability_conditioning.png \
+                         ${CMAKE_SOURCE_DIR}/docs/images/shapes-1.png \
+                         ${CMAKE_SOURCE_DIR}/docs/images/shapes-2.png \
+                         ${CMAKE_SOURCE_DIR}/docs/images/circle-1.png \
+                         ${CMAKE_SOURCE_DIR}/docs/images/circle-2.png \
+                         ${CMAKE_SOURCE_DIR}/docs/images/circle-3.png \
                          ${CMAKE_SOURCE_DIR}/docs/images/shapes_condition_dist.svg \
                          ${CMAKE_SOURCE_DIR}/docs/images/circle_condition_dist.svg
 
