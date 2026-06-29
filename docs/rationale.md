@@ -53,3 +53,8 @@ provides control over this. Second, the guarantee is about the *sorted
 quality vector*, not about individual elements: VEMesh deliberately
 prioritises the worst faces and vertices and may degrade
 better-quality ones along the way.
+
+\par See it in practice
+For benchmark results that put these guarantees to the test on real
+meshes — and a quantitative look at the conditioning gains — see
+\ref performance "VEMesh in practice".

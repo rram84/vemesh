@@ -80,10 +80,10 @@ and hosted at **[rram.bitbucket.io/vemesh-docs][docs]**. Main entry points:
 
 - [About][about] — overview and feature list
 - [Rationale][rationale] — design philosophy and motivation
-- [VEMesh in practice][practice] — what to expect, with benchmark results
 - [Get Started][getstarted] — dependencies, build, and install
 - [Tutorials][tutorials] — worked examples for each operation
 - [User Guide][userguide] — quality metrics, conventions, and algorithmic details
+- [VEMesh in practice][practice] — benchmark results on real meshes
 
 ## Contributing
 
