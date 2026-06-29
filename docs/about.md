@@ -47,10 +47,10 @@ VEMesh:
 ## Next steps
 
 - \subpage rationale "Rationale" — design philosophy and motivation.
-- \subpage performance "VEMesh in practice" — what to expect, with benchmark results on real meshes.
 - \subpage getstarted "Install VEMesh" — dependencies and build.
 - \subpage tutorial "Tutorials" — worked examples explaining each operation and the key concepts behind them.
 - \subpage userguide "User guide" — quality metrics, meshes, and algorithmic details.
+- \subpage performance "VEMesh in practice" — benchmark results on real meshes (best read after the User Guide).
 
 Try VEMesh on your own mesh without writing code with the
 \ref tutorial_app "command-line app".

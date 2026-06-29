@@ -1311,7 +1311,18 @@ HTML_EXTRA_STYLESHEET  = ${CMAKE_CURRENT_SOURCE_DIR}/style/doxygen-awesome.css \
 # files will be copied as-is; there are no commands or markers available.
 # This tag requires that the tag GENERATE_HTML is set to YES.
 
-HTML_EXTRA_FILES       = ${CMAKE_SOURCE_DIR}/LICENSE.txt
+# NOTE: the performance-page figures are referenced from raw <img> tags (inside
+# \htmlonly blocks in performance.md) rather than \image html, because Bitbucket
+# static hosting stamps X-Frame-Options: DENY on every response, which blocks the
+# <object> element Doxygen emits for SVG. <img> is unaffected. Since \image html
+# is also what copies the SVG into the output, we copy the figures explicitly here.
+HTML_EXTRA_FILES       = ${CMAKE_SOURCE_DIR}/LICENSE.txt \
+                         ${CMAKE_SOURCE_DIR}/docs/images/mesh1_all.png \
+                         ${CMAKE_SOURCE_DIR}/docs/images/sorgente_cases_full.png \
+                         ${CMAKE_SOURCE_DIR}/docs/images/sorgente_cases_40.png \
+                         ${CMAKE_SOURCE_DIR}/docs/images/correlation_stability_conditioning.png \
+                         ${CMAKE_SOURCE_DIR}/docs/images/shapes_condition_dist.svg \
+                         ${CMAKE_SOURCE_DIR}/docs/images/circle_condition_dist.svg
 
 # The HTML_COLORSTYLE_HUE tag controls the color of the HTML output. Doxygen
 # will adjust the colors in the style sheet and background images according to

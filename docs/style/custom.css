@@ -54,6 +54,20 @@ div.header .title {
   text-align: center;
 }
 
+/* right-hand "on this page" outline (#page-nav): neutral instead of blue.
+   Doxygen styles this panel from the colour-hue, which makes it blue; override
+   with theme variables so light/dark modes both stay neutral. */
+#page-nav {
+  background-color: var(--page-background-color);
+  border-left: 1px solid var(--separator-color);
+}
+#page-nav-resize-handle {
+  background-color: var(--page-background-color);
+}
+#page-nav li.vis {
+  background-color: var(--odd-color);
+}
+
 /* fix appearance of numbers in citation list */
 dl.citelist dt {
   font-weight: normal;
