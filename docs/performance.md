@@ -212,6 +212,35 @@ each of the 30 meshes from Fig 2a. The clear correlation justifies why improving
 
 ## 2. Embedding interfaces in non-conforming meshes {#performance_interfaces}
 
+
+\htmlonly
+<div class="image"><img src="shapes-1.png" style="max-width:100%;max-height:300px;width:auto;height:auto;" alt="The five embedded interface shapes and the background mesh"/><div class="caption">Figure 5. The five polygonal interface shapes (labeled 1&ndash;5) and the fixed background triangle mesh (right) into which each is embedded. Wherever an interface crosses the background, it cuts the elements it passes through into slivers.</div></div>
+\endhtmlonly
+
+\htmlonly
+<div class="image"><img src="shapes-2.png" style="max-width:100%;max-height:400px;width:auto;height:auto;" alt="Distribution of condition number over random embeddings, per interface shape"/><div class="caption">Figure 6. Distribution of the condition number over many randomly perturbed embeddings of each interface shape, shown as grouped violin plots with one violin per variant. The embedded (uncorrected) meshes are strongly ill-conditioned; the VEMesh variants that include agglomeration (highlighted band) reduce the conditioning by roughly an order of magnitude, whereas relaxation alone yields a more modest gain.</div></div>
+\endhtmlonly
+
+
+## 3. Embedding boundaries in non-conforming meshes
+{#performance_boundaries}
+
+\htmlonly
+<div class="image"><img src="circle-1.png" style="max-width:100%;max-height:300px;width:auto;height:auto;" alt="The circular boundary embedded into progressively refined structured quad meshes"/><div class="caption">Figure 7. The circular boundary embedded into a sequence of progressively refined structured quad meshes (mesh sizes h0, h0/2, h0/4, h0/8). Each successive level halves the mesh size h.</div></div>
+\endhtmlonly
+
+\htmlonly
+<div class="image"><img src="circle-2.png" style="max-width:100%;max-height:300px;width:auto;height:auto;" alt="The structured quad meshes clipped by the circular boundary at four refinement levels"/><div class="caption">Figure 8. The structured quad meshes clipped by the circular boundary at the four refinement levels. Clipping slices the elements the boundary crosses into slivers.</div></div>
+\endhtmlonly
+
+\htmlonly
+<div class="image"><img src="circle-3.png" style="max-width:100%;max-height:400px;width:auto;height:auto;" alt="Distribution of scaled condition number over random clippings, per refinement level"/><div class="caption">Figure 9. Distribution of the scaled condition number (the raw condition number multiplied by h^2) over many randomly perturbed clippings at each refinement level, shown as grouped violin plots with one violin per variant. Scaling by h^2 removes the geometric h^-2 drift so the improvement is comparable across levels. As in the embedded-interface study, the VEMesh variants that include agglomeration (highlighted band) collapse the conditioning, whereas relaxation alone yields little gain.</div></div>
+\endhtmlonly
+
+
+STOP HERE.
+
+
 The second study targets the setting CutVEM was built for: a background mesh into
 which an interface is **embedded**, cutting the elements it crosses into slivers.
 The `embed_shapes` generator embeds a polygonal interface (from
@@ -227,11 +256,8 @@ plots — one violin per variant — so the spread, not just the mean, is visibl
 A companion correlation figure pools all realizations and variants to show worst
 element stability ratio against (scale-corrected) conditioning.
 
-\htmlonly
-<div class="image"><img src="shapes_condition_dist.svg" alt="Conditioning distribution over random embeddings, per interface shape"/><div class="caption">Conditioning distribution over random embeddings, per interface shape, with one violin per variant.</div></div>
-\endhtmlonly
 
-## 3. CutVEM: meshes clipped by boundaries {#performance_boundaries}
+## 3. CutVEM: meshes clipped by boundaries
 
 The third study is the boundary counterpart of the second. Instead of embedding
 an interface in the interior, `clip_circle` **clips** a structured quadrilateral
@@ -250,9 +276,6 @@ refinement (\f$\lambda_2 \sim h^2\f$), the distribution figure scales the
 condition number by \f$h^2\f$, removing that purely geometric drift so that the
 *improvement* across levels is comparable on one footing.
 
-\htmlonly
-<div class="image"><img src="circle_condition_dist.svg" alt="Conditioning distribution over random clippings, per refinement level"/><div class="caption">Conditioning distribution over random clippings, per refinement level, with one violin per variant. The condition number is scaled by h^2 to remove the refinement drift.</div></div>
-\endhtmlonly
 
 ## Running the tests {#performance_running}
 
