@@ -49,7 +49,7 @@ Two caveats are worth knowing. First, the **magnitude** of improvement
 is not bounded from below. Hence, an accepted update can yield
 arbitrarily small gains, and VEMesh may terminate with a still-poor
 mesh if no further updates are accepted. The routines in the library
-provides control over this. Second, the guarantee is about the *sorted
+provide control over this. Second, the guarantee is about the *sorted
 quality vector*, not about individual elements: VEMesh deliberately
 prioritises the worst faces and vertices and may degrade
 better-quality ones along the way.
