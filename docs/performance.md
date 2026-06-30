@@ -54,7 +54,7 @@ has been envisioned.
    operations provided by VEMesh against the literature.
    
 2. \ref performance_interfaces "**Embedded interfaces**" embeds
-   interfaces in non-conforming background triangle meshes and
+   non-conforming interfaces in background triangle meshes and
    examines improvement in conditioning with VEMesh.
    
 3. \ref performance_boundaries "**Clipped boundaries**" embeds
@@ -210,20 +210,78 @@ each of the 30 meshes from Fig 2a. The clear correlation justifies why improving
 \endhtmlonly
 
 
-## 2. Embedding interfaces in non-conforming meshes {#performance_interfaces}
+## 2. Embedding non-conforming interfaces {#performance_interfaces}
+The next case study concerns embedding an interface in a
+non-conforming background mesh. Embedding such an interface splits the
+faces of the mesh into polygons. As a method designed to accommodate
+polygonal elements, this scenario is indeed one of the key motivations
+behind the VEM.  In practice there is little scope for controlling the
+shapes of the elements created. In general, background mesh faces can
+be split into poorly-shaped elements, including narrow slivers and
+flattened polygons.
 
 
 \htmlonly
 <div class="image"><img src="shapes-1.png" style="max-width:100%;max-height:300px;width:auto;height:auto;" alt="The five embedded interface shapes and the background mesh"/><div class="caption">Figure 5. The five polygonal interface shapes (labeled 1&ndash;5) and the fixed background triangle mesh (right) into which each is embedded. Wherever an interface crosses the background, it cuts the elements it passes through into slivers.</div></div>
 \endhtmlonly
+<br>
+
+As shown in Fig 5, we embed five interfaces in a fixed background
+triangle mesh, splitting the intersected faces into triangles and
+quadrilaterals. To avoid the degenerate case of an interface passing
+exactly through a node of the background mesh, we perturb nodes by a
+small distance away from the interface, thus enforcing \f$|\phi({\bf
+x})|>\epsilon\f$ using a tolerance \f$\epsilon\f$ that is much smaller
+than the mesh size \f$h\f$ (here \f$\epsilon < 0.1\%\,h\f$). Here,
+\f$\phi\f$ is the signed distance to the interface. The purpose of
+these perturbations is solely to avoid degeneracies; their small
+magnitude ensures that they do not influence the conclusions below.
+
+A single embedding of an interface in a background mesh is not
+representative of the range of possibilities for interface-element
+intersections that arise in practice. It is therefore ill-advised to
+draw conclusions by embedding an interface in a given mesh as
+is. Instead, we adopt a different strategy by adding small random
+perturbations to the background nodes in the immediate vicinity of the
+interface. Each set of node perturbations defines a slightly different
+background mesh, and so an unbiased sample from the family of
+interface-element intersections. We repeat this 1000 times to
+determine 1000 distinct background meshes into which we embed a given
+interface. These sampling perturbations are deliberately larger than
+the tolerance \f$\epsilon\f$, but remain small relative to the mesh
+size (bounded by \f$h/6\f$). Hence, a small number of background mesh
+faces are distorted in each realization, but do not meaningfully
+deteriorate the mesh quality.
+
 
 \htmlonly
 <div class="image"><img src="shapes-2.png" style="max-width:100%;max-height:400px;width:auto;height:auto;" alt="Distribution of condition number over random embeddings, per interface shape"/><div class="caption">Figure 6. Distribution of the condition number over many randomly perturbed embeddings of each interface shape, shown as grouped violin plots with one violin per variant. The embedded (uncorrected) meshes are strongly ill-conditioned; the VEMesh variants that include agglomeration (highlighted band) reduce the conditioning by roughly an order of magnitude, whereas relaxation alone yields a more modest gain.</div></div>
 \endhtmlonly
 
+For each of the five interfaces, Fig 6 plots the distribution of the
+global stiffness-matrix condition number over the 1000 background mesh
+realizations as a violin plot. The spread for the VEM is striking,
+spanning nearly two orders of magnitude. This is a cautionary reminder
+against drawing conclusions from a single embedding, and the wide
+spread is a serious concern in adopting the VEM for problems with
+embedded interfaces. Since the sampling perturbations are small
+(bounded by \f$h/6\f$), the poor condition numbers observed are caused
+by the embedded interfaces themselves, and not by any pre-existing
+poor-quality elements in the background mesh.
 
-## 3. Embedding boundaries in non-conforming meshes
-{#performance_boundaries}
+Fig 6 also shows the result of improving each embedded mesh with
+VEMesh while preserving the edges along the interface. Vertex
+relaxation alone helps only marginally. Agglomeration, by contrast,
+dramatically lowers the mean, and equally significantly, the spread of
+the condition numbers. The key insight here is that a small fraction
+of "bad" cut-cells at the interface can dominate the global condition
+number. Element agglomeration provides a simple remedy. This is
+precisely the idea behind the CutVEM introduced in \cite vem-cmame.
+
+
+
+## 3. Embedding boundaries in non-conforming meshes {#performance_boundaries}
+
 
 \htmlonly
 <div class="image"><img src="circle-1.png" style="max-width:100%;max-height:300px;width:auto;height:auto;" alt="The circular boundary embedded into progressively refined structured quad meshes"/><div class="caption">Figure 7. The circular boundary embedded into a sequence of progressively refined structured quad meshes (mesh sizes h0, h0/2, h0/4, h0/8). Each successive level halves the mesh size h.</div></div>
