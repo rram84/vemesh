@@ -5,7 +5,7 @@ This page provides representative snapshots of the performance of
 VEMesh when working with real meshes in scenarios we expect the
 library to be used in. 
 
-## VEM stiffness matrix
+## 1. VEM stiffness matrix
 In keeping with the rationale of the library, we emphasize the
 improvement in conditioning of the stiffness matrix in the VEM. For
 demonstration purposes, we
@@ -44,7 +44,7 @@ the VEMesh library by a small MATLAB kernel (`performance/matlab/`)
 that is based on O. Sutton's "Virtual element method in 50 lines of
 MATLAB" \cite sutton2017vem.
 
-## Three case studies
+## 2. Three case studies
 We present three case studies encompassing scenarios for which VEMesh
 has been envisioned. 
 
@@ -68,7 +68,7 @@ justify the technical aspects of VEMesh and shed insights on the
 relationship between element shapes and ill-conditioning.
 
 
-## 1. Mesh improvement and matrix conditioning {#performance_element}
+### A. Mesh improvement and matrix conditioning {#performance_element}
 
 The first study works directly on unstructured polygonal meshes.  The
 study by Sorgente et al. in \cite sorgente2022role considers a
@@ -77,12 +77,13 @@ square domain (mesh1, mesh2,...,mesh5). The reference provides
 algorithms that coarsen these meshes to improve their qualities in a
 certain sense by extremizing a global objective to achieve a specific
 reduction in element count. VEMesh improves these triangulations using
-local agglomeration and relaxation operations. Unlike \cite
+local \ref ug_element_agglomeration "agglomeration" and
+\ref ug_vertex_relaxation "relaxation" operations. Unlike \cite
 sorgente2022role, VEMesh does not target a specific reduction in
 element count during agglomeration; instead, it operates on elements
 whose qualities fall below a specified threshold.
 
-### a. Improving the baseline meshes
+#### Improving the baseline meshes
 Fig 1 shows the coarsest triangulation mesh1 considered in the
 experiment. Its improvements by Sorgente et al., retaining 40% and 20%
 of the elements, are the meshes labeled mesh1_40 and mesh1_20. We
@@ -151,7 +152,7 @@ in the plot refer to the stability ratio, rather than a metric
 correlated to polygon shapes.
 <br/>
 
-### b. Improving pre-optimized meshes
+#### Improving pre-optimized meshes
 
 Next, we demonstrate that VEMesh in fact improves the meshes optimized
 by Sorgente et al. To this end, we run VEMesh not on the baseline
@@ -178,7 +179,7 @@ VEMesh compared to the global (combinatorial) optimization in \cite
 sorgente2022role makes the result even more significant. 
 
 
-### c. Element stability ratio is key to improving condition numbers
+#### Element stability ratio is key to improving condition numbers
 We attribute the improvement in condition numbers with VEMesh to the
 choice of element quality metric. The element stability ratio is
 directly correlated with the condition number, and is largely
@@ -210,8 +211,9 @@ each of the 30 meshes from Fig 2a. The clear correlation justifies why improving
 \endhtmlonly
 
 
-## 2. Embedding non-conforming interfaces {#performance_interfaces}
-The next case study concerns embedding an interface in a
+### B. Embedding non-conforming interfaces {#performance_interfaces}
+The next case study concerns
+\ref tutorial_embed_interface "embedding an interface" in a
 non-conforming background mesh. Embedding such an interface splits the
 faces of the mesh into polygons. As a method designed to accommodate
 polygonal elements, this scenario is indeed one of the key motivations
@@ -270,8 +272,11 @@ by the embedded interfaces themselves, and not by any pre-existing
 poor-quality elements in the background mesh.
 
 Fig 6 also shows the result of improving each embedded mesh with
-VEMesh while preserving the edges along the interface. Vertex
-relaxation alone helps only marginally. Agglomeration, by contrast,
+VEMesh while preserving the edges along the interface. As in the
+\ref performance_element "element-improvement study" — and in the
+boundary study that follows — these VEMesh runs use six iterations, a
+quality threshold of 0.2, and the element stability ratio as the quality
+metric. Vertex relaxation alone helps only marginally. Agglomeration, by contrast,
 dramatically lowers the mean, and equally significantly, the spread of
 the condition numbers. The key insight here is that a small fraction
 of "bad" cut-cells at the interface can dominate the global condition
@@ -280,104 +285,134 @@ precisely the idea behind the CutVEM introduced in \cite vem-cmame.
 
 
 
-## 3. Embedding boundaries in non-conforming meshes {#performance_boundaries}
-
+### C. Embedding non-conforming boundaries {#performance_boundaries}
+This third case study examines the influence of background mesh
+refinement on the improvement realized with VEMesh. The workflow
+closely follows the previous one, except that we now
+\ref tutorial_embed_boundary "embed a circular boundary" in a sequence of
+four progressively refined background meshes composed of structured
+quadrilaterals, see Fig 7. Intersecting the
+boundary with quad elements in the mesh creates triangles,
+quadrilaterals and hexagons of varying qualities.
 
 \htmlonly
 <div class="image"><img src="circle-1.png" style="max-width:100%;max-height:300px;width:auto;height:auto;" alt="The circular boundary embedded into progressively refined structured quad meshes"/><div class="caption">Figure 7. The circular boundary embedded into a sequence of progressively refined structured quad meshes (mesh sizes h0, h0/2, h0/4, h0/8). Each successive level halves the mesh size h.</div></div>
 \endhtmlonly
 
+As before, with each refinement of the background mesh, we create 1000
+different clipped mesh realizations by perturbing the mesh nodes near
+the boundary. Then, clipping the mesh with the circular boundary
+generates a large variety of sizes and shapes of polygonal
+elements. Fig 8 shows representative realizations of meshes over the
+circular domain computed this way with the four background mesh
+refinements.
+
+
 \htmlonly
 <div class="image"><img src="circle-2.png" style="max-width:100%;max-height:300px;width:auto;height:auto;" alt="The structured quad meshes clipped by the circular boundary at four refinement levels"/><div class="caption">Figure 8. The structured quad meshes clipped by the circular boundary at the four refinement levels. Clipping slices the elements the boundary crosses into slivers.</div></div>
 \endhtmlonly
+
+Fig 9 plots the distribution of condition numbers in the VEM computed
+with the clipped meshes. Just as we saw in Fig 6, here again, we find
+a wide spread at each mesh refinement level. Notice that the mean
+remains approximately constant because we scale condition numbers by
+the square of the mesh size. We then improve these meshes with VEMesh
+while leaving nodes and edges along the boundary undisturbed. As
+before, vertex relaxation results only in marginal
+improvement. Element agglomeration lowers the mean in every case and
+nearly eliminates the spread of the distribution. This again reaffirms
+the finding from the study in \cite vem-cmame that agglomeration is an
+effective remedy, improving the poorest few elements in the mesh to
+avoid ill-conditioning.
 
 \htmlonly
 <div class="image"><img src="circle-3.png" style="max-width:100%;max-height:400px;width:auto;height:auto;" alt="Distribution of scaled condition number over random clippings, per refinement level"/><div class="caption">Figure 9. Distribution of the scaled condition number (the raw condition number multiplied by h^2) over many randomly perturbed clippings at each refinement level, shown as grouped violin plots with one violin per variant. Scaling by h^2 removes the geometric h^-2 drift so the improvement is comparable across levels. As in the embedded-interface study, the VEMesh variants that include agglomeration (highlighted band) collapse the conditioning, whereas relaxation alone yields little gain.</div></div>
 \endhtmlonly
 
 
-STOP HERE.
+## 3. Running the performance tests {#performance_running}
 
+All three studies share the same three-stage pipeline — **generate &
+improve** → **analyze** → **plot** — with one script per stage. Keeping
+the stages separate means the slow mesh generation and the MATLAB
+analysis are not rerun when only the figures change.
 
-The second study targets the setting CutVEM was built for: a background mesh into
-which an interface is **embedded**, cutting the elements it crosses into slivers.
-The `embed_shapes` generator embeds a polygonal interface (from
-`sample_data/shapes/`) into a fixed background triangle mesh
-(`sample_data/tri/`), producing the cut cells that wreck conditioning.
-
-To make the result statistically meaningful rather than dependent on one lucky or
-unlucky cut, `run_shapes.sh` generates **many randomly-perturbed embeddings** of
-each interface and improves every one. `analyze_shapes.sh` computes the
-conditioning of every resulting mesh, and `plot_shapes.py` shows, per interface
-shape, the *distribution* of conditioning over the realizations as grouped violin
-plots — one violin per variant — so the spread, not just the mean, is visible.
-A companion correlation figure pools all realizations and variants to show worst
-element stability ratio against (scale-corrected) conditioning.
-
-
-## 3. CutVEM: meshes clipped by boundaries
-
-The third study is the boundary counterpart of the second. Instead of embedding
-an interface in the interior, `clip_circle` **clips** a structured quadrilateral
-mesh against a circular boundary, producing sliver cut cells along the boundary
-itself. Under pure-Neumann boundary conditions no degrees of freedom are removed
-at the boundary, so these boundary slivers are fully exposed to the
-\f$\lambda_{\max}/\lambda_2\f$ metric — making boundary clipping a genuine
-complement to the interior interface-embedding of Section 2.
-
-The clipping is swept over several **refinement levels** (level 0 has \f$h=0.2\f$;
-each level halves \f$h\f$). As with the embedded-interface study, many randomly
-perturbed clippings are generated per level (`run_circle.sh`), analyzed
-(`analyze_circle.sh`) and plotted as per-level violin distributions
-(`plot_circle.py`). Because bare-stiffness conditioning grows as \f$h^{-2}\f$ with
-refinement (\f$\lambda_2 \sim h^2\f$), the distribution figure scales the
-condition number by \f$h^2\f$, removing that purely geometric drift so that the
-*improvement* across levels is comparable on one footing.
-
-
-## Running the tests {#performance_running}
-
-The three studies share a common three-stage pipeline — **generate &
-improve** → **analyze** → **plot** — kept as separate steps so the (slow) mesh
-generation and the (MATLAB-dependent) eigenvalue analysis are not repeated when
-only the plots change. Generated meshes are kept on disk under
-`performance/output/`; nothing is erased between stages.
-
-The mesh generators (`embed_shapes`, `clip_circle`) and `vemesh_app` are built
-alongside the unit tests and tutorials when `BUILD_TESTS=ON` (the default); there
-is no separate build option, and because `vemesh_app` is built here this
-configuration requires [CLI11](https://github.com/CLIUtils/CLI11). The generators
-accept a `-S <seed>` option (and print the seed they used) so any mesh set can be
-regenerated exactly. The analysis stage requires MATLAB or Octave on the `PATH`;
-the plotting stage requires Python with matplotlib (`*.py`) or gnuplot
-(`*.sh`). These are development/evaluation tools and are not installed.
-
-| Study | Generator | Generate & improve | Analyze (eigen) | Plot |
-|-------|-----------|--------------------|-----------------|------|
-| \ref performance_element "Element improvement" | — (`sample_data/sorgente/`) | `run_sorgente.sh` | `analyze_sorgente.sh` | `plot_sorgente.sh` |
-| \ref performance_interfaces "Embedded interfaces" | `embed_shapes` | `run_shapes.sh` | `analyze_shapes.sh` | `plot_shapes.py` |
-| \ref performance_boundaries "Clipped boundaries" | `clip_circle` | `run_circle.sh` | `analyze_circle.sh` | `plot_circle.py` |
-
-A typical run, from the build tree, is:
+#### Building and locating the tools
+The mesh improver `vemesh_app` and the two generators (`embed_shapes`,
+`clip_circle`) are built alongside the unit tests and tutorials when
+`BUILD_TESTS=ON` (the default). The build stages the scripts,
+a symlink to the sample meshes (`sample_data/`) and the MATLAB sources
+(`matlab/`) next to the binaries under `<build>/performance/`. Run every
+script from there:
 
 ```sh
-# from <build>/performance, after `cmake --build` has staged the scripts
-./run_shapes.sh        # generate perturbed embeddings + improve (writes output/shapes/)
-./analyze_shapes.sh    # assemble VEM stiffness + eigenvalues   (writes per-shape CSVs)
-python3 plot_shapes.py # violin distributions + correlation figure
+cmake -S . -B build -DBUILD_TESTS=ON
+cmake --build build -j
+cd build/performance
 ```
 
-The other two studies follow the same pattern with their respective scripts. Each
-script carries a configuration block at its top (meshes/shapes/levels, variant
-option strings, realization counts, parallel job count, and the MATLAB/Octave
-engine command) documented inline; the defaults reproduce the figures discussed
-above.
+Mesh improvement is done with the \ref tutorial_app "vemesh_app"
+command-line app, which the run scripts invoke with the following option
+sets:
+```sh
+agglomerate:        -a   -n 6 -q 0.2 -f 1.2 -m stability
+relax:              -r   -n 6 -q 0.2 -s 20  -m stability -S 12345
+agglomerate_relax:  --ar -n 3 -q 0.2 -f 1.2 -s 20 -m stability -S 12345
+```
 
-\par A note on execution time
-These studies report no timings on purpose: conditioning is intrinsic to the mesh,
-whereas runtime depends on hardware, build flags, and implementation details. As a
-rough orientation, mesh generation and the MATLAB/Octave eigen-analysis dominate the
-wall-clock cost, while the VEMesh improvement step itself is comparatively
-inexpensive; the three-stage pipeline above caches intermediate results so that only
-the changed stage is rerun.
+Here `-n` is the iteration count, `-q` the quality threshold below
+which elements are improved, `-m` the metric, `-f`/`-s` the
+agglomeration factor and relaxation sample count, and `-S` the seed
+(`--ar` does two operations per iteration, so its `-n 3` matches the
+six single operations of the others).
 
+
+The **analyze** step (`analyze_*.sh`) computes each mesh's VEM
+conditioning \f$\lambda_{\max}/\lambda_2\f$ with a small MATLAB script
+provided in the `matlab/` subfolder. The analyze scripts require
+MATLAB on the `PATH`.
+
+The **plot** step reads only the resulting CSVs — no re-run — and writes
+the figures with gnuplot (`plot_sorgente.sh`) or Python with numpy and
+matplotlib (`plot_shapes.py`, `plot_circle.py`).
+
+These analysis and plotting tools are evaluation scripts only and are
+not installed with VEMesh.
+
+
+#### Reproducing each study
+
+**Element improvement** (\ref performance_element) takes no generator; its
+inputs are the Sorgente meshes in `sample_data/sorgente/` (`mesh1`…`mesh5`
+and their `_40` / `_20` coarsenings). `run_sorgente.sh` improves each with
+the three variants, and additionally runs a shape-metric companion pass on
+the `_40` meshes (into `output/sorgente_shape/`) for the stability-vs-shape
+comparison of Fig 3.
+
+```sh
+./run_sorgente.sh      # -> output/sorgente/<mesh>/{baseline,agglomerate,relax,agglomerate_relax}.vtk
+./analyze_sorgente.sh  # -> output/sorgente/eigen.csv  (+ output/sorgente_shape/eigen.csv)
+./plot_sorgente.sh     # condition-number, quality-vector and correlation figures
+```
+
+**Embedded interfaces** (\ref performance_interfaces) uses `embed_shapes`
+to embed each interface polygon (`sample_data/shapes/*.dat`) into the fixed
+background triangle mesh `bbbb-3.off` (`sample_data/tri/`) over many
+randomly perturbed realizations.
+
+```sh
+./run_shapes.sh         # embed + improve -> output/shapes/<shape>/<i>__<variant>.vtk
+./analyze_shapes.sh     # -> output/shapes/<shape>.csv  (one per shape)
+python3 plot_shapes.py  # violin distribution (Fig 6) + correlation figure
+```
+
+**Clipped boundaries** (\ref performance_boundaries) uses `clip_circle` to
+clip a structured quad mesh against a circle of radius 0.45 at four
+refinement levels (level 0: \f$h=0.2\f$; resolution doubles each level),
+again over many perturbed realizations per level.
+
+```sh
+./run_circle.sh         # clip + improve  -> output/circle/<level>/<i>__<variant>.vtk
+./analyze_circle.sh     # -> output/circle/<level>.csv  (one per level)
+python3 plot_circle.py  # per-level violin distribution (Fig 9) + correlation figure
+```
