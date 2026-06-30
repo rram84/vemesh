@@ -99,8 +99,11 @@ cmake ../ -DCMAKE_MODULE_PATH=path/to/pmp
 ```sh
 cmake ../ -DBUILD_TESTS=OFF
 ```
-`BUILD_TESTS=ON` also builds the tutorial examples and the in-tree
-\ref performance tooling. Required CLI11.
+`BUILD_TESTS=ON` (the default) also builds the tutorial examples and the
+in-tree performance tooling — the `vemesh_app` command-line app, the mesh
+generators, and the scripts behind the \ref performance "VEMesh in
+practice" studies. Because `vemesh_app` is built here, this configuration
+additionally requires [CLI11](https://github.com/CLIUtils/CLI11).
 
 **Build documentation (default: OFF, requires Doxygen):**
 ```sh
