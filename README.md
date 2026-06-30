@@ -3,6 +3,10 @@
 *A quality-driven mesh improvement library for planar polygonal
 meshes*
 
+**Full documentation:** [rram.bitbucket.io/vemesh-docs][docs]
+
+Pages: [About][about] · [Rationale][rationale] · [Get Started][getstarted] · [Tutorials][tutorials] · [User Guide][userguide] · [VEMesh in practice][practice]
+
 <!-- badges: build status, docs, license, JOSS DOI go here once available -->
 
 VEMesh improves planar polygonal meshes through **local, atomic, quality-driven
