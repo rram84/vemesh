@@ -13,10 +13,16 @@ preserves mesh validity and topology. Poorer-quality faces and
 vertices are prioritised via a queue, so computational effort is
 focused where it matters most.
 
-VEMesh is **metric-agnostic**. You supply the quality measure and
-control update ordering and acceptance; VEMesh embeds no method-specific
-assumptions. This keeps the library useful beyond the VEM, its
-original target.
+Figure 1 shows both primitives acting on the same patch, in which face
+K1 is of poor quality. Agglomeration merges it with a neighbour into a
+single better-shaped face; vertex relaxation instead repositions the
+shared vertex v, lifting the quality of the poorest face in its
+one-ring. In each case the operation is local and targets the worst
+element.
+
+\htmlonly
+<div class="image"><img src="ops.png" style="max-width:100%;height:auto;" alt="The two mesh-improvement primitives — agglomeration and vertex relaxation — applied to the same polygonal patch around a poor face"/><div class="caption">Figure 1. The two atomic primitives improving the same patch, where face K1 has poor quality: agglomeration merges two faces, while vertex relaxation moves a vertex.</div></div>
+\endhtmlonly
 
 
 
@@ -30,6 +36,12 @@ geometries and cut cells.
 In the VEM, geometric regularity correlates poorly with numerical
 performance. VEMesh therefore improves *elements* rather than merely
 *faces*. The user's metric decides acceptance, not face shape.
+
+
+VEMesh is also **metric-agnostic**. You supply the quality measure and
+control update ordering and acceptance; VEMesh embeds no method-specific
+assumptions. This keeps the library useful beyond the VEM, its
+original target.
 
 ### Connection to triangle and quad meshes
 
