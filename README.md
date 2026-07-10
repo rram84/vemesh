@@ -57,7 +57,7 @@ Platform-specific install commands are listed on the [Get Started][getstarted] p
 ```sh
 git clone https://bitbucket.org/rram/vemesh.git
 cd vemesh
-cmake -S . -B build -DBUILD_TESTS=ON
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON
 cmake --build build -j
 ctest --test-dir build -j
 sudo cmake --install build

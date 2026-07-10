@@ -14,6 +14,17 @@ if(UNIX AND NOT APPLE)
   set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 endif()
 
+# Default to an optimised build when the user has not specified one.
+# (Skip for multi-config generators, which pick the type at build time.)
+get_property(_vm_multi_config GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
+if(NOT _vm_multi_config AND NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release CACHE STRING
+    "Build type (Release, Debug, RelWithDebInfo, MinSizeRel)" FORCE)
+  message(STATUS "vemesh: CMAKE_BUILD_TYPE not set, defaulting to Release")
+  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS
+    Debug Release RelWithDebInfo MinSizeRel)
+endif()
+
 # Build options
 option(BUILD_DOCS "Build documentation" OFF)
 option(BUILD_TESTS "Build unit tests" ON)

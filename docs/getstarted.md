@@ -85,6 +85,14 @@ ctest -j
 
 ### Build options
 
+**Build type (default: Release):**
+```sh
+cmake ../ -DCMAKE_BUILD_TYPE=Debug     # assertions and debug symbols, no optimisation
+```
+vemesh defaults to an optimised `Release` build when no type is given, which is
+what you want for normal use and for the \ref performance "performance studies".
+Switch to `Debug` when developing against the library or diagnosing a failure.
+
 **Custom installation path:**
 ```sh
 cmake ../ -DCMAKE_INSTALL_PREFIX=path/to/install
