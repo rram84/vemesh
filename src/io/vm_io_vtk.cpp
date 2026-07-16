@@ -177,18 +177,18 @@ namespace vm
       throw std::runtime_error("Could not open VTK file: " + filename);
 
     // Headers
-    out << "# vtk DataFile Version 3.0" << std::endl;
-    out << "Polygon mesh " << std::filesystem::path(filename).stem().string() << std::endl;
-    out << "ASCII" << std::endl;
-    out << "DATASET POLYDATA" << std::endl;
+    out << "# vtk DataFile Version 3.0" << "\n";
+    out << "Polygon mesh " << std::filesystem::path(filename).stem().string() << "\n";
+    out << "ASCII" << "\n";
+    out << "DATASET POLYDATA" << "\n";
 
     // nodes
     auto v_container = mesh.vertices();
-    out << "POINTS " << mesh.n_vertices() << " double" << std::endl;
+    out << "POINTS " << mesh.n_vertices() << " double" << "\n";
     for(auto v:v_container)
       {
 	const auto& X = mesh.position(v);
-	out << X[0] << " " << X[1] << " " << X[2] << std::endl;
+	out << X[0] << " " << X[1] << " " << X[2] << "\n";
       }
 
     // polygons
@@ -212,65 +212,65 @@ namespace vm
     else if (min_vert_indx != 0 && min_vert_indx != 1)
       throw std::runtime_error("write_vtk: expected 0/1 based vertex indexing, got " + std::to_string(min_vert_indx));
     
-    out << "POLYGONS " << mesh.n_faces() << " " << cell_size << std::endl;
+    out << "POLYGONS " << mesh.n_faces() << " " << cell_size << "\n";
     for(auto f:f_circulator)
       {
 	out << mesh.valence(f);
 	auto vface = mesh.vertices(f);
 	for(auto v:vface)
 	  out << " " << v.idx()-min_vert_indx;
-	out << std::endl;
+	out << "\n";
       }
 
-    out << "CELL_DATA " << mesh.n_faces() << std::endl;
+    out << "CELL_DATA " << mesh.n_faces() << "\n";
 
     // material ids
     if(!mesh.has_face_property("domain_id"))
       throw std::runtime_error("write_vtk: mesh should have property domain_id");
     
     auto dom_id = mesh.get_face_property<int>("domain_id");
-    out << "SCALARS domain_id int" << std::endl
-	<< "LOOKUP_TABLE default" << std::endl;
+    out << "SCALARS domain_id int" << "\n"
+	<< "LOOKUP_TABLE default" << "\n";
     for(auto f:f_circulator)
       {
-	out << dom_id[f] << std::endl;
+	out << dom_id[f] << "\n";
       }
     
     // face qualities
     if(mesh.has_face_property(Face_Quality_Tag)==true)
       {
 	auto face_quality = mesh.get_face_property<double>(Face_Quality_Tag);
-	out << "SCALARS " << Face_Quality_Tag << " double" << std::endl
-	    << "LOOKUP_TABLE default" << std::endl;
+	out << "SCALARS " << Face_Quality_Tag << " double" << "\n"
+	    << "LOOKUP_TABLE default" << "\n";
 	for(auto f:f_circulator)
 	  {
-	    out << face_quality[f] << std::endl;
+	    out << face_quality[f] << "\n";
 	  }
       }
     
-    out << "POINT_DATA " << mesh.n_vertices() << std::endl;
+    out << "POINT_DATA " << mesh.n_vertices() << "\n";
 
     // interface id
     if(!mesh.has_vertex_property("interface_id"))
       throw std::runtime_error("write_vtk: mesh should have interface_id property");
     
-    out << "SCALARS interface_id int" << std::endl
-	<< "LOOKUP_TABLE default" << std::endl;
+    out << "SCALARS interface_id int" << "\n"
+	<< "LOOKUP_TABLE default" << "\n";
     auto interface_id = mesh.get_vertex_property<int>("interface_id");
     for(auto v:v_container)
       {
-	out << interface_id[v] << std::endl;
+	out << interface_id[v] << "\n";
       }
     
     // write vertex qualities if available
     if(mesh.has_vertex_property(Vertex_Quality_Tag)==true)
       {
 	auto quality = mesh.get_vertex_property<double>(Vertex_Quality_Tag);
-	out << "SCALARS " << Vertex_Quality_Tag << " double" << std::endl
-	    << "LOOKUP_TABLE default" << std::endl;
+	out << "SCALARS " << Vertex_Quality_Tag << " double" << "\n"
+	    << "LOOKUP_TABLE default" << "\n";
 	for(auto v:v_container)
 	  {
-	    out << quality[v] << std::endl;
+	    out << quality[v] << "\n";
 	  }
       }
     
