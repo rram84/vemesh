@@ -1,9 +1,6 @@
 # Sriramajayam
 
-cmake_minimum_required(VERSION 3.17)
-
-project(optimizer_tests
-  DESCRIPTION "Unit tests for the Manager class")
+# Unit tests for the Manager class
 
 # Copy sample mesh files to build directory
 file(COPY

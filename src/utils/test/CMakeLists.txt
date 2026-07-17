@@ -1,9 +1,6 @@
 # Sriramajayam
 
-cmake_minimum_required(VERSION 3.17)
-
-project(utils_tests
-  DESCRIPTION "Unit tests for utilities")
+# Unit tests for utilities
 
 # Copy sample mesh files to build directory
 file(COPY

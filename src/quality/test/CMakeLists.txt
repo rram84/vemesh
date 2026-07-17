@@ -1,9 +1,6 @@
 # Sriramajayam
 
-cmake_minimum_required(VERSION 3.17)
-
-project(quality_tests
-  DESCRIPTION "Unit tests for quality calculations")
+# Unit tests for quality calculations
 
 # List of test executables
 set(TEST_TARGETS
