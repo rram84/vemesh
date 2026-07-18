@@ -87,7 +87,7 @@ namespace vm
     double operator()(const pmp::Vertex& vertex, const pmp::SurfaceMesh& mesh) const;
 
   private:
-     FaceQualityFn fqFunc; //!< Function pointer to the face quality metric
+     FaceQualityFn fqFunc; //!< The callable holding the face quality metric
 
   };
 
