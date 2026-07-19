@@ -12,5 +12,5 @@ foreach(TGT IN LISTS TARGETS)
     vm_io
     vm_utils
     vm_tutorial_utils
-    CLI11::CLI11)
+    vemesh_cli11)
 endforeach()

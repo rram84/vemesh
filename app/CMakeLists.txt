@@ -11,9 +11,6 @@ project(vemesh_app
 # find vemesh
 find_package(vemesh REQUIRED)
 
-# CLI11 for command-line parsing
-find_package(CLI11 REQUIRED)
-
 # Optional OpenMP: lets vemesh_app report the thread count in quality/inspection loops
  find_package(OpenMP)
 
@@ -23,8 +20,11 @@ add_executable(vemesh_app
 
 target_link_libraries(vemesh_app
   PRIVATE
-  vemesh::vemesh
-  CLI11::CLI11)
+  vemesh::vemesh)
+
+# Command-line parsing uses the single-header CLI11 provided in ../external,
+# included as <CLI11.hpp> by vemesh_app_cli.cpp — no external CLI11 dependency.
+target_include_directories(vemesh_app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../external)
 
 if(OpenMP_FOUND)
   target_link_libraries(vemesh_app PRIVATE OpenMP::OpenMP_CXX)

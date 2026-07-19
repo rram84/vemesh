@@ -49,14 +49,9 @@ brew install doxygen
 sudo apt-get install doxygen graphviz
 ```
 
-- **[CLI11](https://github.com/CLIUtils/CLI11)** (required when
-  `BUILD_TESTS=ON`, optional otherwise)
-  ```bash
-# macOS (Homebrew)
-brew install cli11
-# Ubuntu
-sudo apt-get install cli11-dev
-```
+- **[CLI11](https://github.com/CLIUtils/CLI11)** — used by the command-line app
+  and the performance tools for argument parsing. It is provided as a single
+  header in `external/CLI11.hpp`, so no installation is required.
 
 ## Build and install vemesh
 
@@ -110,8 +105,9 @@ cmake ../ -DBUILD_TESTS=OFF
 `BUILD_TESTS=ON` (the default) also builds the tutorial examples and the
 in-tree performance tooling — the `vemesh_app` command-line app, the mesh
 generators, and the scripts behind the \ref performance "VEMesh in
-practice" studies. Because `vemesh_app` is built here, this configuration
-additionally requires [CLI11](https://github.com/CLIUtils/CLI11).
+practice" studies. Their command-line parsing uses the
+[CLI11](https://github.com/CLIUtils/CLI11) header provided in `external/`, so no
+extra dependency is required.
 
 **Build documentation (default: OFF, requires Doxygen):**
 ```sh
@@ -140,8 +136,8 @@ Test the element improvement possible with `vemesh` before integrating it with y
 using the \ref tutorial_app "vemesh_app" command-line tool. Its source is `app/vemesh_app.cpp`.
 
 `vemesh_app` is a **standalone CMake project** in the `app/` folder. It consumes the installed
-`vemesh` package and uses [CLI11](https://github.com/CLIUtils/CLI11) for command-line parsing,
-so build it **after** installing `vemesh` (and CLI11).
+`vemesh` package and uses the [CLI11](https://github.com/CLIUtils/CLI11) header provided in
+`external/CLI11.hpp` for command-line parsing, so build it **after** installing `vemesh`.
 
 **Build the app:**
 ```bash

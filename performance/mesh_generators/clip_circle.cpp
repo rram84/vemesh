@@ -33,7 +33,7 @@
 #include <vm_io.h>                      // vm::write_vtk
 #include <vm_mesh_inspection.h>         // vm::inspect_mesh, vm::MeshInspection
 
-#include <CLI/CLI.hpp>
+#include <CLI11.hpp>
 
 #include <random>
 #include <filesystem>

@@ -54,10 +54,4 @@ RUN set -eux; \
     cmake --install /tmp/pmp/build; \
     rm -rf /tmp/pmp
 
-# CLI11 — header-only, used by the tutorial app (not by CI). Appended as a
-# separate layer so existing Boost/PMP cache survives subsequent edits.
-RUN apt-get update && apt-get install -y --no-install-recommends \
-        libcli11-dev \
-    && rm -rf /var/lib/apt/lists/*
-    
 ENV CMAKE_PREFIX_PATH=/opt/pmp:/opt/boost

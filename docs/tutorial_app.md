@@ -12,7 +12,7 @@ metrics, iteration counts, and mesh output.
 **Source code:** app/vemesh_app.cpp
 
 \note `vemesh_app` is built as a **standalone CMake project** under `app/`, separate from the
-main library and the tutorial examples. Build it after installing `vemesh` and CLI11 — see the
+main library and the tutorial examples. Build it after installing `vemesh` — see the
 \ref getstarted page.
 
 **Overview:**  
@@ -29,7 +29,7 @@ main library and the tutorial examples. Build it after installing `vemesh` and C
 
 [TOC] 
 
- The application uses **CLI11** for command-line parsing. Check the \ref getstarted page for install instructions.
+ The application uses **CLI11** for command-line parsing, provided as a single header in `external/` so no separate install is needed.
 
 ## Flags
 

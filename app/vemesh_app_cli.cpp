@@ -7,7 +7,7 @@
 
 #include "vemesh_app_cli.h"
 
-#include <CLI/CLI.hpp>
+#include <CLI11.hpp>   // single-header CLI11 provided in external/ (no separate dependency)
 
 #include <iostream>
 #include <limits>

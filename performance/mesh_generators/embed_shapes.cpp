@@ -33,7 +33,7 @@
 #include <vm_mesh_inspection.h>         // vm::inspect_mesh, vm::MeshInspection
 #include <vm_utils.h>                   // vm::bg, vm::boost_point_t/polygon_t/linestring_t
 
-#include <CLI/CLI.hpp>
+#include <CLI11.hpp>
 
 #include <random>
 #include <filesystem>

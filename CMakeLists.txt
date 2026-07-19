@@ -29,19 +29,34 @@ endif()
 option(BUILD_DOCS "Build documentation" OFF)
 option(BUILD_TESTS "Build unit tests" ON)
 
+message(STATUS "vemesh build options (override with -D<option>=ON/OFF):")
+message(STATUS "  CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}  (Debug | Release | RelWithDebInfo)")
+message(STATUS "  BUILD_TESTS      = ${BUILD_TESTS}  (build unit tests)")
+message(STATUS "  BUILD_DOCS       = ${BUILD_DOCS}  (build Doxygen documentation)")
+
 # Dependencies
 find_package(Eigen3 REQUIRED)
 find_package(Boost 1.87 REQUIRED CONFIG)
 find_package(OpenMP)                        # optional
-if(OpenMP_FOUND)
-  message(STATUS "vemesh: OpenMP found (${OpenMP_CXX_VERSION})")
-else()
-  message(STATUS "vemesh: OpenMP NOT found - vemesh will run serially")
-endif()
 find_package(pmp REQUIRED)
 if(BUILD_DOCS)
 	find_package(Doxygen REQUIRED)
 endif()
+
+# Report found dependencies
+message(STATUS "vemesh dependencies:")
+message(STATUS "  Eigen3 ${Eigen3_VERSION} (${Eigen3_DIR})")
+message(STATUS "  Boost  ${Boost_VERSION} (${Boost_INCLUDE_DIRS})")
+message(STATUS "  PMP    ${pmp_VERSION} (${pmp_DIR})")
+if(OpenMP_FOUND)
+  message(STATUS "  OpenMP ${OpenMP_CXX_VERSION}")
+else()
+  message(STATUS "  OpenMP not found (optional) - vemesh will run serially")
+endif()
+
+# Third-party headers provided in-tree (defines the vemesh_cli11 interface
+# target, consumed by the in-tree command-line frontends).
+add_subdirectory(external)
 
 # Compile features
 list(APPEND VM_COMPILE_FEATURES cxx_std_17)

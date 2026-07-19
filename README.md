@@ -47,8 +47,10 @@ Required:
 
 Optional:
 
-- [CLI11][cli11] — required only by the command-line app
 - [Doxygen][doxygen] (with Graphviz) — required only to build the documentation
+
+The command-line app and performance tools use [CLI11][cli11], which is provided
+as a single header in `external/` — no separate installation is required.
 
 Platform-specific install commands are listed on the [Get Started][getstarted] page.
 

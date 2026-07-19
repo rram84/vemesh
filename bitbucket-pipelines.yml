@@ -11,5 +11,7 @@ pipelines:
           - cmake --version
           - g++ --version
           - cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON
-          - cmake --build build -j
+          # Cap parallelism: unbounded -j OOM-kills cc1plus on the heavy
+          # PMP/Eigen/CLI11 template TUs within the runner's memory limit.
+          - cmake --build build -j 2
           - ctest --test-dir build --output-on-failure -j
