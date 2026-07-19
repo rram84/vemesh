@@ -22,8 +22,7 @@ pipelines:
           # CMAKE_CXX_COMPILER_LAUNCHER routes every compile through ccache.
           - cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
           # Cap parallelism: unbounded -j OOM-kills cc1plus on the heavy
-          # PMP/Eigen/CLI11 template TUs within the runner's memory limit.
-          - cmake --build build -j 2
+          - cmake --build build -j 3
           # Show cache effectiveness (hits vs misses) for this run.
           - ccache --show-stats
           - ctest --test-dir build --output-on-failure -j
