@@ -3,15 +3,27 @@ clone:
   
 image: rram84/vemesh-ci:latest
 
+definitions:
+  caches:
+    # Persist ccache across runs so unchanged TUs skip cc1plus entirely.
+    # Path matches $CCACHE_DIR set in the CI image.
+    ccache: /root/.ccache
+
 pipelines:
   default:
     - step:
         name: Build and test VEMesh
+        caches:
+          - ccache
         script:
           - cmake --version
           - g++ --version
-          - cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON
+          - ccache --zero-stats
+          # CMAKE_CXX_COMPILER_LAUNCHER routes every compile through ccache.
+          - cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
           # Cap parallelism: unbounded -j OOM-kills cc1plus on the heavy
           # PMP/Eigen/CLI11 template TUs within the runner's memory limit.
           - cmake --build build -j 2
+          # Show cache effectiveness (hits vs misses) for this run.
+          - ccache --show-stats
           - ctest --test-dir build --output-on-failure -j

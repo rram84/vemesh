@@ -3,7 +3,7 @@
 # Rebuild and push when Boost/PMP versions change:
 #   docker buildx build --platform linux/amd64 -t rram84/vemesh-ci:latest -f .ci/Dockerfile --push .
 #
-# Contains: Ubuntu 24.04, GCC 13, CMake, Boost 1.87, Eigen3, PMP 3.0.
+# Contains: Ubuntu 24.04, GCC 13, CMake, Boost 1.87, Eigen3, PMP 3.0, ccache.
 
 FROM ubuntu:24.04
 
@@ -54,4 +54,13 @@ RUN set -eux; \
     cmake --install /tmp/pmp/build; \
     rm -rf /tmp/pmp
 
+# ccache — accelerates repeat CI builds. Appended as a trailing layer so the
+# expensive Boost/PMP layers stay cached across image edits. The pipeline
+# persists $CCACHE_DIR across runs and enables it via
+# -DCMAKE_CXX_COMPILER_LAUNCHER=ccache.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        ccache \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV CCACHE_DIR=/root/.ccache
 ENV CMAKE_PREFIX_PATH=/opt/pmp:/opt/boost
