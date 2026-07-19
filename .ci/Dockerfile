@@ -34,10 +34,16 @@ RUN set -eux; \
     rm -rf /tmp/boost_*
 
 # PMP — no tests, no examples, no viewers (no GLFW/OpenGL pulled in)
+#
+# The 3.0.0 git tag still carries a stale `project(... VERSION 2.0.1)` and PMP
+# reads its installed package version from an (unset) PMP_VERSION variable, so a
+# plain build reports itself as 2.0.1 in pmpConfigVersion.cmake. Pass the version
+# explicitly so the installed package identifies as ${PMP_VERSION}.
 RUN set -eux; \
     git clone --branch ${PMP_VERSION} --depth 1 https://github.com/pmp-library/pmp-library.git /tmp/pmp; \
     cmake -S /tmp/pmp -B /tmp/pmp/build \
         -DCMAKE_BUILD_TYPE=Release \
+        -DPMP_VERSION=${PMP_VERSION} \
         -DCMAKE_INSTALL_PREFIX=/opt/pmp \
         -DPMP_BUILD_EXAMPLES=OFF \
         -DPMP_BUILD_TESTS=OFF \
