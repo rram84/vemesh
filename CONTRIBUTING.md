@@ -1,7 +1,8 @@
 # Contributing to VEMesh
 
 Contributions are welcome — bug reports, documentation fixes, and code. Please
-keep interactions respectful and constructive.
+keep interactions respectful and constructive; this project is governed by our
+[Code of Conduct](CODE_OF_CONDUCT.md).
 
 VEMesh improves planar polygonal meshes via local element agglomeration and
 vertex relaxation. It is **not** a mesh generator or repair tool. See
