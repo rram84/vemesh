@@ -57,7 +57,7 @@ Platform-specific install commands are listed on the [Get Started][getstarted] p
 ## Installation
 
 ```sh
-git clone https://bitbucket.org/rram/vemesh.git
+git clone https://github.com/rram84/vemesh.git
 cd vemesh
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON
 cmake --build build -j
@@ -94,7 +94,7 @@ and hosted at **[rram.bitbucket.io/vemesh-docs][docs]**. Main entry points:
 ## Contributing
 
 Bug reports, feature requests, and pull requests are welcome via the
-[issue tracker](https://bitbucket.org/rram/vemesh/issues). See
+[issue tracker](https://github.com/rram84/vemesh/issues). See
 [`CONTRIBUTING.md`](CONTRIBUTING.md) for guidelines, and please run `ctest`
 locally before submitting a PR.
 

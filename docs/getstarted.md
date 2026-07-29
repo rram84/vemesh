@@ -57,7 +57,7 @@ sudo apt-get install doxygen graphviz
 
 **Clone the repository:**
 ```sh
-git clone git@bitbucket.org:rram/vemesh.git
+git clone https://github.com/rram84/vemesh.git
 ```
 
 **Configure and build:**
