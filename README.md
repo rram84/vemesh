@@ -7,7 +7,8 @@ meshes*
 
 Pages: [About][about] · [Rationale][rationale] · [Get Started][getstarted] · [Tutorials][tutorials] · [User Guide][userguide] · [VEMesh in practice][practice]
 
-<!-- badges: build status, docs, license, JOSS DOI go here once available -->
+[![CI](https://github.com/rram84/vemesh/actions/workflows/ci.yml/badge.svg)](https://github.com/rram84/vemesh/actions/workflows/ci.yml)
+<!-- more badges (docs, license, JOSS DOI) go here once available -->
 
 VEMesh improves planar polygonal meshes through **local, atomic, quality-driven
 updates**. It provides two mesh-modification primitives — **element
