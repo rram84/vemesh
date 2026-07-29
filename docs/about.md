@@ -1,7 +1,7 @@
 # VEMesh {#aboutvemesh}
 *A quality-driven mesh improvement library for planar polygonal meshes*
 
-**Source code:** <https://bitbucket.org/rram/vemesh>
+**Source code:** <https://github.com/rram84/vemesh>
 
 [TOC]
 

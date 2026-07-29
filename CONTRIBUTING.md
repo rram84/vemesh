@@ -10,13 +10,13 @@ vertex relaxation. It is **not** a mesh generator or repair tool. See
 
 ## Reporting issues
 
-Please open an issue on the [issue tracker](https://bitbucket.org/rram/vemesh/issues). For bugs, include
+Please open an issue on the [issue tracker](https://github.com/rram84/vemesh/issues). For bugs, include
 a minimal mesh and code snippet (or `vemesh_app` command) that reproduces the
 problem, your platform and compiler, and the full error or incorrect output.
 
 ## Seeking support
 
-For questions and help, open an issue on the [issue tracker](https://bitbucket.org/rram/vemesh/issues).
+For questions and help, open an issue on the [issue tracker](https://github.com/rram84/vemesh/issues).
 
 ## Contributing code
 
