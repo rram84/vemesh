@@ -1,0 +1,60 @@
+name: CI
+
+# Build VEMesh in Release and run the ctest suite on every push and PR.
+# Mirrors the former Bitbucket Pipelines job, reusing the same prebuilt CI image
+# (Ubuntu 24.04, GCC 13, CMake, Boost 1.87, Eigen3, PMP 3.0, ccache).
+
+on:
+  push:
+    branches: [master, joss]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    name: Build and test VEMesh
+    runs-on: ubuntu-latest
+    container:
+      image: rram84/vemesh-ci:latest
+    env:
+      # These are baked into the image too; set explicitly so the step
+      # environment is unambiguous.
+      CCACHE_DIR: /root/.ccache
+      CMAKE_PREFIX_PATH: /opt/pmp:/opt/boost
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Persist ccache across runs so unchanged translation units skip cc1plus.
+      - name: Restore ccache
+        uses: actions/cache@v4
+        with:
+          path: /root/.ccache
+          key: ccache-${{ github.ref_name }}-${{ github.sha }}
+          restore-keys: |
+            ccache-${{ github.ref_name }}-
+            ccache-
+
+      - name: Toolchain versions
+        run: |
+          cmake --version
+          g++ --version
+          ccache --zero-stats
+
+      # CMAKE_CXX_COMPILER_LAUNCHER routes every compile through ccache.
+      - name: Configure
+        run: >
+          cmake -S . -B build
+          -DCMAKE_BUILD_TYPE=Release
+          -DBUILD_TESTS=ON
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+
+      # Cap parallelism: unbounded -j can OOM-kill cc1plus on the heavy TUs.
+      - name: Build
+        run: cmake --build build -j 3
+
+      - name: ccache stats
+        run: ccache --show-stats
+
+      - name: Test
+        run: ctest --test-dir build --output-on-failure -j
