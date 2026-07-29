@@ -79,7 +79,7 @@ VEMesh is not limited to the VEM or to improving embedded meshes. With customiza
 
 # AI usage disclosure
 
-Claude Code was used to set up a Docker image and the CI pipeline, to write the execution scripts for performance testing, to improve the CMake build system, to format mesh output as VTK files, and to assist with the library's documentation.
+Claude Code was used to set up a Docker image and the CI pipeline, to write the execution scripts for performance testing, to improve the CMake build system, to format mesh I/O, and to assist with the library's documentation.
 
 No algorithmic aspect of the library was implemented with AI assistance. The mesh improvement primitives, the quality metrics, and the data structures on which they operate were designed, implemented, and tested by the authors.
 
