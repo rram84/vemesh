@@ -30,7 +30,8 @@ int main()
   const std::string filename_interface_vertices = "sample_data/shapes/85909.dat";
 
   // signed distance function calculator to the interface
-  const vm::tutorial::PolygonSDF interface_sdf(filename_interface_vertices);
+  const auto interface_loops = vm::tutorial::read_polygon_loops(filename_interface_vertices);
+  const vm::tutorial::PolygonSDF interface_sdf(interface_loops);
 
   // signed-distance level set to the polygon
   vm::tutorial::LevelSetFn sdfunc = [&interface_sdf](const double* X) { return interface_sdf(X); };

@@ -103,10 +103,16 @@ other. Any function matching this signature can be used (for example, an
 analytic signed distance such as `std::sqrt(x*x + y*y) - r` for a circle).
 
 For an interface given as a **polygon**, the library provides a
-ready-made implementation through th class `vm::tutorial::PolygonSDF`.
-The class takes the polygon's vertices at construction. Its operators
+ready-made implementation through the class `vm::tutorial::PolygonSDF`.
+The class takes the polygon's vertices at construction — either a single
+closed loop, or several disjoint closed loops (nested loops are treated
+as holes and separate loops as independent components). Its operators
 return the signed distance to its boundary (negative inside, positive
-outside). To accelerate distance queries, it stores boundary segments
-in an R-tree. This reduces the query cost to `O(log n)` in the number
-of polygon vertices. The implementation is fast enough to evaluate at
-every mesh vertex even for finely sampled interfaces.
+outside). File I/O is kept out of the class: the free helper
+`vm::tutorial::read_polygon_loops` reads the loops from a text file
+(one `x y` pair per line, a blank line separating loops) for passing to
+the constructor. To accelerate distance queries, `PolygonSDF` stores all
+boundary segments in a single R-tree. This reduces the query cost to
+`O(log n)` in the total number of polygon vertices. The implementation is
+fast enough to evaluate at every mesh vertex even for finely sampled
+interfaces.

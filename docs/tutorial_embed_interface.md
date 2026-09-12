@@ -34,18 +34,21 @@ embed an interface in a non-conforming mesh using a level set function.
 
 ### Embedding an interface in a non-conforming mesh
 **The interface:**  
-The interface is given by an ordered sequence of sample points read from a file, one `x y` pair per line. These points are the vertices of a simple polygon whose boundary is the interface.  
+The interface is given by an ordered sequence of sample points read from a file, one `x y` pair per line, with a blank line separating one closed loop from the next. These points are the vertices of the polygon — a single simple loop, or several disjoint closed loops — whose boundary is the interface.  
 
 **The level set:**  
-The location of the interface is specified using a level set function of type `vm::tutorial::LevelSetFn`, see \ref tutorial_utils "tutorial utilities". Here it is provided by `vm::tutorial::PolygonSDF`, the signed distance to the interface polygon:  
+The location of the interface is specified using a level set function of type `vm::tutorial::LevelSetFn`, see \ref tutorial_utils "tutorial utilities". Here it is provided by `vm::tutorial::PolygonSDF`, the signed distance to the interface polygon. The polygon vertices are read from the file by the free helper `vm::tutorial::read_polygon_loops`, keeping file I/O out of `PolygonSDF` itself:  
 ```cpp
-  // signed distance to the interface polygon (read from the sample file)
-  const vm::tutorial::PolygonSDF interface_sdf(filename_interface_vertices);
+  // read the interface polygon loop(s) from the sample file
+  const auto interface_loops = vm::tutorial::read_polygon_loops(filename_interface_vertices);
+
+  // signed distance to the interface polygon
+  const vm::tutorial::PolygonSDF interface_sdf(interface_loops);
 
   vm::tutorial::LevelSetFn sdfunc =
     [&interface_sdf](const double* X) { return interface_sdf(X); };
 ```  
-`vm::tutorial::PolygonSDF` evaluates the signed distance to the polygon boundary: its magnitude is the Euclidean distance to the nearest boundary segment, and its sign is determined by whether the evaluation point lies inside the polygon. Adopting the convention that the negative sub-level set coincides with the polygon enclosed by the interface, the level set vanishes on the interface, is negative at points inside the polygon, and is positive elsewhere. The boundary segments are stored internally in an R-tree, so each evaluation stays fast even for finely sampled interfaces; see \ref tutorial_utils.
+`vm::tutorial::PolygonSDF` evaluates the signed distance to the polygon boundary: its magnitude is the Euclidean distance to the nearest boundary segment, and its sign is determined by whether the evaluation point lies inside the polygon. Adopting the convention that the negative sub-level set coincides with the polygon enclosed by the interface, the level set vanishes on the interface, is negative at points inside the polygon, and is positive elsewhere. The interface may consist of several disjoint closed loops (separated by a blank line in the file); nested loops are treated as holes and separate loops as independent components. The boundary segments are stored internally in an R-tree, so each evaluation stays fast even for finely sampled interfaces; see \ref tutorial_utils.
 
 **Background mesh:**   
 A structured rectangle mesh over a square domain  is generated using the utility `vm::tutorial::create_rectangle_mesh`.  

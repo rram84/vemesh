@@ -72,7 +72,8 @@ int main(int argc, char** argv)
   fs::create_directories(outdir);
 
   // SDF to interface
-  vm::tutorial::PolygonSDF interface_sdf(geom_file);
+  const auto interface_loops = vm::tutorial::read_polygon_loops(geom_file);
+  vm::tutorial::PolygonSDF interface_sdf(interface_loops);
 
   // signed-distance level set to the polygon
   vm::tutorial::LevelSetFn sdfunc = [&interface_sdf](const double* X) { return interface_sdf(X); };

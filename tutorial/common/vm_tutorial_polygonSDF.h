@@ -1,7 +1,7 @@
 // Sriramajayam
 
 /** \file vm_tutorial_polygonSDF.h
- * \brief R-tree-accelerated signed distance to a simple polygon (vm::tutorial::PolygonSDF)
+ * \brief R-tree-accelerated signed distance to one or more closed polygon loops (vm::tutorial::PolygonSDF)
  * \author Ramsharan Rangarajan
  */
 
@@ -20,19 +20,23 @@ namespace vm
   namespace tutorial
   {
     /**
-     * \brief Signed distance to a simple polygon
+     * \brief Signed distance to one or more closed polygon loops
      *
      * Computes the signed distance from a query point to the boundary of a
-     * simple polygon. The sign convention adopted assigns negative distances to points
-     * *inside* the polygon and positive to those *outside*. 
+     * polygon. The sign convention adopted assigns negative distances to points
+     * *inside* the polygon and positive to those *outside*.
      * The polygon's boundary is the zero level set of the function. A PolygonSDF is
      * therefore usable directly as a \ref LevelSetFn for \ref adjust_mesh_nodes,
      * \ref clip_mesh and \ref embed_interface, with the polygon playing the
      * role of the negative sub-level set.
      *
-     * The polygon is supplied as an ordered list of vertices.
-     * The implementation here builds an R-tree of the boundary segments for fast queries.
-     * 
+     * The boundary may be a single simple polygon or **several disjoint closed
+     * loops**, supplied as one ordered vertex list per loop. All loops are
+     * indexed into a single R-tree and the even-odd sign test is applied over
+     * every loop, so nested loops act as holes (inside outer + inside inner =
+     * even = outside) and separate loops as independent components, with no
+     * per-loop bookkeeping.
+     *
      * Each distance query is evaluated in two parts:
      * - **magnitude:** the Euclidean distance to the nearest boundary segment,
      *   located by a nearest-neighbour query on the R-tree;
@@ -40,13 +44,14 @@ namespace vm
      *   \f$+x\f$ horizontal ray from the query point with the boundary (the
      *   even-odd rule), considering only the segments returned by the R-tree.
      *
-     * As a result, the per-query cost is \f$O(\log n)\f$ 
-     * in the number of polygon vertices \f$n\f$.
+     * As a result, the per-query cost is \f$O(\log n)\f$
+     * in the total number of polygon vertices \f$n\f$.
      *
-     * \note The polygon is assumed to be *simple* (non-self-intersecting). Its
-     *       boundary is closed and its orientation corrected internally, so the
-     *       supplied vertices need not repeat the first point or follow a
-     *       particular winding.
+     * \note Each loop is assumed *simple* (non-self-intersecting) and distinct
+     *       loops are assumed not to cross. Each loop is closed and its
+     *       orientation corrected internally, so the supplied vertices need not
+     *       repeat the first point or follow a particular winding. A single loop
+     *       is the ordinary simple-polygon case.
      *
      * \see LevelSetFn
      * \see adjust_mesh_nodes
@@ -58,7 +63,10 @@ namespace vm
     {
     public:
       /**
-       * \brief Construct from polygon boundary vertices.
+       * \brief Construct from a single closed loop's boundary vertices.
+       *
+       * Convenience overload for the common simple-polygon case; equivalent to
+       * passing a single loop to the multi-loop constructor.
        *
        * \param[in] vertices Boundary vertices as flattened \f$x,y\f$ pairs in
        *            order around the polygon, i.e. `{x0, y0, x1, y1, ...}`. At
@@ -69,16 +77,20 @@ namespace vm
       PolygonSDF(const std::vector<double>& vertices);
 
       /**
-       * \brief Construct from a text file of boundary samples.
+       * \brief Construct from several closed loops (holes / disjoint pieces).
        *
-       * \param[in] filename Path to a whitespace-separated file with one
-       *            `x y` boundary sample per line, in order around the polygon.
+       * Nested loops act as holes and separate loops as independent components
+       * (see the class description); orientation and winding per loop are
+       * immaterial.
        *
-       * \throws std::runtime_error if the file cannot be opened.
-       * \throws std::invalid_argument if fewer than three vertices are read.
+       * \param[in] loops One flattened \f$x,y\f$ list per closed loop, i.e.
+       *            `{{x0,y0,x1,y1,...}, ...}`. Loops with fewer than three
+       *            vertices are ignored.
+       *
+       * \throws std::invalid_argument if no loop has at least three vertices.
        */
-      PolygonSDF(const std::string& filename);
-
+      PolygonSDF(const std::vector<std::vector<double>>& loops);
+      
       /**
        * \brief Signed distance at a point.
        *
@@ -104,11 +116,25 @@ namespace vm
       using segment_t = vm::bgm::segment<vm::boost_point_t>;
       using rtree_t   = boost::geometry::index::rtree<segment_t, boost::geometry::index::rstar<16>>;
 
-      // shared construction: vertices -> corrected polygon -> segment R-tree
-      void build(const std::vector<double>& vertices);
-
+      // shared construction: loops -> corrected rings -> one segment R-tree
+      void build(const std::vector<std::vector<double>>& loops);
+      
       rtree_t rtree_;
     };
 
+    /**
+     * \brief Read polygon loops from a text file for use with PolygonSDF.
+     *
+     * One `x y` sample per line, in order around each loop; a blank line
+     * separates one closed loop from the next. A file with no blank line is a
+     * single loop. Keeps file I/O out of PolygonSDF's construction.
+     *
+     * \param[in] filename Path to the polygon file.
+     * \return One flattened {x0,y0,...} list per loop.
+     * \throws std::runtime_error if the file cannot be opened.
+     * \ingroup tutorial_utils
+     */
+    std::vector<std::vector<double>> read_polygon_loops(const std::string& filename);
+    
   }
 }
