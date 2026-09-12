@@ -1,0 +1,6 @@
+# Frozen study dataset: the geometry/background DATA is generated (large) and is
+# NOT committed — it persists locally for the runs, and is archived externally
+# (e.g. Zenodo) for the paper. Only the provenance (README.md, manifest.csv) is
+# tracked. Regenerate the data via ../geometry/ (see README.md).
+/geometries/
+/backgrounds/

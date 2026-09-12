@@ -1,0 +1,6 @@
+# Generated study data — never committed (large; reproducible from the scripts).
+data/
+output/
+*.off
+*.dat
+!.gitignore

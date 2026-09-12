@@ -18,6 +18,9 @@ endif()
 # mesh generators that produce the test datasets
 add_subdirectory(mesh_generators)
 
+# study tooling (Computational Mechanics paper: relax vs. agglomerate)
+add_subdirectory(study)
+
 target_compile_features(vemesh_app PRIVATE cxx_std_17)
 
 # Stage the run script next to the binary on every build (so edits to the source
