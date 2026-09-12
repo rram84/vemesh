@@ -26,7 +26,13 @@ namespace vm
    * to access and store vertex qualities.
    */
   inline const std::string Vertex_Quality_Tag = "vertex_quality";
-    
+
+  /** \brief Per-face "altered this iteration" flag (0/1, or an int code). */
+  inline const std::string Face_Altered_Tag = "altered";
+
+  /** \brief Per-iteration "vertex moved by relaxation" flag (0/1). */
+  inline const std::string Vertex_Altered_Tag = "vertex_altered";
+  
   /** \brief Reads a polygonal mesh from a .OFF file into a SurfaceMesh.
    * 
    * This function parses a standard OFF file containing vertex coordinates

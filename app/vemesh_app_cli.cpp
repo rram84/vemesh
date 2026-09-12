@@ -22,7 +22,7 @@ std::optional<CLIConfig> parse_cli(int argc, char** argv, int& exit_code)
     \n=================== \
     \n(i)   agglomerate elements:  ./vemesh_app -a -i in_mesh.OFF -o out_dir -n 5 -f 1.2 -m stability -v iter \
     \n(ii)  relax vertices:        ./vemesh_app -r -i in_mesh.OFF -o out_dir -n 5 -s 5 -m shape \
-    \n(iii) agglomerate and relax: ./vemesh_app --ar -i in_mesh.OFF -o out_dir -n 5 -f 1.2 -s 5 -m stability -v detailed \
+    \n(iii) agglomerate and relax: ./vemesh_app --ar -i in_mesh.OFF -o out_dir -n 5 -f 1.2 -s 5 -m stability -v op \
     \n(iv)  relax and agglomerate: ./vemesh_app --ra -i in_mesh.OFF -o out_dir -n 5 -f 1.2 -s 5  -m shape\n");
 
   app.set_help_flag("-h,--help", "Print this help message and exit");
@@ -72,7 +72,7 @@ std::optional<CLIConfig> parse_cli(int argc, char** argv, int& exit_code)
 
   std::string output_mode_str = "none";
   app.add_option("-v", output_mode_str,
-		 "Mesh output: none | iter | detailed")->check(CLI::IsMember({"none","iter","detailed"}));
+		 "Mesh output: none | iter | op | update")->check(CLI::IsMember({"none","iter","op","update"}));
 
   opt_a->needs(opt_f);                 // agglomerate
   opt_r->needs(opt_s);                 // relax
@@ -117,8 +117,10 @@ std::optional<CLIConfig> parse_cli(int argc, char** argv, int& exit_code)
     cfg.output_mode = CLIConfig::MeshOutputMode::None;
   else if(output_mode_str=="iter")
     cfg.output_mode = CLIConfig::MeshOutputMode::IterationEnd;
-  else if(output_mode_str=="detailed")
-    cfg.output_mode = CLIConfig::MeshOutputMode::Detailed;
+  else if(output_mode_str=="op")
+    cfg.output_mode = CLIConfig::MeshOutputMode::EachOperation;
+  else if(output_mode_str=="update")
+    cfg.output_mode = CLIConfig::MeshOutputMode::EachUpdate;
 
   return cfg;
 }

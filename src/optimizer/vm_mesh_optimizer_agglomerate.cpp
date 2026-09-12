@@ -139,8 +139,11 @@ namespace vm
   int MeshOptimizer::agglomerate(const QualityEvaluator &QE,
 				 double qmin,
 				 double qfactor,
-				 const ProgressCallback &callback)
+				 const ProgressCallback &callback,
+				 bool reset_altered)
   {
+    if(reset_altered) clear_alteration_flags();
+     
     // sanity checks
     if (qmin <= 0.)
       throw std::invalid_argument("MeshOptimizer::agglomerate: qmin must be > 0");
@@ -307,11 +310,11 @@ namespace vm
     assert(mesh.is_deleted(f0) || mesh.is_deleted(f1));
     assert(!(mesh.is_deleted(f0) && mesh.is_deleted(f1)));
     
-    // done
-    if(mesh.is_deleted(f0))
-      return f1;
-    else
-      return f0;
+    // done: the surviving face is the merged (altered) polygon
+    const pmp::Face survivor = mesh.is_deleted(f0) ? f1 : f0;
+    if(mesh.has_face_property("altered"))          // set only when the app enables tracking
+      mesh.get_face_property<int>("altered")[survivor] = 1;
+    return survivor;
   }
 
   

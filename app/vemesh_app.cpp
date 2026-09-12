@@ -28,7 +28,7 @@
 
 namespace fs = std::filesystem;
 
-// Generate a per-update callback that writes intermediate meshes in detailed mode
+// Generate a per-update callback that writes intermediate meshes in each-update mode
 vm::ProgressCallback make_mesh_callback(int iter,
 					const fs::path &outpath,
 					CLIConfig::MeshOutputMode output_mode,
@@ -56,10 +56,10 @@ int main(int argc, char **argv)
   // echo the run configuration
   auto mode_name = [](CLIConfig::Mode m) {
     switch(m) {
-      case CLIConfig::Mode::Agglomerate:      return "agglomerate (-a)";
-      case CLIConfig::Mode::Relax:            return "relax (-r)";
-      case CLIConfig::Mode::AgglomerateRelax: return "agglomerate+relax (--ar)";
-      case CLIConfig::Mode::RelaxAgglomerate: return "relax+agglomerate (--ra)";
+    case CLIConfig::Mode::Agglomerate:      return "agglomerate (-a)";
+    case CLIConfig::Mode::Relax:            return "relax (-r)";
+    case CLIConfig::Mode::AgglomerateRelax: return "agglomerate+relax (--ar)";
+    case CLIConfig::Mode::RelaxAgglomerate: return "relax+agglomerate (--ra)";
     }
     return "?";
   };
@@ -106,52 +106,67 @@ int main(int argc, char **argv)
 	    
   // Quality evaluator
   vm::QualityEvaluator QE(face_quality_metric);
-  
+    
   // initial mesh quality
   optimizer.evaluate_face_qualities(QE, vm::Face_Quality_Tag);
   optimizer.evaluate_vertex_qualities(vm::Face_Quality_Tag, vm::Vertex_Quality_Tag);
   vm::write_vtk(mesh, (outpath / "input_mesh.vtk").string());
   vm::write_face_quality_vector(mesh, (outpath / "input_mesh_quality.dat").string());
 
+  // lambda for saving information after an operation
+  auto capture = [&](const std::string& tag){
+    if(cfg.output_mode != CLIConfig::MeshOutputMode::EachOperation) return;
+    optimizer.evaluate_face_qualities(QE, vm::Face_Quality_Tag);
+    optimizer.evaluate_vertex_qualities(vm::Face_Quality_Tag, vm::Vertex_Quality_Tag);
+    vm::write_vtk(mesh, (outpath / ("mesh-" + tag + ".vtk")).string());
+  };
+
+    
   // improvement iterations
   for(int iter=0; iter<cfg.num_iters; ++iter) {
 
     std::cout << "Mesh improvement iteration " << iter <<":\n" << std::flush;
-
+    
     // relaxation seed. nullopt when -S is not given -> nondeterministic
     const std::optional<unsigned int> rseed =
       cfg.seed ? std::optional<unsigned int>(*cfg.seed + static_cast<unsigned int>(iter))
-               : std::nullopt;
+      : std::nullopt;
     switch(cfg.mode)
       {
       case CLIConfig::Mode::Agglomerate:
-	{
-	  auto callback = make_mesh_callback(iter, outpath, cfg.output_mode, "a");
-	  optimizer.agglomerate(QE, cfg.qepsilon, cfg.qfactor, callback);
-	  break;
-	}
+        {
+          auto callback = make_mesh_callback(iter, outpath, cfg.output_mode, "a");
+          optimizer.agglomerate(QE, cfg.qepsilon, cfg.qfactor, callback);
+          capture("iter" + std::to_string(iter) + "-a"); 
+          break;
+        }
       case CLIConfig::Mode::Relax:
-	{
-	  auto callback = make_mesh_callback(iter, outpath, cfg.output_mode, "r");
-	  optimizer.relax(QE, cfg.qepsilon, cfg.num_samples, callback, rseed);
-	  break;
-	}
+        {
+          auto callback = make_mesh_callback(iter, outpath, cfg.output_mode, "r");
+          optimizer.relax(QE, cfg.qepsilon, cfg.num_samples, callback, rseed);
+          capture("iter" + std::to_string(iter) + "-r");  
+          break;
+        }
       case CLIConfig::Mode::AgglomerateRelax:
-	{
-	  auto callback_a = make_mesh_callback(iter, outpath, cfg.output_mode, "a");
-	  optimizer.agglomerate(QE, cfg.qepsilon, cfg.qfactor, callback_a);
-	  auto callback_r = make_mesh_callback(iter, outpath, cfg.output_mode, "a-r");
-	  optimizer.relax(QE, cfg.qepsilon, cfg.num_samples, callback_r, rseed);
-	  break;
-	}
+        {
+          auto callback_a = make_mesh_callback(iter, outpath, cfg.output_mode, "a");
+          optimizer.agglomerate(QE, cfg.qepsilon, cfg.qfactor, callback_a);
+          capture("iter" + std::to_string(iter) + "-a");  
+          auto callback_r = make_mesh_callback(iter, outpath, cfg.output_mode, "a-r");
+          optimizer.relax(QE, cfg.qepsilon, cfg.num_samples, callback_r, rseed);
+          capture("iter" + std::to_string(iter) + "-r"); 
+          break;
+        }
       case CLIConfig::Mode::RelaxAgglomerate:
-	{
-	  auto callback_r = make_mesh_callback(iter, outpath, cfg.output_mode, "r");
-	  optimizer.relax(QE, cfg.qepsilon, cfg.num_samples, callback_r, rseed);
-	  auto callback_a = make_mesh_callback(iter, outpath, cfg.output_mode, "r-a");
-	  optimizer.agglomerate(QE, cfg.qepsilon, cfg.qfactor, callback_a);
-	  break;
-	}
+        {
+          auto callback_r = make_mesh_callback(iter, outpath, cfg.output_mode, "r");
+          optimizer.relax(QE, cfg.qepsilon, cfg.num_samples, callback_r, rseed);
+          capture("iter" + std::to_string(iter) + "-r"); 
+          auto callback_a = make_mesh_callback(iter, outpath, cfg.output_mode, "r-a");
+          optimizer.agglomerate(QE, cfg.qepsilon, cfg.qfactor, callback_a);
+          capture("iter" + std::to_string(iter) + "-a");  
+          break;
+        }
       }
 
     // output at the end of the iteration
@@ -177,11 +192,11 @@ vm::ProgressCallback make_mesh_callback(int iter,
 					CLIConfig::MeshOutputMode output_mode,
 					const std::string descr)
 {
-  // If output mode is "None" or "IterationEnd", return a callback that does nothing
-  if(output_mode == CLIConfig::MeshOutputMode::None || output_mode==CLIConfig::MeshOutputMode::IterationEnd)
+  // Only the per-update mode writes intermediate meshes through this callback.
+  if(output_mode != CLIConfig::MeshOutputMode::EachUpdate)
     return [](const vm::ProgressInfo&, const pmp::SurfaceMesh&, const vm::MeshOptimizer&) { return true; };
-  
-  // Output mode is detailed. generate a callback that writes VTK files
+
+  // Output mode is each-update: generate a callback that writes VTK files
   return [iter, outpath, descr](const vm::ProgressInfo& info,
 				const pmp::SurfaceMesh &mesh,
 				const vm::MeshOptimizer &)

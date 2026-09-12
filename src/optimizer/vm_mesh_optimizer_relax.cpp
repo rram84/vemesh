@@ -51,6 +51,15 @@ namespace vm
     
     // found a feasible point. update.
     mesh.position(vertex) = std::get<pmp::Point>(result);
+
+    if(mesh.has_vertex_property("vertex_altered"))
+      mesh.get_vertex_property<int>("vertex_altered")[vertex] = 1;
+    
+    if(mesh.has_face_property("altered"))          // faces incident to the moved vertex changed
+      {
+        auto altered = mesh.get_face_property<int>("altered");
+        for(auto f : mesh.faces(vertex)) altered[f] = 1;
+      }
     return {true, std::get<double>(result)};
   }
 
@@ -145,8 +154,11 @@ namespace vm
 			   double qmin,
 			   int num_samples,
 			   const ProgressCallback &callback,
-			   std::optional<unsigned int> seed)
+			   std::optional<unsigned int> seed,
+			   bool reset_altered)
   {
+    if(reset_altered) clear_alteration_flags();
+    
     if (qmin <= 0.)
       throw std::invalid_argument("relax: qmin must be > 0");
     if (num_samples < 1)

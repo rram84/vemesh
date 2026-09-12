@@ -247,6 +247,15 @@ namespace vm
 	    out << face_quality[f] << "\n";
 	  }
       }
+
+    // per-iteration altered flag
+    if(mesh.has_face_property(Face_Altered_Tag)==true)
+      {
+        auto altered = mesh.get_face_property<int>(Face_Altered_Tag);
+        out << "SCALARS " << Face_Altered_Tag << " int" << "\n"
+            << "LOOKUP_TABLE default" << "\n";
+        for(auto f:f_circulator) out << altered[f] << "\n";
+      }
     
     out << "POINT_DATA " << mesh.n_vertices() << "\n";
 
@@ -272,6 +281,15 @@ namespace vm
 	  {
 	    out << quality[v] << "\n";
 	  }
+      }
+
+    // per-iteration vertex-altered flag (relaxation)
+    if(mesh.has_vertex_property(Vertex_Altered_Tag)==true)
+      {
+        auto va = mesh.get_vertex_property<int>(Vertex_Altered_Tag);
+        out << "SCALARS " << Vertex_Altered_Tag << " int" << "\n"
+            << "LOOKUP_TABLE default" << "\n";
+        for(auto v:v_container) out << va[v] << "\n";   // match the vertex loop var used above
       }
     
     // done

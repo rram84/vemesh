@@ -43,7 +43,8 @@ struct CLIConfig
   enum class MeshOutputMode {
     None,           // don't save anything
       IterationEnd,   // save once per iteration
-      Detailed        // save after each update / callback
+      EachOperation,  // save once after each operation (agglomerate / relax)
+      EachUpdate      // save after each update / callback
       };
   MeshOutputMode output_mode = MeshOutputMode::None;
 };

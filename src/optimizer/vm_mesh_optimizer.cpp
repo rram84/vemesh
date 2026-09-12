@@ -23,6 +23,21 @@ namespace vm
       throw std::invalid_argument("MeshOptimizer: input mesh must have vertex property interface_id");
   }
 
+
+  // track altered faces/vertices
+  void MeshOptimizer::clear_alteration_flags()
+  {
+    auto fa = mesh.has_face_property("altered")
+      ? mesh.get_face_property<int>("altered")
+      : mesh.add_face_property<int>("altered", 0);
+    for(auto f : mesh.faces()) fa[f] = 0;
+    auto va = mesh.has_vertex_property("vertex_altered")
+      ? mesh.get_vertex_property<int>("vertex_altered")
+      : mesh.add_vertex_property<int>("vertex_altered", 0);
+    for(auto v : mesh.vertices()) va[v] = 0;
+  }
+
+  
   // visualize mesh along with face qualities
   void MeshOptimizer::evaluate_face_qualities(const QualityEvaluator& QE, const std::string& property_tag)
   {
@@ -46,7 +61,7 @@ namespace vm
     // done
     return;
   }
-  
+
   
   // visualize mesh along with vertex qualities
   void MeshOptimizer::evaluate_vertex_qualities(const std::string& face_quality_tag,

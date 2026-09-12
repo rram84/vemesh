@@ -219,7 +219,8 @@ namespace vm
     int agglomerate(const QualityEvaluator& QE,
 		    double qmin,
 		    double qfactor,
-		    const ProgressCallback &callback=nullptr);
+		    const ProgressCallback &callback=nullptr,
+		    bool reset_altered = true);
 
     //! \brief Relaxes a vertex to a more favorable position
     //! \param[in] vertex Vertex to consider relaxing
@@ -277,7 +278,8 @@ namespace vm
 	      double qmin,
 	      int num_samples,
 	      const ProgressCallback &callback=nullptr,
-	      std::optional<unsigned int> seed = std::nullopt);
+	      std::optional<unsigned int> seed = std::nullopt,
+	      bool reset_altered = true);
     
     //! \brief Evaluates the qualities of all faces in the mesh and saves it as a face property in the mesh
     //! \param[in] QE Reference to an instance of QualityEvaluator, used to evaluate face qualities
@@ -364,5 +366,9 @@ namespace vm
     //! Marked `mutable` so it can advance from inside the `const` helper
     //! `compute_feasible_vertex_positions`.
     mutable std::mt19937 rng;
+
+  private:
+    //! Zero (create if absent) the per-iteration face/vertex alteration flags.
+    void clear_alteration_flags();
   };
 }
