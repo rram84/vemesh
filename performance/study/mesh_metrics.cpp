@@ -1,35 +1,46 @@
 // Sriramajayam
 
 /** \file mesh_metrics.cpp
- * \brief Study tool: per-mesh counts + per-altered-element quality metrics for
- *        the relaxation-vs-agglomeration study (Computational Mechanics paper).
+ * \brief Study tool: per-mesh counts + aggregated per-altered-element quality
+ *        statistics for the relaxation-vs-agglomeration study (Comp. Mech. paper).
  *
  * Given ONE captured mesh (a per-operation VTK written by `vemesh_app -v op`, or
- * a baseline embedded mesh), this tool emits the mesh-intrinsic quantities the
- * study records, as CSV on stdout. It is a PURE function of the mesh: all study
- * context (geometry, background, driver, workflow, realization, iteration,
- * operation) is passed opaquely via --tag and echoed back verbatim, so the run
- * harness owns the bookkeeping and this tool stays study-structure-agnostic.
+ * a baseline embedded mesh), this tool emits, as CSV on stdout, the study's
+ * mesh-intrinsic quantities. It is a PURE function of the mesh: all study context
+ * (geometry, background, driver, workflow, realization, operation) is passed
+ * opaquely via --tag and echoed back verbatim, so the run harness owns the
+ * bookkeeping and this tool stays study-structure-agnostic.
  *
- * Two row kinds are emitted, distinguished by a leading field so a single stdout
- * stream carries both (the harness routes G-> globals, F-> perturbed):
+ * Two row kinds, distinguished by a leading field so one stdout stream carries
+ * both (the harness routes them to different CSVs):
  *
  *   G,<tag>,nelems,nverts,n_alt_faces,n_alt_verts
- *   F,<tag>,face_idx,sides,q_stability,q_geom          (one per ALTERED face)
+ *   H,<tag>,n_alt,qs_min,qs_max,qg_min,qg_max,qs_sum,qg_sum,qs_sumsq,qg_sumsq,
+ *          qsqg_sum, <qs_hist x QNB>, <qg_hist x QNB>, <sides_hist x SNB>
  *
- * The element-quality comparison is recorded ONLY for altered ("perturbed")
- * faces: for well-shaped elements the two metrics barely differ, so the F-rows
- * carry the informative sample. Both metrics come straight from the library
- * (vm::quality::vem_stability_ratio and vm::quality::geom_shape) -- nothing is
- * hand-computed here -- and are evaluated for every altered face irrespective of
- * which one drove the optimization -- quality is a pure function of geometry,
- * whereas the app records only WHICH faces it altered (the `altered` integer
- * field), which is not recoverable from geometry and so is read back from the
- * VTK text. Edge-count statistics over altered elements are derived downstream
- * from the F-rows' `sides` column.
+ * The H row is emitted only when the mesh has altered ("perturbed") faces (a flag
+ * gates it). It records the DISTRIBUTION of the two quality metrics over the
+ * altered set -- not the individual element values -- as FIXED-bin histograms
+ * plus extremes and running sums. Fixed bins make everything additive: pooling
+ * across realizations / geometries is a column-wise sum, and quantiles / violins
+ * are read off the pooled histogram; the running sums give exact pooled means,
+ * variances and the stability-vs-geom Pearson correlation. Storing histograms
+ * rather than every element value keeps the study output small.
  *
- * The global VEM conditioning number (lambda_max/lambda_2) is NOT computed here;
- * it comes from the MATLAB vem_eig pass, keyed by the same staged filename/tag.
+ * The element-quality comparison is over altered faces only: for well-shaped
+ * elements the two metrics barely differ, so the altered set is the informative
+ * sample. Both metrics come straight from the library (vm::quality::
+ * vem_stability_ratio and vm::quality::geom_shape) -- nothing is hand-computed --
+ * evaluated for every altered face irrespective of which drove the optimization;
+ * the app records only WHICH faces it altered (the `altered` integer field), read
+ * back from the VTK text since read_vtk skips it.
+ *
+ * Bins (documented for the CSV header): q_stability and q_geom are in [0,1] with
+ * QNB uniform bins (bin b covers [b/QNB,(b+1)/QNB)); sides bin b covers b+SMIN
+ * sides for b<SNB-1 and ">= SMIN+SNB-1" for the last (overflow) bin.
+ *
+ * The global VEM conditioning is computed separately (mesh_conditioning); it is
+ * NOT recomputed here.
  *
  * \author Ramsharan Rangarajan
  */
@@ -40,8 +51,11 @@
 #include <CLI11.hpp>
 
 #include <algorithm>
+#include <array>
+#include <cmath>
 #include <fstream>
 #include <iostream>
+#include <limits>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -49,16 +63,30 @@
 
 namespace {
 
+constexpr int QNB  = 1000; // quality histogram bins over [0,1] (fine-grained)
+constexpr int SMIN = 3;    // first sides bin = triangles
+constexpr int SNB  = 48;   // sides bins: b -> (SMIN+b) sides, last bin = overflow (>= SMIN+SNB-1 = 50)
+
+int q_bin(double v)
+{
+  int b = static_cast<int>(std::floor(v * QNB));
+  if(b < 0) b = 0;
+  if(b >= QNB) b = QNB - 1;
+  return b;
+}
+
+int s_bin(int sides)
+{
+  int b = sides - SMIN;
+  if(b < 0) b = 0;
+  if(b >= SNB) b = SNB - 1;
+  return b;
+}
+
 // Read one integer SCALARS field of exactly `count` values from a VTK file.
-// vm::write_vtk emits each scalar field as
-//     SCALARS <name> int
-//     LOOKUP_TABLE default
-//     <v0>
-//     ...
-// so we scan for the "SCALARS <name> " line, skip the LOOKUP_TABLE line, and
-// read `count` integers. Values are returned in file order, which matches the
-// face / vertex iteration order of vm::read_vtk on the same file. Returns an
-// all-zero vector when the field is absent (a mesh with no alterations).
+// vm::write_vtk emits each scalar field as "SCALARS <name> int / LOOKUP_TABLE
+// default / v0 / v1 / ...". Values come back in file order, matching the face /
+// vertex iteration order of vm::read_vtk on the same file. Absent field -> zeros.
 std::vector<int> read_int_field(const std::string& filename,
                                 const std::string& field,
                                 std::size_t count)
@@ -91,16 +119,15 @@ std::vector<int> read_int_field(const std::string& filename,
 int main(int argc, char** argv)
 {
   std::string meshfile, tag;
-  bool emit_faces = false;   // also stream per-altered-face rows (F,...)
+  bool altered_stats = false;   // also emit the H row (altered-set histograms)
 
-  CLI::App app{"Per-mesh counts + per-altered-element quality (relax-vs-agglomerate study)"};
+  CLI::App app{"Per-mesh counts + aggregated altered-element quality (relax-vs-agglomerate study)"};
   app.add_option("-i", meshfile, "input mesh (.vtk captured by vemesh_app)")
     ->required()->check(CLI::ExistingFile);
   app.add_option("--tag", tag,
-                 "opaque context string echoed verbatim into every row "
-                 "(e.g. geom,bg,driver,workflow,real,iter,op)")->required();
-  app.add_flag("--emit-faces", emit_faces,
-               "also stream one F-row per ALTERED face (sides,area,q_stability,q_geom)");
+                 "opaque context string echoed verbatim into every row")->required();
+  app.add_flag("--altered-stats", altered_stats,
+               "also emit the H row: histograms + extremes + sums over ALTERED faces");
 
   CLI11_PARSE(app, argc, argv);
 
@@ -115,9 +142,15 @@ int main(int argc, char** argv)
   const std::size_t n_alt_verts =
     std::count_if(v_altered.begin(), v_altered.end(), [](int x){ return x != 0; });
 
-  // Per-ALTERED-face pass: recompute BOTH metrics and stream F-rows on request.
+  // Per-ALTERED-face pass: accumulate distributions of both metrics.
   std::size_t n_alt_faces = 0;
-  std::ostringstream frows;
+  double qs_min =  std::numeric_limits<double>::infinity(), qs_max = -1.0, qs_sum = 0.0, qs_sq = 0.0;
+  double qg_min =  std::numeric_limits<double>::infinity(), qg_max = -1.0, qg_sum = 0.0, qg_sq = 0.0;
+  double qsqg_sum = 0.0;
+  std::array<long, QNB> qs_hist{}; qs_hist.fill(0);
+  std::array<long, QNB> qg_hist{}; qg_hist.fill(0);
+  std::array<long, SNB> s_hist{};  s_hist.fill(0);
+
   std::vector<pmp::Point> coords;
   std::size_t fidx = 0;
   for(auto f : mesh.faces())
@@ -125,23 +158,37 @@ int main(int argc, char** argv)
     if(fidx < f_altered.size() && f_altered[fidx] != 0)
     {
       ++n_alt_faces;
-      if(emit_faces)
-      {
-        coords.clear();
-        for(auto v : mesh.vertices(f)) coords.push_back(mesh.position(v));
-        const double qs = vm::quality::vem_stability_ratio(coords);
-        const double qg = vm::quality::geom_shape(coords);
-        frows << "F," << tag << ',' << fidx << ',' << coords.size() << ','
-              << qs << ',' << qg << '\n';
-      }
+      coords.clear();
+      for(auto v : mesh.vertices(f)) coords.push_back(mesh.position(v));
+      const double qs = vm::quality::vem_stability_ratio(coords);
+      const double qg = vm::quality::geom_shape(coords);
+      const int    ns = static_cast<int>(coords.size());
+
+      qs_min = std::min(qs_min, qs); qs_max = std::max(qs_max, qs); qs_sum += qs; qs_sq += qs*qs;
+      qg_min = std::min(qg_min, qg); qg_max = std::max(qg_max, qg); qg_sum += qg; qg_sq += qg*qg;
+      qsqg_sum += qs*qg;
+      ++qs_hist[q_bin(qs)];
+      ++qg_hist[q_bin(qg)];
+      ++s_hist[s_bin(ns)];
     }
     ++fidx;
   }
 
+  std::cout.setf(std::ios::scientific);
+  std::cout.precision(10);
   std::cout << "G," << tag << ',' << nelems << ',' << nverts << ','
             << n_alt_faces << ',' << n_alt_verts << '\n';
-  if(emit_faces) std::cout << frows.str();
-  std::cout.flush();
 
+  if(altered_stats && n_alt_faces > 0)
+  {
+    std::cout << "H," << tag << ',' << n_alt_faces << ','
+              << qs_min << ',' << qs_max << ',' << qg_min << ',' << qg_max << ','
+              << qs_sum << ',' << qg_sum << ',' << qs_sq << ',' << qg_sq << ',' << qsqg_sum;
+    for(long c : qs_hist) std::cout << ',' << c;
+    for(long c : qg_hist) std::cout << ',' << c;
+    for(long c : s_hist)  std::cout << ',' << c;
+    std::cout << '\n';
+  }
+  std::cout.flush();
   return 0;
 }

@@ -18,11 +18,18 @@
 #      is no staging or batching: a mesh lives only long enough to be measured.
 #
 # Everything scalar is appended to two CSVs (the only things kept):
-#   output/<geom>_<bg>/globals.csv    geom,bg,driver,workflow,real,op,nelems,nverts,
-#                                     n_alt_faces,n_alt_verts,lambda2,lambda_max,cond_ratio
-#   output/<geom>_<bg>/perturbed.csv  geom,bg,driver,workflow,real,op,face_idx,sides,q_stability,q_geom
-# op="base" is the unimproved embedded baseline. The two share the key columns
-# (geom,bg,driver,workflow,real,op); perturbed joins to globals on that key.
+#   output/<geom>_<bg>/globals.csv  geom,bg,driver,workflow,real,op,step,nelems,nverts,
+#                                   n_alt_faces,n_alt_verts,lambda2,lambda_max,cond_ratio
+#   output/<geom>_<bg>/altered.csv  key,step,n_alt, extremes(qs/qg min,max),
+#                                   sums(qs,qg,qs^2,qg^2,qs*qg), and FIXED-bin
+#                                   histograms of q_stability, q_geom and sides
+#                                   over the ALTERED faces.
+# op="base" is the unimproved embedded baseline; step is the linear operation
+# index in EXECUTION order (see analyze_mesh). We store altered-element
+# DISTRIBUTIONS (histograms + extremes + sums), never individual element values:
+# fixed bins are additive, so pooling across realizations/geometries is a column
+# sum, and violins/quantiles/correlation come from the pooled rows. The two CSVs
+# share the key columns (geom,bg,driver,workflow,real,op,step).
 #
 # Usage:  ./run_geometry.sh [GEOM] [BG] [N_REAL] [SEED]
 #   GEOM    geometry stem under dataset/geometries (default 85909)
@@ -89,10 +96,12 @@ rm -rf "$OUT"; mkdir -p "$OUT"
 RUN="$OUT/_run"              # vemesh_app scratch (per invocation)
 EMB="$OUT/_embed"            # the current realization's embedded mesh
 
-G_CSV="$OUT/globals.csv"
-echo "geom,bg,driver,workflow,real,op,nelems,nverts,n_alt_faces,n_alt_verts,lambda2,lambda_max,cond_ratio" > "$G_CSV"
-P_CSV="$OUT/perturbed.csv"
-echo "geom,bg,driver,workflow,real,op,face_idx,sides,q_stability,q_geom" > "$P_CSV"
+G_CSV="$OUT/globals.csv"      # one row per mesh (per realization): scalars + conditioning
+echo "geom,bg,driver,workflow,real,op,step,nelems,nverts,n_alt_faces,n_alt_verts,lambda2,lambda_max,cond_ratio" > "$G_CSV"
+
+A_CSV="$OUT/altered.csv"      # FINAL: one row per (geom,bg,driver,workflow,step), pooled over realizations
+RAW_A="$OUT/_altered_raw.csv" # transient: per-mesh H rows, summed into A_CSV at the end
+: > "$RAW_A"
 
 echo
 echo "  relax-vs-agglomerate study  ·  geometry $GEOM  ·  background $BG"
@@ -104,27 +113,49 @@ t_run=0; t_analyze=0
 overall_t0=$SECONDS
 
 # --------------------------------------------------------------------------- #
-# Analyze ONE mesh immediately (conditioning + counts + per-altered quality) and
-# append its rows, keyed by (geom,bg,driver,workflow,real,op). Called the instant
-# a mesh is produced; the caller deletes the file afterwards.
-#   globals.csv <- one row: counts + lambda2,lambda_max,cond_ratio
-#   perturbed.csv <- one row per ALTERED face: sides,q_stability,q_geom
+# step: linear operation index in EXECUTION order (0..5), so "quality vs step" is
+# a clean x-axis per workflow regardless of the intra-iteration convention.
+#   -r/-a : step = iteration k
+#   --ra  : each iteration is r then a  -> step = 2k + (0 if r else 1)
+#   --ar  : each iteration is a then r  -> step = 2k + (0 if a else 1)
+#   base  : step = -1
+# --------------------------------------------------------------------------- #
+step_of() {
+  local wf="$1" op="$2" k t
+  if [[ "$op" == base ]]; then echo -1; return; fi
+  k="${op#iter}"; k="${k%-*}"; t="${op##*-}"     # iteration number, op type (a|r)
+  case "$wf" in
+    relax|agglomerate) echo "$k" ;;
+    ra) [[ "$t" == r ]] && echo $(( 2*k )) || echo $(( 2*k + 1 )) ;;
+    ar) [[ "$t" == a ]] && echo $(( 2*k )) || echo $(( 2*k + 1 )) ;;
+  esac
+}
+
+# --------------------------------------------------------------------------- #
+# Analyze ONE mesh immediately (conditioning + counts + altered-set histograms).
+# Called the instant a mesh is produced; the caller deletes the file afterwards.
+#   globals.csv <- one row: counts + lambda2,lambda_max,cond_ratio (per mesh)
+#   RAW_A       <- one H row per mesh (histograms + extremes + sums over altered
+#                  faces); summed into altered.csv per (geom,bg,driver,wf,step) at
+#                  the end. Only meshes with altered faces contribute an H row.
 # --------------------------------------------------------------------------- #
 analyze_mesh() {
-  local f="$1" driver="$2" wf="$3" real="$4" op="$5" t0
+  local f="$1" driver="$2" wf="$3" real="$4" op="$5" t0 step
   t0=$SECONDS
+  step="$(step_of "$wf" "$op")"
 
   # global VEM conditioning: "<name>.vtk,lambda2,lambda_max,ratio"
   local cl l2 lmax ratio
   cl="$("$CONDITION" "$f")" || die "mesh_conditioning failed on $f"
   l2="${cl#*,}"; lmax="${l2#*,}"; ratio="${lmax#*,}"; lmax="${lmax%%,*}"; l2="${l2%%,*}"
 
-  # counts + per-altered-element quality (both metrics); merge cond into the G row
-  "$METRICS" -i "$f" --tag t --emit-faces \
-    | awk -F, -v g="$G_CSV" -v p="$P_CSV" -v k="$GEOM,$BG,$driver,$wf,$real,$op" \
+  # counts (G) + altered-set histograms (H); merge cond into the G globals row,
+  # send H to the raw file for end-of-run pooling.
+  "$METRICS" -i "$f" --tag t --altered-stats \
+    | awk -F, -v g="$G_CSV" -v raw="$RAW_A" -v k="$GEOM,$BG,$driver,$wf,$real,$op" -v step="$step" \
           -v l2="$l2" -v lmax="$lmax" -v ratio="$ratio" 'BEGIN{OFS=","}
-        $1=="G"{ print k,$3,$4,$5,$6,l2,lmax,ratio >> g }
-        $1=="F"{ print k,$3,$4,$5,$6 >> p }' \
+        $1=="G"{ print k,step,$3,$4,$5,$6,l2,lmax,ratio >> g }
+        $1=="H"{ out=k","step; for(i=3;i<=NF;i++) out=out","$i; print out >> raw }' \
     || die "mesh_metrics failed on $f"
 
   t_analyze=$(( t_analyze + SECONDS - t0 ))
@@ -173,8 +204,59 @@ for (( i=0; i<N_REAL; i++ )); do
   printf '  realization %d/%d done\n' "$(( i + 1 ))" "$N_REAL"
 done
 
+# --------------------------------------------------------------------------- #
+# Pool the per-mesh H rows into altered.csv: one row per (geom,bg,driver,
+# workflow,step), summed over realizations. Histograms and sums add; extremes
+# take min/max. Geometries are NOT merged here -- that is done at analysis time,
+# so cross-geometry variation stays visible. QNB/SNB must match mesh_metrics.cpp.
+# --------------------------------------------------------------------------- #
+python3 - "$RAW_A" "$A_CSV" <<'PY'
+import sys
+QNB, SNB = 1000, 48          # must match mesh_metrics.cpp
+raw, out = sys.argv[1], sys.argv[2]
+groups, order = {}, []
+try:
+    fh = open(raw)
+except FileNotFoundError:
+    fh = None
+if fh:
+    for line in fh:
+        t = line.rstrip("\n").split(",")
+        if len(t) < 17:
+            continue
+        key = (t[0], t[1], t[2], t[3], t[6])          # geom,bg,driver,workflow,step
+        n_alt = int(float(t[7]))
+        ext = [float(t[8]), float(t[9]), float(t[10]), float(t[11])]   # qs_min,qs_max,qg_min,qg_max
+        sums = [float(x) for x in t[12:17]]           # qs_sum,qg_sum,qs_sumsq,qg_sumsq,qsqg_sum
+        hist = [int(float(x)) for x in t[17:]]        # QNB + QNB + SNB
+        if key not in groups:
+            order.append(key)
+            groups[key] = [n_alt, ext[:], sums[:], hist[:]]
+        else:
+            g = groups[key]
+            g[0] += n_alt
+            g[1][0] = min(g[1][0], ext[0]); g[1][1] = max(g[1][1], ext[1])
+            g[1][2] = min(g[1][2], ext[2]); g[1][3] = max(g[1][3], ext[3])
+            for i in range(len(sums)): g[2][i] += sums[i]
+            for i in range(len(hist)): g[3][i] += hist[i]
+    fh.close()
+hdr = ["geom","bg","driver","workflow","step","n_alt",
+       "qs_min","qs_max","qg_min","qg_max","qs_sum","qg_sum","qs_sumsq","qg_sumsq","qsqg_sum"]
+hdr += ["qs_h%d" % i for i in range(QNB)]
+hdr += ["qg_h%d" % i for i in range(QNB)]
+hdr += ["s%d" % (3+i) for i in range(SNB-1)] + ["s%dp" % (3+SNB-1)]
+fmt = lambda x: ("%.10g" % x) if isinstance(x, float) else str(x)
+with open(out, "w") as o:
+    o.write(",".join(hdr) + "\n")
+    for key in order:
+        n_alt, ext, sums, hist = groups[key]
+        row = list(key) + [n_alt] + ext + sums + hist
+        o.write(",".join(fmt(v) for v in row) + "\n")
+PY
+rm -f "$RAW_A"
+
 printf '\n  done in %ds  (vemesh_app=%ds  analyze=%ds)\n' \
        "$(( SECONDS - overall_t0 ))" "$t_run" "$t_analyze"
-printf '  globals=%d  perturbed=%d rows\n' \
-       "$(( $(wc -l < "$G_CSV") - 1 ))" "$(( $(wc -l < "$P_CSV") - 1 ))"
-echo "  -> $OUT/{globals,perturbed}.csv"
+printf '  globals=%d rows (per mesh)   altered=%d rows (pooled per driver x workflow x step)\n' \
+       "$(( $(wc -l < "$G_CSV") - 1 ))" "$(( $(wc -l < "$A_CSV") - 1 ))"
+echo "  -> $OUT/{globals,altered}.csv"

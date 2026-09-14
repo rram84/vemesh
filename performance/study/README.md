@@ -65,26 +65,40 @@ realization count.
 
 ## Output schema
 
-`globals.csv` — one row per captured mesh:
+`step` is the linear operation index in **execution order** (`base`=−1): `-r`/`-a`
+give `step=0..5`; `--ra` runs r then a each iteration (`step=2k`,`2k+1`), `--ar`
+runs a then r. So "quantity vs `step`" is a clean per-workflow x-axis.
+
+`globals.csv` — **one row per captured mesh** (per realization; cheap scalars):
 
 | column | meaning |
 |---|---|
-| `geom,bg,driver,workflow,real,op` | key. `driver`=metric that drove the run; `op`=`base` or `iterK-a`/`iterK-r` |
+| `geom,bg,driver,workflow,real,op,step` | key. `driver`=metric that drove the run |
 | `nelems,nverts` | mesh size |
-| `n_alt_faces,n_alt_verts` | # elements/vertices the optimizer altered in that operation |
+| `n_alt_faces,n_alt_verts` | # elements/vertices altered in that operation |
 | `lambda2,lambda_max,cond_ratio` | global VEM conditioning; `cond_ratio = lambda_max/lambda2` |
 
-`perturbed.csv` — one row per **altered** face (joins to `globals` on the key):
+`altered.csv` — **one row per `(geom,bg,driver,workflow,step)`**, pooled over all
+realizations (geometries are *not* merged — that happens at analysis time, so
+across-geometry variation stays visible). It stores the **distribution** of the
+two metrics over the altered ("perturbed") faces, never individual values:
 
-| column | meaning |
+| column(s) | meaning |
 |---|---|
-| `geom,bg,driver,workflow,real,op` | key |
-| `face_idx,sides` | face index; polygon edge count |
-| `q_stability,q_geom` | **both** quality metrics on that face |
+| `geom,bg,driver,workflow,step` | key |
+| `n_alt` | total altered faces pooled over realizations |
+| `qs_min,qs_max,qg_min,qg_max` | extremes of `q_stability` / `q_geom` |
+| `qs_sum,qg_sum,qs_sumsq,qg_sumsq,qsqg_sum` | running sums → exact pooled mean, variance, and the `q_stability`–`q_geom` Pearson correlation |
+| `qs_h0..qs_h999` | histogram of `q_stability`, **1000 fixed bins** over [0,1] (bin b = `[b/1000,(b+1)/1000)`) |
+| `qg_h0..qg_h999` | histogram of `q_geom`, same bins |
+| `s3..s49,s50p` | histogram of `sides` (3…49 explicit, `s50p` = ≥50) |
 
-Only *altered* faces get element rows: well-shaped elements don't distinguish the
-two metrics, so the informative sample is the perturbed set. Edge-count statistics
-come from aggregating `sides`.
+Everything in `altered.csv` is **additive** (fixed bins, sums, min/max), so
+merging realizations or geometries is a column-wise sum; violins / quantiles read
+off the pooled histogram, correlation off the pooled sums. Only *altered* faces
+contribute: well-shaped elements don't distinguish the two metrics, so the
+altered set is the informative sample. (Bin counts `QNB=1000`, `SNB=48` are set in
+`mesh_metrics.cpp` and mirrored in the driver's pooling step.)
 
 ---
 
