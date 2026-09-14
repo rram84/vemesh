@@ -24,8 +24,8 @@ Everything here is study tooling (never on `master`); it builds under
   admissibility gates ─►  sampling_check/embed_check       (frozen input)   (perturb)     (-r/-a/--ra/--ar,     │
                                                                                             -v op)              │
                                                                                                                 ▼
-                                                       globals.csv   ◄── mesh_conditioning (λmax/λ2)  +  mesh_metrics
-                                                       perturbed.csv ◄──                                (counts, q per altered face)
+                                                       globals.csv  ◄─┐  mesh_analyze  (ONE pass/mesh:
+                                                       altered.csv  ◄─┘   λmax/λ2 + counts + altered-set histograms)
                                                                               (each mesh analyzed, then deleted)
 ```
 
@@ -43,7 +43,7 @@ Two layers:
 
 ```bash
 # build (from repo root)
-cmake --build build --target vemesh_app embed_shapes mesh_metrics mesh_conditioning
+cmake --build build --target vemesh_app embed_shapes mesh_analyze mesh_conditioning
 
 # run: GEOM stem, background (quad|tri), #realizations, base seed
 performance/study/run_geometry.sh 85909 quad 20 12345
@@ -57,7 +57,7 @@ per-operation capture the instant it is written, then deletes it. Shared options
 `-q 0.2 -f 1.2 -s 20`. The `base` rows are the unimproved embedded mesh.
 
 Why no staging/batching: conditioning is a fast in-process C++ call
-(`mesh_conditioning`), so there is no MATLAB engine start-up to amortize — a mesh
+(`mesh_analyze`), so there is no MATLAB engine start-up to amortize — a mesh
 lives only long enough to be measured. This keeps disk bounded regardless of the
 realization count.
 
@@ -98,7 +98,16 @@ merging realizations or geometries is a column-wise sum; violins / quantiles rea
 off the pooled histogram, correlation off the pooled sums. Only *altered* faces
 contribute: well-shaped elements don't distinguish the two metrics, so the
 altered set is the informative sample. (Bin counts `QNB=1000`, `SNB=48` are set in
-`mesh_metrics.cpp` and mirrored in the driver's pooling step.)
+`mesh_analyze.cpp` and mirrored in the driver's pooling step.)
+
+**Histogram convergence** (`KEEP_RAW=1`): the pooling collapses realizations, so
+`altered.csv` alone can't show whether the histograms have converged. Running with
+`KEEP_RAW=1 ./run_geometry.sh ...` additionally writes `altered_raw.csv` — the
+**per-realization** H rows (keyed by `…,real,op,step`) — from which cumulative
+histograms at increasing N can be compared. Use it on a pilot geometry to pick the
+realization count; omit it for the full sweep (pooled `altered.csv` only = small).
+(`globals.csv` is always per-realization, so cond#-distribution convergence needs
+no flag.)
 
 ---
 
@@ -107,7 +116,7 @@ altered set is the informative sample. (Bin counts `QNB=1000`, `SNB=48` are set 
 | file | what it does | in → out |
 |---|---|---|
 | `run_geometry.sh` | study driver (above) | dataset + binaries → 2 CSVs |
-| `mesh_metrics.cpp` → `mesh_metrics` | per mesh: counts + per-altered-face `q_stability`,`q_geom`. Recomputes both metrics from geometry (`vm::quality::*`); reads the `altered`/`vertex_altered` flags from the VTK text | `.vtk`, `--tag`, `--emit-faces` → `G,…`/`F,…` CSV lines |
+| `mesh_analyze.cpp` → `mesh_analyze` | **the harness tool**: reads a mesh ONCE and emits conditioning + counts (`G` row) and altered-set histograms/extremes/sums (`H` row). Recomputes both metrics from geometry (`vm::quality::*`); reads `altered` flags from the VTK text. Merges the former `mesh_conditioning`+`mesh_metrics` into one process/read per mesh | `.vtk`, `--tag`, `--altered-stats` → `G,…`/`H,…` CSV lines |
 | `vm_study_conditioning.{h,cpp}` | assembles the global k=1 pure-Neumann VEM stiffness from `vm::quality::vem_stiffness_matrix` (the **same** element stiffness the stability ratio uses) and computes `λmax` (Lanczos) and `λ2` (shift-invert) via Spectra | `pmp::SurfaceMesh` → `{λ2,λmax,ratio}` |
 | `mesh_conditioning.cpp` → `mesh_conditioning` | thin CLI over the above; a drop-in replacement for the MATLAB `vem_eig` | `.vtk…` → `name,λ2,λmax,ratio` per line |
 | `test/test_conditioning.cpp` | unit test (ctest): assembly symmetry, `K·1=0`, VEM patch/consistency, Spectra-vs-dense eigenvalues. Self-contained (no MATLAB) | — |
