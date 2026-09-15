@@ -165,11 +165,11 @@ void test_relax_1(const pmp::SurfaceMesh& in_mesh,
 	auto result = opt.relax(v, QE, 4); // nsamples = 4
 
 	// check for improvement and perturbation
-	if(std::get<bool>(result)==true)
+	if(result.moved==true)
 	  {
 	    // new vertex coordinates and quality
 	    pmp::Point Y = mesh.position(v);
-	    double new_quality = std::get<double>(result);
+	    double new_quality = result.quality;
 	    
 	    if(new_quality<=curr_quality)
 	      {
@@ -383,8 +383,8 @@ void test_relax_reproducible(const pmp::SurfaceMesh& mesh,
   vm::MeshOptimizer opt_a(mesh);
   vm::MeshOptimizer opt_b(mesh);
   
-  const int relaxed_a = opt_a.relax(QE, qmin, num_samples, nullptr, seed);
-  const int relaxed_b = opt_b.relax(QE, qmin, num_samples, nullptr, seed);
+  const int relaxed_a = opt_a.relax(QE, qmin, num_samples, nullptr, seed).n_moved;
+  const int relaxed_b = opt_b.relax(QE, qmin, num_samples, nullptr, seed).n_moved;
   
   if (relaxed_a != relaxed_b) {
     std::cerr << "\ntest_relax_reproducibility: relax count differs ("
@@ -512,7 +512,7 @@ void test_agglomerate_2(const pmp::SurfaceMesh &in_mesh,
   // relax faces
   std::uniform_real_distribution<double> d(1.01, 1.2);
   const double qfactor = d(gen);
-  int nmerged = opt.agglomerate(subset, QE, qfactor);
+  int nmerged = opt.agglomerate(subset, QE, qfactor).n_merged;
 
   // consistency in number of faces
   if(nmerged>static_cast<int>(subset.size()) || mesh.n_faces()!=in_mesh.n_faces()-nmerged)
@@ -550,7 +550,7 @@ void test_agglomerate_3(const pmp::SurfaceMesh &in_mesh,
   const double qmin = d1(gen);
   std::uniform_real_distribution<double> d2(1.01, 1.2);
   const double qfactor = d2(gen);
-  int nmerged = opt.agglomerate(QE, qmin, qfactor);
+  int nmerged = opt.agglomerate(QE, qmin, qfactor).n_merged;
   //vm::write_vtk(mesh, "out.vtk");
   
   // consistency in number of faces

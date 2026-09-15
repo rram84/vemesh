@@ -23,7 +23,10 @@
 #
 # Everything scalar is appended to two CSVs (the only things kept):
 #   output/<geom>_<bg>/globals.csv  geom,bg,driver,workflow,real,op,step,nelems,nverts,
-#                                   n_alt_faces,n_alt_verts,lambda2,lambda_max,cond_ratio
+#                                   n_alt_faces,n_alt_verts,lambda2,lambda_max,cond_ratio,
+#                                   op_cpu_sec,n_cand,n_succ,n_samp_gen,n_samp_feas
+#                                   (last 5 = per-operation stats from vemesh_app --op-stats;
+#                                    n_samp_* empty for agglomerate ops and baseline)
 #   output/<geom>_<bg>/altered.csv  key,step,n_alt, extremes(qs/qg min,max),
 #                                   sums(qs,qg,qs^2,qg^2,qs*qg), and FIXED-bin
 #                                   histograms of q_stability, q_geom and sides,
@@ -113,13 +116,15 @@ step_of() {
 # row. G_CSV / RAW_A here are the worker's OWN part files.
 # --------------------------------------------------------------------------- #
 analyze_mesh() {
-  local f="$1" driver="$2" wf="$3" real="$4" op="$5" step
+  local f="$1" driver="$2" wf="$3" real="$4" op="$5" opstat="${6:-,,,,}" step
   step="$(step_of "$wf" "$op")"
+  # opstat = 5 comma-separated op-statistics fields appended to the G row
+  # (op_cpu_sec,n_cand,n_succ,n_samp_gen,n_samp_feas); ",,,," when none (baseline).
 
   "$ANALYZE" -i "$f" --tag t --altered-stats \
-    | awk -F, -v g="$G_CSV" -v raw="$RAW_A" -v k="$GEOM,$BG,$driver,$wf,$real,$op" -v step="$step" \
+    | awk -F, -v g="$G_CSV" -v raw="$RAW_A" -v k="$GEOM,$BG,$driver,$wf,$real,$op" -v step="$step" -v os="$opstat" \
           'BEGIN{OFS=","}
-        $1=="G"{ print k,step,$3,$4,$5,$6,$7,$8,$9 >> g }
+        $1=="G"{ print k","step","$3","$4","$5","$6","$7","$8","$9","os >> g }
         $1=="H"{ out=k","step; for(i=3;i<=NF;i++) out=out","$i; print out >> raw }' \
     || die "mesh_analyze failed on $f"
 }
@@ -143,19 +148,22 @@ run_realization() {
 
   analyze_mesh "$emb" baseline none "$i" base
 
-  local m entry name flag iters cap op
+  local m entry name flag iters cap op os OPS
   for m in "${DRIVERS[@]}"; do
     for entry in "${WORKFLOWS[@]}"; do
       IFS='|' read -r name flag iters <<< "$entry"
       rm -rf "$RUN"; mkdir -p "$RUN"
+      OPS="$RUN/opstats.txt"   # vemesh_app --op-stats writes one OPSTAT line per op here
       case "$name" in
-        relax)       "$APP" "$flag" -i "$emb" -o "$RUN" -n "$iters" -q "$QEPS"              -s "$NSAMP" -m "$m" -S "$seed_i" -v op >/dev/null 2>&1 ;;
-        agglomerate) "$APP" "$flag" -i "$emb" -o "$RUN" -n "$iters" -q "$QEPS" -f "$QFAC"               -m "$m"             -v op >/dev/null 2>&1 ;;
-        *)           "$APP" "$flag" -i "$emb" -o "$RUN" -n "$iters" -q "$QEPS" -f "$QFAC" -s "$NSAMP" -m "$m" -S "$seed_i" -v op >/dev/null 2>&1 ;;
+        relax)       "$APP" "$flag" -i "$emb" -o "$RUN" -n "$iters" -q "$QEPS"              -s "$NSAMP" -m "$m" -S "$seed_i" -v op --op-stats >"$OPS" 2>/dev/null ;;
+        agglomerate) "$APP" "$flag" -i "$emb" -o "$RUN" -n "$iters" -q "$QEPS" -f "$QFAC"               -m "$m"             -v op --op-stats >"$OPS" 2>/dev/null ;;
+        *)           "$APP" "$flag" -i "$emb" -o "$RUN" -n "$iters" -q "$QEPS" -f "$QFAC" -s "$NSAMP" -m "$m" -S "$seed_i" -v op --op-stats >"$OPS" 2>/dev/null ;;
       esac || die "vemesh_app $flag ($name,$m) failed on $GEOM realization $i"
       for cap in "$RUN"/mesh-iter*.vtk; do
         op="$(basename "$cap" .vtk)"; op="${op#mesh-}"
-        analyze_mesh "$cap" "$m" "$name" "$i" "$op"
+        # join this op's OPSTAT line -> "cpu,ncand,nsucc,ngen,nfeas" (-1 sample counts -> empty)
+        os="$(awk -v t="$op" '$1=="OPSTAT" && $2==t {g=($6==-1?"":$6); f=($7==-1?"":$7); print $3","$4","$5","g","f; exit}' "$OPS")"
+        analyze_mesh "$cap" "$m" "$name" "$i" "$op" "${os:-,,,,}"
       done
       rm -rf "$RUN"
     done
@@ -173,7 +181,7 @@ fi
 
 # =========================== main =========================================== #
 rm -rf "$OUT"; mkdir -p "$OUT" "$PARTS" "$WORK"
-echo "geom,bg,driver,workflow,real,op,step,nelems,nverts,n_alt_faces,n_alt_verts,lambda2,lambda_max,cond_ratio" > "$G_CSV"
+echo "geom,bg,driver,workflow,real,op,step,nelems,nverts,n_alt_faces,n_alt_verts,lambda2,lambda_max,cond_ratio,op_cpu_sec,n_cand,n_succ,n_samp_gen,n_samp_feas" > "$G_CSV"
 
 echo
 echo "  relax-vs-agglomerate study  ·  geometry $GEOM  ·  background $BG"

@@ -22,7 +22,7 @@ namespace vm
   // ------- overload 1 --------- //
   
   // relax a vertex
-  std::pair<bool, double>
+  VertexRelaxResult
   MeshOptimizer::relax(const pmp::Vertex& vertex,
 		       const QualityEvaluator &QE,
 		       int num_samples,
@@ -32,35 +32,44 @@ namespace vm
 
     // update seed for random num generator if provided
     if (seed) rng.seed(*seed);
-    
+
+    VertexRelaxResult res;
+    res.quality = curr_quality;   // default: unchanged; no samples drawn on the early exits
+
     // cannot move boundary vertices
     if(mesh.is_boundary(vertex)==true)
-      return {false, curr_quality};
+      return res;
 
     // cannot move vertices on intefaces
     auto v_interface_ids = mesh.get_vertex_property<int>("interface_id");
     if(v_interface_ids[vertex]!=-1)
-      return {false, curr_quality};
-    
+      return res;
+
     // identify a feasible new position & move
-    const auto result = compute_improved_vertex_position(vertex, num_samples, QE);
-        
-    // no feasible point
-    if(std::get<bool>(result)==false)
-      return {false, curr_quality};
-    
+    const ImprovedVertexPosition result = compute_improved_vertex_position(vertex, num_samples, QE);
+
+    // sampling happened regardless of whether an improvement was found -> report it
+    res.n_samples_generated = result.n_samples_generated;
+    res.n_samples_feasible  = result.n_samples_feasible;
+
+    // no improving point
+    if(result.found==false)
+      return res;
+
     // found a feasible point. update.
-    mesh.position(vertex) = std::get<pmp::Point>(result);
+    mesh.position(vertex) = result.position;
 
     if(mesh.has_vertex_property("vertex_altered"))
       mesh.get_vertex_property<int>("vertex_altered")[vertex] = 1;
-    
+
     if(mesh.has_face_property("altered"))          // faces incident to the moved vertex changed
       {
         auto altered = mesh.get_face_property<int>("altered");
         for(auto f : mesh.faces(vertex)) altered[f] = 1;
       }
-    return {true, std::get<double>(result)};
+    res.moved   = true;
+    res.quality = result.quality;
+    return res;
   }
 
 
@@ -74,24 +83,24 @@ namespace vm
     { return A.second>B.second; }
   }
 
-  int MeshOptimizer::relax(const std::set<pmp::Vertex>& subset,
-			   const QualityEvaluator& QE,
-			   int num_samples,
-			   const ProgressCallback &callback,
-			   std::optional<unsigned int> seed)
+  RelaxStats MeshOptimizer::relax(const std::set<pmp::Vertex>& subset,
+				  const QualityEvaluator& QE,
+				  int num_samples,
+				  const ProgressCallback &callback,
+				  std::optional<unsigned int> seed)
   {
     if (num_samples < 1)
       throw std::invalid_argument("relax: num_samples must be >= 1");
 
     // update seed for random num generator if provided
     if (seed) rng.seed(*seed);
-    
+
     // tolerance for comparing qualities
     const double qeps = 1.e-8;
 
     // interface ids of vertices
     auto v_interface_ids = mesh.get_vertex_property<int>("interface_id");
-    
+
     // priority queue of vertices to be relaxed during this iteration
     std::priority_queue<VQ_pair_t, std::vector<VQ_pair_t>, decltype(&PoorerVertexFirst)> vertex_queue(PoorerVertexFirst);
     for(auto& v:subset)
@@ -101,7 +110,12 @@ namespace vm
 	  double qval = QE(v, mesh);
 	  vertex_queue.push({v, qval});
 	}
-    const int qsize = static_cast<int>(vertex_queue.size());
+
+    // per-operation statistics. n_candidates is fixed up front; the sample counts
+    // accumulate across the per-vertex relaxations; n_moved tracks successes.
+    RelaxStats stats;
+    stats.n_candidates = static_cast<long>(vertex_queue.size());
+    const int qsize = static_cast<int>(stats.n_candidates);
 
     // #vertices relaxed during this iteration
     int nrelaxed = 0;
@@ -124,9 +138,10 @@ namespace vm
 	  }
 
 	// this vertex is the current priority
-	auto result = this->relax(v, QE, num_samples); // if a seed was provided, rng was already reseeded
-	auto success = result.first;
-	if(success==true)
+	const VertexRelaxResult result = this->relax(v, QE, num_samples); // if a seed was provided, rng was already reseeded
+	stats.n_samples_generated += result.n_samples_generated;
+	stats.n_samples_feasible  += result.n_samples_feasible;
+	if(result.moved==true)
 	  {
 	    ++nrelaxed;
 	    if(callback!=nullptr)
@@ -134,28 +149,29 @@ namespace vm
 		bool flag = callback(
 				     {static_cast<int>(v.idx()),
 					 qsize, nrelaxed,
-					 std::get<double>(result)},
+					 result.quality},
 				     mesh, *this);
 
 		// continue with relaxation
 		if(flag==false)
-		  return nrelaxed;
+		  { stats.n_moved = nrelaxed; return stats; }
 	      }
 	  }
       }
 
-    return nrelaxed;
+    stats.n_moved = nrelaxed;
+    return stats;
   }
 
 
   // --------- overload 3 ---------- //
   
-  int MeshOptimizer::relax(const QualityEvaluator &QE,
-			   double qmin,
-			   int num_samples,
-			   const ProgressCallback &callback,
-			   std::optional<unsigned int> seed,
-			   bool reset_altered)
+  RelaxStats MeshOptimizer::relax(const QualityEvaluator &QE,
+				  double qmin,
+				  int num_samples,
+				  const ProgressCallback &callback,
+				  std::optional<unsigned int> seed,
+				  bool reset_altered)
   {
     if(reset_altered) clear_alteration_flags();
     
@@ -187,7 +203,7 @@ namespace vm
       if(is_candidate[i])
 	vertex_set.insert(pmp::Vertex(static_cast<pmp::IndexType>(i)));
     
-    // agglomerate
+    // relax the low-quality vertices
     return relax(vertex_set, QE, num_samples, callback); // if a seed was provided, rng was already reseeded
   }
   
@@ -195,7 +211,7 @@ namespace vm
 
   // dispatch: use the parallel candidate evaluation when built with OpenMP,
   // otherwise the serial one. Both yield identical results for a given seed.
-  std::tuple<bool, pmp::Point, double>
+  ImprovedVertexPosition
   MeshOptimizer::compute_improved_vertex_position(const pmp::Vertex     &vertex,
 						  const int             num_samples,
 						  const QualityEvaluator &QE)
@@ -208,10 +224,10 @@ namespace vm
   }
 
   // --- serial implementation --- //
-  std::tuple<bool, pmp::Point, double>
+  ImprovedVertexPosition
   MeshOptimizer::compute_improved_vertex_position_serial(const pmp::Vertex     &vertex,
 							 const int             num_samples,
-							 const QualityEvaluator &QE)  
+							 const QualityEvaluator &QE)
   {
     assert(mesh.is_valid(vertex)==true);
     assert(mesh.is_boundary(vertex)==false);
@@ -258,14 +274,20 @@ namespace vm
       }
     
     // position guard restores the vertex position in the mesh
-    
+
     // done
-    return {success, pmp::Point(curr_best_pos.first,curr_best_pos.second,given_vertex_pos[2]), curr_best_quality};
+    ImprovedVertexPosition out;
+    out.found    = success;
+    out.position = pmp::Point(curr_best_pos.first, curr_best_pos.second, given_vertex_pos[2]);
+    out.quality  = curr_best_quality;
+    out.n_samples_generated = 2*num_samples;                              // 2 strategies x num_samples
+    out.n_samples_feasible  = static_cast<long>(feasible_samples.size()); // feasible subset examined
+    return out;
   }
 
 
   // --- parallel implementation --- //
-  std::tuple<bool, pmp::Point, double>
+  ImprovedVertexPosition
   MeshOptimizer::compute_improved_vertex_position_parallel(const pmp::Vertex     &vertex,
 							   const int             num_samples,
 							   const QualityEvaluator &QE)
@@ -334,9 +356,13 @@ namespace vm
 	  success           = true;
 	}
 
-    return {success,
-	    pmp::Point(curr_best_pos.first, curr_best_pos.second, given_vertex_pos[2]),
-	    curr_best_quality};
+    ImprovedVertexPosition out;
+    out.found    = success;
+    out.position = pmp::Point(curr_best_pos.first, curr_best_pos.second, given_vertex_pos[2]);
+    out.quality  = curr_best_quality;
+    out.n_samples_generated = 2*num_samples;                              // 2 strategies x num_samples
+    out.n_samples_feasible  = static_cast<long>(feasible_samples.size()); // feasible subset examined
+    return out;
   }
 
   

@@ -62,7 +62,7 @@ int main()
   for(int iter=0; iter<num_iters; ++iter) {
     
     std::cout << "\n Iteration " << iter <<": " << std::flush;
-    int num_relaxed = optimizer.relax(QE, qepsilon, num_samples);
+    int num_relaxed = optimizer.relax(QE, qepsilon, num_samples).n_moved;
     std::cout << "relaxed " << num_relaxed << " vertices " << std::flush;
 
     // evaluate mesh qualities and save file

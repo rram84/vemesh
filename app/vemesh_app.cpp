@@ -17,6 +17,7 @@
 #include <vm_io.h>
 
 #include <algorithm>
+#include <ctime>
 #include <filesystem>
 #include <iostream>
 #include <stdexcept>
@@ -121,6 +122,21 @@ int main(int argc, char **argv)
     vm::write_vtk(mesh, (outpath / ("mesh-" + tag + ".vtk")).string());
   };
 
+  // lambda for emitting per-operation statistics (only when --op-stats). One line
+  // per operation, keyed by the same `tag` as the captured mesh, so the study
+  // harness can join it to that mesh's analysis. Sample counts are -1 for
+  // agglomeration (no sampling step). CPU time (not wall) is reported so it stays
+  // meaningful under a saturated parallel job pool.
+  //   OPSTAT <tag> <cpu_sec> <n_candidates> <n_success> <n_samples_generated> <n_samples_feasible>
+  auto emit_opstats = [&](const std::string& tag, double cpu_sec,
+			  long n_candidates, long n_success,
+			  long n_samples_generated, long n_samples_feasible){
+    if(!cfg.op_stats) return;
+    std::cout << "OPSTAT " << tag << " " << cpu_sec << " "
+	      << n_candidates << " " << n_success << " "
+	      << n_samples_generated << " " << n_samples_feasible << "\n";
+  };
+
     
   // improvement iterations
   for(int iter=0; iter<cfg.num_iters; ++iter) {
@@ -136,35 +152,61 @@ int main(int argc, char **argv)
       case CLIConfig::Mode::Agglomerate:
         {
           auto callback = make_mesh_callback(iter, outpath, cfg.output_mode, "a");
-          optimizer.agglomerate(QE, cfg.qepsilon, cfg.qfactor, callback);
-          capture("iter" + std::to_string(iter) + "-a"); 
+          const std::clock_t t0 = std::clock();
+          const vm::AgglomerateStats s = optimizer.agglomerate(QE, cfg.qepsilon, cfg.qfactor, callback);
+          const double cpu = double(std::clock()-t0)/CLOCKS_PER_SEC;
+          const std::string tag = "iter" + std::to_string(iter) + "-a";
+          capture(tag);
+          emit_opstats(tag, cpu, s.n_candidates, s.n_merged, -1, -1);
           break;
         }
       case CLIConfig::Mode::Relax:
         {
           auto callback = make_mesh_callback(iter, outpath, cfg.output_mode, "r");
-          optimizer.relax(QE, cfg.qepsilon, cfg.num_samples, callback, rseed);
-          capture("iter" + std::to_string(iter) + "-r");  
+          const std::clock_t t0 = std::clock();
+          const vm::RelaxStats s = optimizer.relax(QE, cfg.qepsilon, cfg.num_samples, callback, rseed);
+          const double cpu = double(std::clock()-t0)/CLOCKS_PER_SEC;
+          const std::string tag = "iter" + std::to_string(iter) + "-r";
+          capture(tag);
+          emit_opstats(tag, cpu, s.n_candidates, s.n_moved, s.n_samples_generated, s.n_samples_feasible);
           break;
         }
       case CLIConfig::Mode::AgglomerateRelax:
         {
           auto callback_a = make_mesh_callback(iter, outpath, cfg.output_mode, "a");
-          optimizer.agglomerate(QE, cfg.qepsilon, cfg.qfactor, callback_a);
-          capture("iter" + std::to_string(iter) + "-a");  
+          std::clock_t t0 = std::clock();
+          const vm::AgglomerateStats sa = optimizer.agglomerate(QE, cfg.qepsilon, cfg.qfactor, callback_a);
+          double cpu = double(std::clock()-t0)/CLOCKS_PER_SEC;
+          std::string tag_a = "iter" + std::to_string(iter) + "-a";
+          capture(tag_a);
+          emit_opstats(tag_a, cpu, sa.n_candidates, sa.n_merged, -1, -1);
+
           auto callback_r = make_mesh_callback(iter, outpath, cfg.output_mode, "a-r");
-          optimizer.relax(QE, cfg.qepsilon, cfg.num_samples, callback_r, rseed);
-          capture("iter" + std::to_string(iter) + "-r"); 
+          t0 = std::clock();
+          const vm::RelaxStats sr = optimizer.relax(QE, cfg.qepsilon, cfg.num_samples, callback_r, rseed);
+          cpu = double(std::clock()-t0)/CLOCKS_PER_SEC;
+          std::string tag_r = "iter" + std::to_string(iter) + "-r";
+          capture(tag_r);
+          emit_opstats(tag_r, cpu, sr.n_candidates, sr.n_moved, sr.n_samples_generated, sr.n_samples_feasible);
           break;
         }
       case CLIConfig::Mode::RelaxAgglomerate:
         {
           auto callback_r = make_mesh_callback(iter, outpath, cfg.output_mode, "r");
-          optimizer.relax(QE, cfg.qepsilon, cfg.num_samples, callback_r, rseed);
-          capture("iter" + std::to_string(iter) + "-r"); 
+          std::clock_t t0 = std::clock();
+          const vm::RelaxStats sr = optimizer.relax(QE, cfg.qepsilon, cfg.num_samples, callback_r, rseed);
+          double cpu = double(std::clock()-t0)/CLOCKS_PER_SEC;
+          std::string tag_r = "iter" + std::to_string(iter) + "-r";
+          capture(tag_r);
+          emit_opstats(tag_r, cpu, sr.n_candidates, sr.n_moved, sr.n_samples_generated, sr.n_samples_feasible);
+
           auto callback_a = make_mesh_callback(iter, outpath, cfg.output_mode, "r-a");
-          optimizer.agglomerate(QE, cfg.qepsilon, cfg.qfactor, callback_a);
-          capture("iter" + std::to_string(iter) + "-a");  
+          t0 = std::clock();
+          const vm::AgglomerateStats sa = optimizer.agglomerate(QE, cfg.qepsilon, cfg.qfactor, callback_a);
+          cpu = double(std::clock()-t0)/CLOCKS_PER_SEC;
+          std::string tag_a = "iter" + std::to_string(iter) + "-a";
+          capture(tag_a);
+          emit_opstats(tag_a, cpu, sa.n_candidates, sa.n_merged, -1, -1);
           break;
         }
       }

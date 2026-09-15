@@ -77,6 +77,13 @@ runs a then r. So "quantity vs `step`" is a clean per-workflow x-axis.
 | `nelems,nverts` | mesh size |
 | `n_alt_faces,n_alt_verts` | # elements/vertices altered in that operation |
 | `lambda2,lambda_max,cond_ratio` | global VEM conditioning; `cond_ratio = lambda_max/lambda2` |
+| `op_cpu_sec` | **CPU** time of the operation (`vemesh_app --op-stats`, `std::clock`). CPU not wall, so it stays meaningful under the saturated `xargs -P` pool |
+| `n_cand,n_succ` | candidates the op considered / actually changed (vertices moved for `r` ops, faces merged for `a` ops) |
+| `n_samp_gen,n_samp_feas` | relocation samples drawn (`= 2·num_samples` per candidate vertex) / feasible subset. **`r` ops only** — empty for agglomerate ops and the baseline |
+
+Derived at analysis time (all additive counts, so poolable first): **% feasible** =
+`n_samp_feas/n_samp_gen` (relax); **% success** = `n_succ/n_cand` (vertex-move rate
+for relax, agglomeration rate for agglomerate); mean per-op cost from `op_cpu_sec`.
 
 `altered.csv` — **one row per `(geom,bg,driver,workflow,step)`**, pooled over all
 realizations (geometries are *not* merged — that happens at analysis time, so

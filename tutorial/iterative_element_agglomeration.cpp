@@ -59,7 +59,7 @@ int main()
   for(int iter=0; iter<num_iters; ++iter) {
     
     std::cout << "\n Iteration " << iter <<": " << std::flush;
-    int num_agg = optimizer.agglomerate(QE, qepsilon, qfactor);
+    int num_agg = optimizer.agglomerate(QE, qepsilon, qfactor).n_merged;
     std::cout << "agglomerated " << num_agg << " faces " << std::flush;
 
     // evaluate mesh qualities and save file

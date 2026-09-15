@@ -72,7 +72,7 @@ int main()
     return true; };
   
   // --- optimize ---
-  int num_agg = optimizer.agglomerate(QE, qepsilon, qfactor, callback);
+  int num_agg = optimizer.agglomerate(QE, qepsilon, qfactor, callback).n_merged;
   std::cout << "Agglomerated " << num_agg << " faces " << std::flush;
 
   // --- optional: inspect the output mesh ---

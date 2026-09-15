@@ -218,11 +218,11 @@ void test_improved_vertex_position(const pmp::SurfaceMesh &in_mesh, const vm::Qu
     if(!mesh.is_boundary(v))
       {
 	auto result = opt.compute_improved_vertex_position(v, 4, QE);
-	if(std::get<bool>(result)==true)
+	if(result.found==true)
 	  {
 	    // quality should be improved
 	    double curr_quality = QE(v,mesh);
-	    if(std::get<double>(result)<curr_quality)
+	    if(result.quality<curr_quality)
 	      {
 		std::cerr << "\ntest_improved_vertex_position: quality did not improve\n";
 		std::exit(EXIT_FAILURE);
@@ -230,7 +230,7 @@ void test_improved_vertex_position(const pmp::SurfaceMesh &in_mesh, const vm::Qu
 
 	    // new location should be feasible
 	    pmp::SurfaceMesh tmp = mesh;
-	    tmp.position(v) = std::get<pmp::Point>(result);
+	    tmp.position(v) = result.position;
 	    vm::MeshInspectionErrors errors; 
 	    bool flag = vm::inspect_mesh(tmp, vm::MeshInspection::Adjacency, errors);
 	    if(flag==false)
@@ -242,7 +242,7 @@ void test_improved_vertex_position(const pmp::SurfaceMesh &in_mesh, const vm::Qu
 
 	    // check quality
 	    double check_quality = QE(v, tmp);
-	    if(std::abs(check_quality-std::get<double>(result))>1.e-4)
+	    if(std::abs(check_quality-result.quality)>1.e-4)
 	      {
 		std::cerr << "\ntest_improved_vertex_position: inconsistency in optimal quality\n";
 		for(auto &e:errors) std::cerr << e << "\n";
@@ -260,18 +260,18 @@ void test_improved_vertex_position(const pmp::SurfaceMesh &in_mesh, const vm::Qu
 	opt.rng.seed(seed);
 	const auto res_parallel = opt.compute_improved_vertex_position_parallel(v, 4, QE);
 
-	if(std::get<bool>(res_serial) != std::get<bool>(res_parallel))
+	if(res_serial.found != res_parallel.found)
 	  {
 	    std::cerr << "\ntest_improved_vertex_position: serial/parallel disagree on success"
 		      << " (vertex " << v.idx() << ", seed " << seed << ")\n";
 	    std::exit(EXIT_FAILURE);
 	  }
 
-	const auto& ps = std::get<pmp::Point>(res_serial);
-	const auto& pp = std::get<pmp::Point>(res_parallel);
+	const auto& ps = res_serial.position;
+	const auto& pp = res_parallel.position;
 	const double dx = ps[0]-pp[0], dy = ps[1]-pp[1], dz = ps[2]-pp[2];
 	if(std::sqrt(dx*dx + dy*dy + dz*dz) > 1.e-12 ||
-	   std::abs(std::get<double>(res_serial) - std::get<double>(res_parallel)) > 1.e-12)
+	   std::abs(res_serial.quality - res_parallel.quality) > 1.e-12)
 	  {
 	    std::cerr << "\ntest_improved_vertex_position: serial/parallel results differ at vertex "
 		      << v.idx() << ", seed " << seed << "\n";

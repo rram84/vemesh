@@ -74,6 +74,9 @@ std::optional<CLIConfig> parse_cli(int argc, char** argv, int& exit_code)
   app.add_option("-v", output_mode_str,
 		 "Mesh output: none | iter | op | update")->check(CLI::IsMember({"none","iter","op","update"}));
 
+  app.add_flag("--op-stats", cfg.op_stats,
+	       "print one OPSTAT line per operation (CPU time + candidate/success/sample counts)");
+
   opt_a->needs(opt_f);                 // agglomerate
   opt_r->needs(opt_s);                 // relax
   opt_ra->needs(opt_f)->needs(opt_s);  // agglomerate+relax

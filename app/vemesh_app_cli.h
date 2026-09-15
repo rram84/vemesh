@@ -39,6 +39,10 @@ struct CLIConfig
   // optional RNG seed for reproducible vertex relaxation (unset -> nondeterministic)
   std::optional<unsigned int> seed = std::nullopt;
 
+  // when true, print one "OPSTAT ..." line per operation to stdout: CPU time and
+  // the operation's RelaxStats / AgglomerateStats. Off by default (study use).
+  bool op_stats = false;
+
   // output mode
   enum class MeshOutputMode {
     None,           // don't save anything

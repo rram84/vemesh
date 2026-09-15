@@ -29,6 +29,43 @@ namespace vm
     double quality;       //!< Revised quality of the agglomerated face or relaxed vertex
   };
 
+  //! \brief Per-operation statistics for a vertex-relaxation sweep.
+  //! Optionally reported: pass a non-null pointer to a relax() sweep overload to
+  //! have it filled. All counts refer to that single operation (one sweep over the
+  //! candidate set). Left untouched (all callers that omit the pointer are unaffected).
+  struct RelaxStats {
+    long n_candidates        = 0; //!< vertices considered in this operation
+    long n_moved             = 0; //!< vertices actually relaxed (moved)
+    long n_samples_generated = 0; //!< relocation samples drawn (2*num_samples per candidate)
+    long n_samples_feasible  = 0; //!< of those, how many were feasible
+  };
+
+  //! \brief Per-operation statistics for an agglomeration sweep.
+  //! Agglomeration has no sampling step, so only candidate/merge counts are recorded.
+  //! Optionally reported: pass a non-null pointer to an agglomerate() sweep overload.
+  struct AgglomerateStats {
+    long n_candidates = 0; //!< faces considered in this operation
+    long n_merged     = 0; //!< faces actually merged
+  };
+
+  //! \brief Result of proposing an improved position for a single vertex.
+  //! (Return of the protected compute_improved_vertex_position helpers.)
+  struct ImprovedVertexPosition {
+    bool       found = false;        //!< a strictly better position was found
+    pmp::Point position;             //!< that position (or the current one if none found)
+    double     quality = 0.0;        //!< vertex quality there
+    long       n_samples_generated = 0; //!< relocation samples drawn (2*num_samples)
+    long       n_samples_feasible  = 0; //!< of those, how many were feasible
+  };
+
+  //! \brief Outcome of relaxing a single vertex (return of relax(vertex, ...)).
+  struct VertexRelaxResult {
+    bool   moved   = false;          //!< whether the vertex was relocated
+    double quality = 0.0;            //!< quality at the new (or current) position
+    long   n_samples_generated = 0;  //!< relocation samples drawn for this vertex
+    long   n_samples_feasible  = 0;  //!< of those, how many were feasible
+  };
+
   /**
    * \brief Progress callback invoked during mesh optimization.
    *
@@ -203,11 +240,12 @@ namespace vm
     //! \param[in] qfactor Lower bound for factor of improvement in face quality,
     //!                    assumed to be greater than 1.
     //! \param[in] callback Callback function invoked after each successful agglomeration attempt
-    //! \return Number of aglomerated faces. Can help decide if another iteration of agglomeration is warranted
-    int agglomerate(const std::set<pmp::Face>& subset,
-		    const QualityEvaluator& QE,
-		    double qfactor,
-		    const ProgressCallback &callback=nullptr);
+    //! \return AgglomerateStats for this operation (candidates considered and faces merged).
+    //! `.n_merged` is the number of agglomerated faces (formerly the int return).
+    AgglomerateStats agglomerate(const std::set<pmp::Face>& subset,
+				 const QualityEvaluator& QE,
+				 double qfactor,
+				 const ProgressCallback &callback=nullptr);
 
     //! \brief Agglomerate faces in a mesh
     //! Attempts merging all faces satisfying \f$Q(f)\leq \epsilon\f$ for the given quality threshold \f$\epsilon\f$.
@@ -215,12 +253,13 @@ namespace vm
     //! \param[in] qmin Acceptable positive lower bound for quality
     //! \param[in] qfactor Lower bound for factor of improvement in face quality, assumed to be greater than 1.
     //! \param[in] callback Callback function invoked after each successful agglomeration attempt
-    //! \return Number of agglomerated faces.  Can help decide if another iteration of agglomeration is warranted
-    int agglomerate(const QualityEvaluator& QE,
-		    double qmin,
-		    double qfactor,
-		    const ProgressCallback &callback=nullptr,
-		    bool reset_altered = true);
+    //! \return AgglomerateStats for this operation (candidates considered and faces merged).
+    //! `.n_merged` is the number of agglomerated faces (formerly the int return).
+    AgglomerateStats agglomerate(const QualityEvaluator& QE,
+				 double qmin,
+				 double qfactor,
+				 const ProgressCallback &callback=nullptr,
+				 bool reset_altered = true);
 
     //! \brief Relaxes a vertex to a more favorable position
     //! \param[in] vertex Vertex to consider relaxing
@@ -231,15 +270,15 @@ namespace vm
     //! \param[in] seed Optional RNG seed. When supplied, the internal RNG is re-seeded with this value at the start of the call,
     //!                 making the result reproducible across invocations. Omit (the default) for nondeterministic behavior.
     //!
-    //! \return A pair `result`. The boolean `result->first` indicates if the relaxation was successful.
-    //! The double `result->second` returns the quality of the vertex at its new location if the relaxation was successful, and
-    //! at its existing location otherwise.
-    //! \note A total of 2*num_samples sample points are generated. 
+    //! \return A VertexRelaxResult. `.moved` indicates if the relaxation was successful,
+    //! `.quality` the quality at the new location (or the existing one otherwise), and
+    //! `.n_samples_generated`/`.n_samples_feasible` the sampling counts for this vertex.
+    //! \note A total of 2*num_samples sample points are generated.
     //! In general, only a (small) fraction of these sample points will be *feasible*.
-    std::pair<bool,double> relax(const pmp::Vertex& vertex,
-				 const QualityEvaluator& QE,
-				 int num_samples,
-				 std::optional<unsigned int> seed = std::nullopt);
+    VertexRelaxResult relax(const pmp::Vertex& vertex,
+			    const QualityEvaluator& QE,
+			    int num_samples,
+			    std::optional<unsigned int> seed = std::nullopt);
 
     //! \brief Relaxes a specified subset of vertices to more favorable positions.
     //! \param[in] subset Set of vertices to consider relaxing
@@ -251,14 +290,16 @@ namespace vm
     //! \param[in] seed Optional RNG seed. When supplied, the internal RNG is re-seeded with this value at the start of the call,
     //!                 making the result reproducible across invocations. Omit (the default) for nondeterministic behavior.
     //!
-    //! \return Number of relaxed vertices. Can help decide if another iteration of vertex relaxations is warranted
-    //! \note A total of 2*num_samples sample points are generated per vertex. 
+    //! \return RelaxStats for this operation. `.n_moved` is the number of relaxed
+    //! vertices (formerly the int return); `.n_candidates` and the sample counts
+    //! summarise the operation.
+    //! \note A total of 2*num_samples sample points are generated per vertex.
     //! In general, only a (small) fraction of these sample points will be *feasible*.
-    int relax(const std::set<pmp::Vertex>& subset,
-	      const QualityEvaluator& QE,
-	      int num_samples,
-	      const ProgressCallback &callback=nullptr,
-	      std::optional<unsigned int> seed = std::nullopt);
+    RelaxStats relax(const std::set<pmp::Vertex>& subset,
+		     const QualityEvaluator& QE,
+		     int num_samples,
+		     const ProgressCallback &callback=nullptr,
+		     std::optional<unsigned int> seed = std::nullopt);
 
     //! \brief Relaxes vertices of poor quality to more favorable positions.
     //! Attempts relaxing all vertices with quality less than a given tolerance.
@@ -271,15 +312,17 @@ namespace vm
     //! \param[in] seed Optional RNG seed. When supplied, the internal RNG is re-seeded with this value at the start of the call,
     //!                 making the result reproducible across invocations. Omit (the default) for nondeterministic behavior.
     //!
-    //! \return Number of relaxed vertices. Can help decide if another iteration of vertex relaxations is warranted
-    //! \note A total of 2*num_samples sample points are generated per vertex. 
+    //! \return RelaxStats for this operation. `.n_moved` is the number of relaxed
+    //! vertices (formerly the int return); `.n_candidates` and the sample counts
+    //! summarise the operation.
+    //! \note A total of 2*num_samples sample points are generated per vertex.
     //! In general, only a (small) fraction of these sample points will be *feasible*.
-    int relax(const QualityEvaluator& QE,
-	      double qmin,
-	      int num_samples,
-	      const ProgressCallback &callback=nullptr,
-	      std::optional<unsigned int> seed = std::nullopt,
-	      bool reset_altered = true);
+    RelaxStats relax(const QualityEvaluator& QE,
+		     double qmin,
+		     int num_samples,
+		     const ProgressCallback &callback=nullptr,
+		     std::optional<unsigned int> seed = std::nullopt,
+		     bool reset_altered = true);
     
     //! \brief Evaluates the qualities of all faces in the mesh and saves it as a face property in the mesh
     //! \param[in] QE Reference to an instance of QualityEvaluator, used to evaluate face qualities
@@ -331,19 +374,17 @@ namespace vm
     //!                        (i) within the bounding box of faces incident at the vertex, and 
     //!                        (ii) as convex combinations of vertices in the 1-ring
     //! \param[in] QE Instance of QualityEvaluator used to compute face qualities
-    //! \return Triplet result, such that: \n
-    //! `std::get<bool>(result)` indicates whether an improved location was found
-    //! `std::get<pmp::Point>` equals the new location in case of success, and the current location otherwise \n
-    //! `std::get<double>` equals the new quality at the vertex in case of success, and the current quality otherwise
-    std::tuple<bool, pmp::Point, double>
+    //! \return ImprovedVertexPosition: `.found`/`.position`/`.quality` as before, plus
+    //! `.n_samples_generated` (=2*num_samples) and `.n_samples_feasible`.
+    ImprovedVertexPosition
       compute_improved_vertex_position(const pmp::Vertex      &vertex,
 				       const int              num_samples,
 				       const QualityEvaluator& QE);
 
-    
+
     //! \brief Serial implementation of compute_improved_vertex_position.
     //! Evaluates candidate positions one at a time, moving the vertex in place.
-    std::tuple<bool, pmp::Point, double>
+    ImprovedVertexPosition
       compute_improved_vertex_position_serial(const pmp::Vertex      &vertex,
 					      const int              num_samples,
 					      const QualityEvaluator& QE);
@@ -351,7 +392,7 @@ namespace vm
     //! \brief Parallel (OpenMP) implementation of compute_improved_vertex_position.
     //! Scores each candidate on local copies of the incident-face polygons, so no
     //! shared mesh state is mutated. Identical results to the serial version.
-    std::tuple<bool, pmp::Point, double>
+    ImprovedVertexPosition
       compute_improved_vertex_position_parallel(const pmp::Vertex      &vertex,
 						const int              num_samples,
 						const QualityEvaluator& QE);

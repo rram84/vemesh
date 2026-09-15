@@ -64,14 +64,14 @@ namespace vm
   }
   
   // agglomerate faces in a subset
-  int MeshOptimizer::agglomerate(const std::set<pmp::Face>& subset,
-				 const QualityEvaluator& QE,
-				 double qfactor,
-				 const ProgressCallback &callback)
+  AgglomerateStats MeshOptimizer::agglomerate(const std::set<pmp::Face>& subset,
+					      const QualityEvaluator& QE,
+					      double qfactor,
+					      const ProgressCallback &callback)
   {
     if (qfactor <= 1.)
       throw std::invalid_argument("MeshOptimizer::agglomerate: qfactor must be > 1");
-    
+
     // tolerance for comparing qualities
     const double qeps = 1.e-6;
 
@@ -83,8 +83,12 @@ namespace vm
 	double qval = QE(f, mesh);
 	face_queue.push({f, qval});
       }
-    const int qsize = static_cast<int>(face_queue.size());
-      
+
+    // per-operation statistics (agglomeration has no sampling step)
+    AgglomerateStats stats;
+    stats.n_candidates = static_cast<long>(face_queue.size());
+    const int qsize = static_cast<int>(stats.n_candidates);
+
     // track #of faces merged during execution
     int nmerged = 0;
 
@@ -124,23 +128,23 @@ namespace vm
 	      
 	      // terminate agglomeration?
 	      if(flag==false)
-		return nmerged;
+		{ stats.n_merged = nmerged; return stats; }
 	    }
 	}
       }
     
-    return nmerged;
+    { stats.n_merged = nmerged; return stats; }
   }
 
 
   // ----- overload 3 ----- //
   
   // merge faces
-  int MeshOptimizer::agglomerate(const QualityEvaluator &QE,
-				 double qmin,
-				 double qfactor,
-				 const ProgressCallback &callback,
-				 bool reset_altered)
+  AgglomerateStats MeshOptimizer::agglomerate(const QualityEvaluator &QE,
+					      double qmin,
+					      double qfactor,
+					      const ProgressCallback &callback,
+					      bool reset_altered)
   {
     if(reset_altered) clear_alteration_flags();
      

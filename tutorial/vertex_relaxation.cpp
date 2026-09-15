@@ -74,7 +74,7 @@ int main()
     return true; };
   
   // --- optimize ---
-  int num_relaxed = optimizer.relax(QE, qepsilon, num_samples, callback);
+  int num_relaxed = optimizer.relax(QE, qepsilon, num_samples, callback).n_moved;
   std::cout << "Relaxed " << num_relaxed << " vertices " << std::flush;
 
   // --- optional: inspect the output mesh ---

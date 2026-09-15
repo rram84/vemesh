@@ -102,12 +102,12 @@ int main()
 
     // relax 
     auto relax_vertices = identify_candidate_vertices(mesh, QE, qepsilon); // candidate vertices
-    int num_relaxed = optimizer.relax(relax_vertices, QE, num_samples);
+    int num_relaxed = optimizer.relax(relax_vertices, QE, num_samples).n_moved;
     std::cout << "\nrelaxed " << num_relaxed << " vertices " << std::flush;
 
     // agglomerate
     auto agg_faces = identify_candidate_faces(mesh, QE, qepsilon); // candidate faces
-    int num_agg = optimizer.agglomerate(agg_faces, QE, qfactor);
+    int num_agg = optimizer.agglomerate(agg_faces, QE, qfactor).n_merged;
     std::cout << "\nagglomerated " << num_agg << " faces " << std::flush;
 
     // evaluate mesh qualities and save file
