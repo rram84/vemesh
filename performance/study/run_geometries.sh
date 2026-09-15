@@ -20,6 +20,15 @@
 set -euo pipefail
 shopt -s nullglob
 
+# Keep the machine awake for the whole sweep. macOS idle-sleeps after its timer
+# even with a nohup job running (a background job does not count as user
+# activity), which halts the CPU and inflates per-geometry wall time ~20x. Re-exec
+# the whole sweep under caffeinate; the assertion lives exactly as long as it does.
+if [[ -z "${CAFFEINATED:-}" ]] && command -v caffeinate >/dev/null 2>&1; then
+  export CAFFEINATED=1
+  exec caffeinate -i -m -s "$0" "$@"
+fi
+
 BG="${1:-quad}"
 N_REAL="${2:-250}"
 SEED="${3:-12345}"
